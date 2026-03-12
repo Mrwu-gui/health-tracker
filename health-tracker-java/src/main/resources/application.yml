@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/health_tracker?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+
+jwt:
+  secret: "change_this_secret_key_please_32_chars_min"
+  expiration-minutes: 1440
+
+wechat:
+  mini:
+    appid: ""
+    secret: ""
+  web:
+    appid: ""
+    secret: ""
+    redirect-uri: ""
+
+sms:
+  enabled: false
+  aliyun:
+    access-key-id: ""
+    access-key-secret: ""
+    sign-name: ""
+    template-code: ""

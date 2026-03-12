@@ -1,0 +1,70 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/index",
+      "style": {
+        "navigationBarTitleText": "登录"
+      }
+    },
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "健康管理",
+        "navigationBarBackgroundColor": "#0f172a",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/records/index",
+      "style": {
+        "navigationBarTitleText": "记录"
+      }
+    },
+    {
+      "path": "pages/stats/index",
+      "style": {
+        "navigationBarTitleText": "统计"
+      }
+    },
+    {
+      "path": "pages/reminders/index",
+      "style": {
+        "navigationBarTitleText": "提醒"
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    }
+  ],
+  "tabBar": {
+    "color": "#94a3b8",
+    "selectedColor": "#38bdf8",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/records/index",
+        "text": "记录"
+      },
+      {
+        "pagePath": "pages/stats/index",
+        "text": "统计"
+      },
+      {
+        "pagePath": "pages/reminders/index",
+        "text": "提醒"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的"
+      }
+    ]
+  }
+}

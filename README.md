@@ -104,62 +104,7 @@
 - 可选缓存：Redis
 - 消息推送：微信订阅消息 / PC端弹窗
 
----
-
-## 五、数据库设计示例
-1. 用户表 `user`：
-   - id, username, password, sex, age, height, weight, created_at
-2. 运动记录表 `exercise_record`：
-   - id, user_id, type, duration, calories, date
-3. 饮食记录表 `diet_record`：
-   - id, user_id, meal_type, food_name, calories, date
-4. 睡眠记录表 `sleep_record`：
-   - id, user_id, start_time, end_time, deep_sleep_minutes, light_sleep_minutes
-5. 体重记录表 `weight_record`：
-   - id, user_id, weight, bmi, date
-6. 血压/心率表 `health_record`：
-   - id, user_id, systolic, diastolic, heart_rate, date
-7. 目标表 `goal`：
-   - id, user_id, goal_type, target_value, current_value, period (daily/weekly)
-8. 提醒表 `reminder`：
-   - id, user_id, type, message, remind_time, status
-9. 药物表 `medication`：
-   - id, user_id, drug_name, dosage, frequency, start_date, end_date, notes
-10. 服药记录表 `medication_record`：
-    - id, user_id, medication_id, date, time, status (已服/未服)
-
----
-
-## 六、API 设计示例
-### 用户管理
-- POST `/api/user/register` 注册
-- POST `/api/user/login` 登录
-- GET `/api/user/profile` 获取个人信息
-
-### 数据记录
-- POST `/api/exercise/add` 添加运动记录
-- GET `/api/exercise/list?userId=&date=` 获取运动记录
-- POST `/api/diet/add` 添加饮食记录
-- GET `/api/diet/list?userId=&date=` 获取饮食记录
-- POST `/api/sleep/add` 添加睡眠记录
-- GET `/api/sleep/list?userId=&date=` 获取睡眠记录
-
-### 目标管理
-- POST `/api/goal/add` 新增目标
-- GET `/api/goal/list?userId=` 获取目标列表
-
-### 健康分析
-- GET `/api/statistics/overview?userId=&period=` 获取统计数据
-
-### 药物管理
-- POST `/api/medication/add` 添加药物
-- GET `/api/medication/list?userId=` 获取药物列表
-- POST `/api/medication/record` 添加服药记录
-- GET `/api/medication/statistics?userId=&period=` 获取服药统计
-
----
-
-## 七、开发注意事项
+## 五、开发注意事项
 1. M2 芯片 Mac 开发注意：
    - 使用 Apple Silicon 原生版本（VS Code、Node、Java）
 2. 数据库操作：
@@ -174,7 +119,7 @@
 
 ---
 
-## 八、后续扩展方向
+## 六、后续扩展方向
 - 社区互动功能（健康问答、打卡排行榜）
 - AI 智能健康建议生成
 - 第三方健康设备接入（智能手环、血压计、体脂秤）

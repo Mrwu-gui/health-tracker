@@ -1,7 +1,12 @@
 <template>
   <view class="page">
+    <view class="hero">
+      <text class="badge">健康助手</text>
+      <text class="hero-title">更懂你的健康记录</text>
+      <text class="hero-subtitle">每天一点点，养成好习惯</text>
+    </view>
     <view class="card">
-      <text class="title">健康管理小程序</text>
+      <text class="title">欢迎回来</text>
       <text class="subtitle">登录后同步步数、饮食、睡眠与用药提醒</text>
       <!-- #ifdef MP-WEIXIN -->
       <button class="primary" @click="loginWeChat" :disabled="loading">
@@ -14,6 +19,11 @@
       </button>
       <!-- #endif -->
       <text v-if="message" class="message">{{ message }}</text>
+    </view>
+    <view class="tips">
+      <text>• 今日步数自动同步</text>
+      <text>• 睡眠支持手动记录</text>
+      <text>• 用药提醒更安心</text>
     </view>
   </view>
 </template>
@@ -90,9 +100,37 @@ export default {
 <style>
 .page {
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
+  padding: 28px 22px 32px;
+  background: linear-gradient(180deg, #f6efe6 0%, #f9f6f1 40%, #ffffff 100%);
+  color: #2d2a26;
+}
+
+.hero {
+  margin-top: 12px;
+  margin-bottom: 18px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #efe3d2;
+  color: #7b5f3c;
+  font-size: 11px;
+}
+
+.hero-title {
+  display: block;
+  margin-top: 8px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.hero-subtitle {
+  display: block;
+  margin-top: 6px;
+  color: #8a7a67;
+  font-size: 12px;
 }
 
 .card {
@@ -102,7 +140,8 @@ export default {
   text-align: center;
   box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
   width: 100%;
-  max-width: 320px;
+  max-width: 340px;
+  margin: 0 auto;
 }
 
 .title {
@@ -118,7 +157,7 @@ export default {
 }
 
 .primary {
-  background: #0f172a;
+  background: #5a4b3b;
   color: #ffffff;
   border-radius: 12px;
 }
@@ -128,5 +167,13 @@ export default {
   margin-top: 12px;
   color: #ef4444;
   font-size: 12px;
+}
+
+.tips {
+  margin-top: 18px;
+  color: #8a7a67;
+  font-size: 12px;
+  display: grid;
+  gap: 6px;
 }
 </style>

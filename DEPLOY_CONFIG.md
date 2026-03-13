@@ -47,9 +47,9 @@
 - SPRING_DATA_REDIS_HOST=redis
 
 ## 微信与短信
-- 微信小程序 AppID: wx4d5635b224dd6e22
-- 微信小程序 AppSecret: 13fec31d4dad98659de962e8060de5e7
-- 手机号登录: 阿里云短信(未在服务器侧配置密钥，需后续补全)
+- 微信小程序 AppID: `<YOUR_WECHAT_APPID>`
+- 微信小程序 AppSecret: `<YOUR_WECHAT_APPSECRET>`
+- 手机号登录: 阿里云短信（需在服务器或环境变量中配置 AccessKey/Secret）
 
 ## 说明
 - 当前未绑定域名，直接使用公网 IP 访问。

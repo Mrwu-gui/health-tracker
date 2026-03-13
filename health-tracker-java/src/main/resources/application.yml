@@ -24,15 +24,24 @@ jwt:
   secret: ${JWT_SECRET:change_this_secret_key_please_32_chars_min}
   expiration-minutes: 1440
 
+springdoc:
+  api-docs:
+    path: /api/docs
+  swagger-ui:
+    path: /api/docs-ui
+
 wechat:
   mini:
-    appid: ${WECHAT_MINI_APPID:wx4d5635b224dd6e22}
-    secret: ${WECHAT_MINI_SECRET:13fec31d4dad98659de962e8060de5e7}
+    appid: ${WECHAT_MINI_APPID:}
+    secret: ${WECHAT_MINI_SECRET:}
     template-id: ${WECHAT_MINI_TEMPLATE_ID:}
   web:
     appid: ${WECHAT_WEB_APPID:}
     secret: ${WECHAT_WEB_SECRET:}
     redirect-uri: ${WECHAT_WEB_REDIRECT_URI:}
+  message:
+    token: ${WECHAT_MSG_TOKEN:}
+    aes-key: ${WECHAT_MSG_AES_KEY:}
 
 sms:
   enabled: ${SMS_ENABLED:false}

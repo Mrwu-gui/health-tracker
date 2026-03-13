@@ -36,7 +36,7 @@
 
 <script>
 import { request } from "../../utils/api";
-const TEMPLATE_ID = import.meta.env.VITE_WX_TEMPLATE_ID || "";
+const TEMPLATE_ID = process.env.UNI_WX_TEMPLATE_ID || "";
 
 export default {
   data() {

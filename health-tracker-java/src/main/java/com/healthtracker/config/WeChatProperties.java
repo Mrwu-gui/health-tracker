@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 public class WeChatProperties {
     private final Mini mini = new Mini();
     private final Web web = new Web();
+    private final Message message = new Message();
 
     public Mini getMini() {
         return mini;
@@ -15,6 +16,10 @@ public class WeChatProperties {
 
     public Web getWeb() {
         return web;
+    }
+
+    public Message getMessage() {
+        return message;
     }
 
     public static class Mini {
@@ -74,6 +79,27 @@ public class WeChatProperties {
 
         public void setRedirectUri(String redirectUri) {
             this.redirectUri = redirectUri;
+        }
+    }
+
+    public static class Message {
+        private String token;
+        private String aesKey;
+
+        public String getToken() {
+            return token;
+        }
+
+        public void setToken(String token) {
+            this.token = token;
+        }
+
+        public String getAesKey() {
+            return aesKey;
+        }
+
+        public void setAesKey(String aesKey) {
+            this.aesKey = aesKey;
         }
     }
 }

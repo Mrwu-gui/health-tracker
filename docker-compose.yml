@@ -1,0 +1,68 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: docker.m.daocloud.io/library/mysql:8.3
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: health_tracker
+    volumes:
+      - ./docker/mysql:/var/lib/mysql
+      - ./health-tracker-java/src/main/resources/db:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "3306:3306"
+
+  redis:
+    image: docker.m.daocloud.io/library/redis:7
+    restart: always
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ./health-tracker-java
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/health_tracker?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATA_REDIS_HOST: redis
+      WECHAT_MINI_APPID: "${WECHAT_MINI_APPID:-}"
+      WECHAT_MINI_SECRET: "${WECHAT_MINI_SECRET:-}"
+      WECHAT_MINI_TEMPLATE_ID: ""
+      # TODO: Replace placeholders with real values in your server env
+      WECHAT_MSG_TOKEN: "${WECHAT_MSG_TOKEN:-}"
+      WECHAT_MSG_AES_KEY: "${WECHAT_MSG_AES_KEY:-}"
+      SMS_ENABLED: "${SMS_ENABLED:-false}"
+      SMS_COOLDOWN_SECONDS: "${SMS_COOLDOWN_SECONDS:-60}"
+      SMS_ALIYUN_ACCESS_KEY_ID: "${SMS_ALIYUN_ACCESS_KEY_ID:-}"
+      SMS_ALIYUN_ACCESS_KEY_SECRET: "${SMS_ALIYUN_ACCESS_KEY_SECRET:-}"
+      SMS_ALIYUN_SIGN_NAME: "${SMS_ALIYUN_SIGN_NAME:-}"
+      SMS_ALIYUN_TEMPLATE_CODE: "${SMS_ALIYUN_TEMPLATE_CODE:-}"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+      - redis
+
+  web:
+    build:
+      context: ./health-tracker-web
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  miniapp:
+    build:
+      context: ./health-tracker-miniapp
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3101:80"
+    depends_on:
+      - backend

@@ -1,0 +1,77 @@
+# 云效流水线配置（分开部署：Java / Web / Uniapp）
+version: "2.0"
+name: health-tracker-split-deploy
+displayName: 健康管理系统分开部署流水线
+
+sources:
+  repo_main:
+    type: git
+    name: health-tracker
+    endpoint: https://github.com/Mrwu-gui/health-tracker.git
+    branch: main
+
+stages:
+  deploy_backend_stage:
+    name: "部署后端"
+    jobs:
+      deploy_backend_job:
+        name: "SSH部署后端"
+        runsOn:
+          group: public/cn-beijing
+          container: build-steps-public-registry.cn-beijing.cr.aliyuncs.com/build-steps/alinux3:latest
+        steps:
+          deploy_backend_step:
+            name: "执行部署"
+            step: Command
+            with:
+              run: |
+                mkdir -p ~/.ssh
+                echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+                chmod 600 ~/.ssh/id_rsa
+                export SSH_HOST SSH_USER APP_DIR
+                bash ./ci/scripts/deploy_backend.sh
+
+  deploy_web_stage:
+    name: "部署PC端"
+    jobs:
+      deploy_web_job:
+        name: "SSH部署PC端"
+        runsOn:
+          group: public/cn-beijing
+          container: build-steps-public-registry.cn-beijing.cr.aliyuncs.com/build-steps/alinux3:latest
+        steps:
+          deploy_web_step:
+            name: "执行部署"
+            step: Command
+            with:
+              run: |
+                mkdir -p ~/.ssh
+                echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+                chmod 600 ~/.ssh/id_rsa
+                export SSH_HOST SSH_USER APP_DIR
+                bash ./ci/scripts/deploy_web.sh
+
+  deploy_miniapp_stage:
+    name: "部署小程序H5"
+    jobs:
+      deploy_miniapp_job:
+        name: "SSH部署小程序H5"
+        runsOn:
+          group: public/cn-beijing
+          container: build-steps-public-registry.cn-beijing.cr.aliyuncs.com/build-steps/alinux3:latest
+        steps:
+          deploy_miniapp_step:
+            name: "执行部署"
+            step: Command
+            with:
+              run: |
+                mkdir -p ~/.ssh
+                echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+                chmod 600 ~/.ssh/id_rsa
+                export SSH_HOST SSH_USER APP_DIR
+                bash ./ci/scripts/deploy_miniapp.sh
+
+triggers:
+  push:
+    branches:
+      - main

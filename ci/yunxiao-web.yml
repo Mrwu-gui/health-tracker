@@ -1,0 +1,31 @@
+version: "2.0"
+name: health-tracker-web-deploy
+displayName: 健康管理-PC端部署
+
+sources:
+  repo_main:
+    type: git
+    name: health-tracker
+    endpoint: https://github.com/Mrwu-gui/health-tracker.git
+    branch: main
+
+stages:
+  web_deploy_stage:
+    name: "PC端部署"
+    jobs:
+      web_deploy_job:
+        name: "更新代码并部署PC端"
+        runsOn:
+          group: public/cn-beijing
+          container: build-steps-public-registry.cn-beijing.cr.aliyuncs.com/build-steps/alinux3:latest
+        steps:
+          web_deploy_step:
+            name: "执行部署"
+            step: Command
+            with:
+              run: |
+                dnf -y install openssh-clients git
+                mkdir -p ~/.ssh
+                echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+                chmod 600 ~/.ssh/id_rsa
+                ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "${SSH_USER}@${SSH_HOST}" "cd ${APP_DIR} && git pull && podman-compose up -d --build web"

@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 public class SecurityConfig {
@@ -26,7 +27,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/health", "/api/user/register", "/api/user/login", "/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/api/health", "/api/user/register", "/api/user/login", "/api/auth/**", "/api/docs/**", "/api/docs-ui/**").permitAll()
                 .anyRequest().authenticated()
             )
             .httpBasic(Customizer.withDefaults())
@@ -37,10 +39,28 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOriginPattern("*");
+        config.addAllowedOriginPattern("http://localhost:*");
+        config.addAllowedOriginPattern("http://127.0.0.1:*");
+        config.addAllowedOrigin("http://139.196.155.234");
+        config.addAllowedOrigin("http://172.24.51.229");
+        config.addAllowedOriginPattern("http://139.196.155.234:*");
+        config.addAllowedOriginPattern("http://172.24.51.229:*");
+        // TODO: Re-enable when domain is verified
+        // config.addAllowedOrigin("http://datewell.xyz");
+        // config.addAllowedOriginPattern("http://datewell.xyz:*");
+        // config.addAllowedOrigin("https://datewell.xyz");
+        // config.addAllowedOriginPattern("https://datewell.xyz:*");
+        // config.addAllowedOrigin("http://www.datewell.xyz");
+        // config.addAllowedOriginPattern("http://www.datewell.xyz:*");
+        // config.addAllowedOrigin("https://www.datewell.xyz");
+        // config.addAllowedOriginPattern("https://www.datewell.xyz:*");
+        config.addAllowedOriginPattern("https://139.196.155.234:*");
+        config.addAllowedOriginPattern("https://localhost:*");
+        config.addAllowedOriginPattern("https://127.0.0.1:*");
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
-        config.setAllowCredentials(false);
+        config.setMaxAge(3600L);
+        config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;

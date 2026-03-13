@@ -1,0 +1,31 @@
+version: "2.0"
+name: health-tracker-backend-deploy
+displayName: 健康管理-后端部署
+
+sources:
+  repo_main:
+    type: git
+    name: health-tracker
+    endpoint: https://github.com/Mrwu-gui/health-tracker.git
+    branch: main
+
+stages:
+  backend_deploy_stage:
+    name: "后端部署"
+    jobs:
+      backend_deploy_job:
+        name: "更新代码并部署后端"
+        runsOn:
+          group: public/cn-beijing
+          container: build-steps-public-registry.cn-beijing.cr.aliyuncs.com/build-steps/alinux3:latest
+        steps:
+          backend_deploy_step:
+            name: "执行部署"
+            step: Command
+            with:
+              run: |
+                dnf -y install openssh-clients git
+                mkdir -p ~/.ssh
+                echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+                chmod 600 ~/.ssh/id_rsa
+                ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "${SSH_USER}@${SSH_HOST}" "cd ${APP_DIR} && git pull && podman-compose up -d --build backend"

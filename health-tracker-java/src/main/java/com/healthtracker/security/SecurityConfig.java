@@ -31,7 +31,6 @@ public class SecurityConfig {
                 .requestMatchers("/api/health", "/api/user/register", "/api/user/login", "/api/auth/**", "/api/docs/**", "/api/docs-ui/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .httpBasic(Customizer.withDefaults())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

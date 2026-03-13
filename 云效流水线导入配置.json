@@ -1,0 +1,113 @@
+{
+  "name": "health-tracker-deployment",
+  "displayName": "健康管理系统部署",
+  "description": "自动构建和部署健康管理系统到阿里云服务器",
+  "variables": [
+    {
+      "name": "SERVER_IP",
+      "value": "139.196.155.234",
+      "description": "服务器公网IP地址"
+    },
+    {
+      "name": "SSH_USER",
+      "value": "root",
+      "description": "SSH登录用户名"
+    },
+    {
+      "name": "DEPLOY_DIR",
+      "value": "/opt/health-tracker",
+      "description": "服务器部署目录"
+    }
+  ],
+  "stages": [
+    {
+      "name": "check",
+      "displayName": "代码检查",
+      "steps": [
+        {
+          "step": "java-check",
+          "displayName": "Java代码检查",
+          "type": "Command",
+          "script": "cd health-tracker-java && mvn clean compile -DskipTests"
+        },
+        {
+          "step": "node-check",
+          "displayName": "Node.js依赖检查",
+          "type": "Command",
+          "script": "cd health-tracker-web && npm install --only=prod && cd ../health-tracker-miniapp && npm install --only=prod"
+        }
+      ]
+    },
+    {
+      "name": "build",
+      "displayName": "构建",
+      "steps": [
+        {
+          "step": "backend-build",
+          "displayName": "构建Java后端",
+          "type": "Command",
+          "script": "cd health-tracker-java && mvn clean package -DskipTests && ls -la target/"
+        },
+        {
+          "step": "web-build",
+          "displayName": "构建Web前端",
+          "type": "Command",
+          "script": "cd health-tracker-web && npm run build && ls -la dist/"
+        },
+        {
+          "step": "miniapp-build",
+          "displayName": "构建小程序H5",
+          "type": "Command",
+          "script": "cd health-tracker-miniapp && npm run build:h5 && ls -la dist/build/h5/"
+        }
+      ]
+    },
+    {
+      "name": "deploy",
+      "displayName": "部署",
+      "steps": [
+        {
+          "step": "ssh-deploy",
+          "displayName": "SSH部署到服务器",
+          "type": "Command",
+          "script": "#!/bin/bash\nset -e\n\n# 准备部署脚本\ncat > deploy.sh << 'EOF'\n#!/bin/bash\nset -e\n\necho '=== 开始部署健康管理系统 ==='\necho '时间: $(date)'\necho '服务器: ${SERVER_IP}'\necho '目录: ${DEPLOY_DIR}'\n\n# 进入部署目录\ncd ${DEPLOY_DIR}\n\n# 停止旧服务\necho '停止旧服务...'\nif [ -f 'docker-compose.yml' ]; then\n    podman-compose down || true\n    echo '旧服务已停止'\nfi\n\n# 备份MySQL数据\nif [ -d 'docker/mysql' ]; then\n    echo '备份MySQL数据...'\n    mkdir -p backups\n    tar -czf backups/mysql-$(date +%Y%m%d%H%M%S).tar.gz docker/mysql\n    echo '数据备份完成'\nfi\n\n# 清理旧文件（保留备份）\necho '清理旧文件...'\nrm -rf health-tracker-java health-tracker-web health-tracker-miniapp\nrm -f docker-compose.yml Dockerfile.*\n\n# 从GitHub拉取最新代码\necho '拉取最新代码...'\ngit clone https://github.com/Mrwu-gui/health-tracker.git .\n\n# 设置执行权限\nchmod +x deploy-scripts/*.sh\n\n# 启动服务\necho '启动服务...'\npodman-compose up -d --build\n\necho '等待服务启动...'\nsleep 30\n\necho '检查服务状态...'\npodman-compose ps\n\necho '=== 部署完成 ==='\necho '访问地址:'\necho '后端API: http://${SERVER_IP}:8080'\necho 'PC Web端: http://${SERVER_IP}'\necho '小程序H5端: http://${SERVER_IP}:3101'\nEOF\n\n# 复制部署脚本到服务器\necho '复制部署脚本到服务器...'\nscp -o StrictHostKeyChecking=no deploy.sh ${SSH_USER}@${SERVER_IP}:${DEPLOY_DIR}/\n\n# 执行部署脚本\necho '执行部署脚本...'\nssh -o StrictHostKeyChecking=no ${SSH_USER}@${SERVER_IP} \"cd ${DEPLOY_DIR} && chmod +x deploy.sh && ./deploy.sh\"\n\necho '部署完成！'"
+        }
+      ]
+    },
+    {
+      "name": "verify",
+      "displayName": "验证",
+      "steps": [
+        {
+          "step": "health-check",
+          "displayName": "健康检查",
+          "type": "Command",
+          "script": "#!/bin/bash\nset -e\n\necho '进行服务健康检查...'\nsleep 60\n\ncheck_service() {\n    local url=$1\n    local name=$2\n    \n    if curl -f -s --max-time 10 \"$url\" > /dev/null; then\n        echo \"✅ $name 正常 ($url)\"\n        return 0\n    else\n        echo \"❌ $name 异常 ($url)\"\n        return 1\n    fi\n}\n\n# 检查所有服务\nall_ok=true\n\ncheck_service \"http://${SERVER_IP}:8080/api/health\" \"后端API\" || all_ok=false\ncheck_service \"http://${SERVER_IP}\" \"Web前端\" || all_ok=false\ncheck_service \"http://${SERVER_IP}:3101\" \"小程序H5\" || all_ok=false\n\nif [ \"$all_ok\" = true ]; then\n    echo '🎉 所有服务健康检查通过！'\n    \n    echo ''\n    echo '================ 部署成功 ================'\n    echo '后端API:    http://${SERVER_IP}:8080'\n    echo 'PC Web端:   http://${SERVER_IP}'\n    echo '小程序H5:   http://${SERVER_IP}:3101'\n    echo '========================================='\nelse\n    echo '⚠️  部分服务检查失败，请查看日志'\n    exit 1\nfi"
+        }
+      ]
+    }
+  ],
+  "triggers": {
+    "push": {
+      "branches": ["main"],
+      "paths": ["**"]
+    }
+  },
+  "cache": {
+    "paths": [
+      "health-tracker-java/.m2",
+      "health-tracker-web/node_modules",
+      "health-tracker-miniapp/node_modules"
+    ]
+  },
+  "notifications": {
+    "success": {
+      "type": "DingTalk",
+      "webhook": "请填写钉钉机器人Webhook地址"
+    },
+    "failure": {
+      "type": "DingTalk",
+      "webhook": "请填写钉钉机器人Webhook地址"
+    }
+  }
+}

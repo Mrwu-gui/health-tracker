@@ -1,0 +1,162 @@
+# 云效流水线配置
+version: "2.0"
+name: health-tracker-deployment
+displayName: 健康管理系统部署流水线
+
+# 全局变量
+variables:
+  - name: SERVER_IP
+    value: "139.196.155.234"
+    description: "服务器公网IP"
+  - name: SSH_USER
+    value: "root"
+    description: "SSH用户名"
+  - name: DEPLOY_DIR
+    value: "/opt/health-tracker"
+    description: "服务器部署目录"
+  - name: DOCKER_REGISTRY
+    value: "registry.cn-hangzhou.aliyuncs.com"
+    description: "Docker镜像仓库"
+
+# 阶段配置
+stages:
+  - name: build
+    displayName: 构建阶段
+    steps:
+      - step: java-build
+        displayName: "Java后端构建"
+        type: Build
+        language: Java
+        jdkVersion: "Open JDK 17"
+        mavenVersion: "Maven 3.9"
+        buildCommand: |
+          cd health-tracker-java
+          mvn clean package -DskipTests
+        artifacts:
+          - name: backend-jar
+            path: health-tracker-java/target/*.jar
+
+      - step: web-build
+        displayName: "Web前端构建"
+        type: Build
+        language: NodeJS
+        nodeVersion: "Node.js 18"
+        buildCommand: |
+          cd health-tracker-web
+          npm install
+          npm run build
+        artifacts:
+          - name: web-dist
+            path: health-tracker-web/dist
+
+      - step: miniapp-build
+        displayName: "小程序构建"
+        type: Build
+        language: NodeJS
+        nodeVersion: "Node.js 18"
+        buildCommand: |
+          cd health-tracker-miniapp
+          npm install
+          npm run build:h5
+        artifacts:
+          - name: miniapp-dist
+            path: health-tracker-miniapp/dist/build/h5
+
+      - step: docker-build
+        displayName: "Docker镜像构建"
+        type: Build
+        language: Docker
+        dockerfilePath: "health-tracker-java/Dockerfile"
+        contextPath: "health-tracker-java"
+        imageName: "${DOCKER_REGISTRY}/health-tracker/backend"
+        imageTag: "${CI_COMMIT_ID}"
+        push: true
+
+  - name: deploy
+    displayName: 部署阶段
+    steps:
+      - step: ssh-deploy
+        displayName: "SSH部署到服务器"
+        type: SSH
+        host: "${SERVER_IP}"
+        username: "${SSH_USER}"
+        password: ""  # 使用SSH密钥
+        script: |
+          echo "开始部署健康管理系统..."
+          
+          # 创建部署目录
+          mkdir -p ${DEPLOY_DIR}
+          cd ${DEPLOY_DIR}
+          
+          # 停止并删除旧容器
+          podman-compose down || true
+          
+          # 拉取最新代码
+          if [ -d ".git" ]; then
+            git pull origin main
+          else
+            git clone https://github.com/Mrwu-gui/health-tracker.git .
+          fi
+          
+          # 更新配置文件
+          echo "更新环境配置..."
+          
+          # 启动服务
+          echo "启动服务..."
+          podman-compose up -d --build
+          
+          # 检查服务状态
+          echo "服务状态检查..."
+          podman-compose ps
+          
+          echo "部署完成！"
+          
+          # 显示访问地址
+          echo ""
+          echo "================ 访问地址 ================"
+          echo "后端API: http://${SERVER_IP}:8080"
+          echo "PC Web端: http://${SERVER_IP}"
+          echo "小程序H5端: http://${SERVER_IP}:3101"
+          echo "========================================="
+
+  - name: test
+    displayName: 测试阶段
+    steps:
+      - step: api-test
+        displayName: "API接口测试"
+        type: Command
+        script: |
+          echo "等待服务启动..."
+          sleep 30
+          
+          echo "测试后端API..."
+          curl -f http://${SERVER_IP}:8080/api/health || exit 1
+          
+          echo "测试Web前端..."
+          curl -f http://${SERVER_IP} || exit 1
+          
+          echo "测试小程序H5..."
+          curl -f http://${SERVER_IP}:3101 || exit 1
+          
+          echo "所有服务测试通过！"
+
+# 触发器配置
+triggers:
+  push:
+    branches:
+      - main
+    paths:
+      - "health-tracker-java/**"
+      - "health-tracker-web/**"
+      - "health-tracker-miniapp/**"
+      - "docker-compose.yml"
+      - "Dockerfile*"
+
+# 通知配置
+notifications:
+  success:
+    - type: DingTalk
+      webhook: ""  # 钉钉机器人webhook地址
+  failure:
+    - type: DingTalk
+      webhook: ""  # 钉钉机器人webhook地址

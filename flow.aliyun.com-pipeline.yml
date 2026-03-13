@@ -1,0 +1,203 @@
+# 云效流水线配置 - 简化版
+# 适用于 https://flow.aliyun.com
+
+# 基本信息
+name: health-tracker-deployment
+displayName: 健康管理系统部署
+
+# 全局变量
+variables:
+  SERVER_IP: "139.196.155.234"
+  SSH_USER: "root"
+  DEPLOY_DIR: "/opt/health-tracker"
+  DOCKER_REGISTRY: "registry.cn-hangzhou.aliyuncs.com"
+
+# 阶段1: 代码检查
+stages:
+  - name: code-check
+    displayName: 代码检查
+    steps:
+      - step: java-check
+        displayName: Java代码检查
+        type: Command
+        script: |
+          echo "检查Java代码..."
+          cd health-tracker-java
+          mvn clean compile -DskipTests
+          echo "Java代码检查完成"
+
+      - step: node-check
+        displayName: Node.js代码检查
+        type: Command
+        script: |
+          echo "检查前端代码..."
+          cd health-tracker-web
+          npm install
+          npm run lint || echo "lint检查跳过"
+          
+          cd ../health-tracker-miniapp
+          npm install
+          npm run lint || echo "lint检查跳过"
+          echo "Node.js代码检查完成"
+
+# 阶段2: 构建
+  - name: build
+    displayName: 构建
+    steps:
+      - step: backend-build
+        displayName: 后端构建
+        type: Command
+        script: |
+          echo "构建Java后端..."
+          cd health-tracker-java
+          mvn clean package -DskipTests
+          ls -la target/
+          echo "后端构建完成"
+
+      - step: frontend-build
+        displayName: 前端构建
+        type: Command
+        script: |
+          echo "构建Web前端..."
+          cd health-tracker-web
+          npm install
+          npm run build
+          echo "Web前端构建完成"
+          
+          echo "构建小程序H5..."
+          cd ../health-tracker-miniapp
+          npm install
+          npm run build:h5
+          echo "小程序H5构建完成"
+
+# 阶段3: 部署
+  - name: deploy
+    displayName: 部署到服务器
+    steps:
+      - step: ssh-deploy
+        displayName: SSH部署
+        type: Command
+        script: |
+          echo "开始部署到服务器 ${SERVER_IP}..."
+          
+          # 准备部署脚本
+          cat > deploy.sh << 'EOF'
+          #!/bin/bash
+          set -e
+          
+          echo "=== 健康管理系统部署脚本 ==="
+          echo "部署目录: ${DEPLOY_DIR}"
+          echo "服务器IP: ${SERVER_IP}"
+          
+          # 创建部署目录
+          mkdir -p ${DEPLOY_DIR}
+          cd ${DEPLOY_DIR}
+          
+          # 停止旧服务
+          echo "停止旧服务..."
+          podman-compose down || true
+          
+          # 备份旧数据
+          if [ -d "docker/mysql" ]; then
+            echo "备份MySQL数据..."
+            tar -czf mysql-backup-$(date +%Y%m%d%H%M%S).tar.gz docker/mysql
+          fi
+          
+          # 清理旧文件（保留备份）
+          echo "清理旧文件..."
+          rm -rf health-tracker-java health-tracker-web health-tracker-miniapp
+          rm -f docker-compose.yml Dockerfile.*
+          
+          # 从GitHub拉取代码
+          echo "从GitHub拉取代码..."
+          git clone https://github.com/Mrwu-gui/health-tracker.git .
+          
+          # 确保有执行权限
+          chmod +x deploy-scripts/*
+          
+          # 启动服务
+          echo "启动服务..."
+          podman-compose up -d --build
+          
+          # 等待服务启动
+          echo "等待服务启动..."
+          sleep 30
+          
+          # 检查服务状态
+          echo "检查服务状态..."
+          podman-compose ps
+          
+          # 测试服务
+          echo "测试服务..."
+          curl -f http://localhost:8080/api/health || echo "后端服务可能还在启动中"
+          curl -f http://localhost || echo "Web服务可能还在启动中"
+          curl -f http://localhost:3101 || echo "小程序服务可能还在启动中"
+          
+          echo "=== 部署完成 ==="
+          echo "访问地址:"
+          echo "后端API: http://${SERVER_IP}:8080"
+          echo "PC Web端: http://${SERVER_IP}"
+          echo "小程序H5端: http://${SERVER_IP}:3101"
+          EOF
+          
+          # 复制部署脚本到服务器
+          echo "复制部署脚本到服务器..."
+          scp -o StrictHostKeyChecking=no -i /Users/shuaiqideguigegegegege/.ssh/health_tracker_deploy deploy.sh ${SSH_USER}@${SERVER_IP}:${DEPLOY_DIR}/
+          
+          # 执行部署脚本
+          echo "执行部署脚本..."
+          ssh -o StrictHostKeyChecking=no -i /Users/shuaiqideguigegegegege/.ssh/health_tracker_deploy ${SSH_USER}@${SERVER_IP} "cd ${DEPLOY_DIR} && chmod +x deploy.sh && ./deploy.sh"
+          
+          echo "部署完成！"
+
+# 阶段4: 验证
+  - name: verify
+    displayName: 服务验证
+    steps:
+      - step: health-check
+        displayName: 健康检查
+        type: Command
+        script: |
+          echo "进行服务健康检查..."
+          sleep 60  # 给服务更多启动时间
+          
+          echo "检查后端服务..."
+          if curl -f http://${SERVER_IP}:8080/api/health; then
+            echo "✅ 后端服务正常"
+          else
+            echo "❌ 后端服务异常"
+            exit 1
+          fi
+          
+          echo "检查Web服务..."
+          if curl -f http://${SERVER_IP}; then
+            echo "✅ Web服务正常"
+          else
+            echo "❌ Web服务异常"
+            exit 1
+          fi
+          
+          echo "检查小程序服务..."
+          if curl -f http://${SERVER_IP}:3101; then
+            echo "✅ 小程序服务正常"
+          else
+            echo "❌ 小程序服务异常"
+            exit 1
+          fi
+          
+          echo "🎉 所有服务验证通过！"
+
+# 触发器
+triggers:
+  push:
+    branches:
+      - main
+    paths:
+      - "**"
+
+# 缓存配置
+cache:
+  paths:
+    - health-tracker-java/.m2
+    - health-tracker-web/node_modules
+    - health-tracker-miniapp/node_modules

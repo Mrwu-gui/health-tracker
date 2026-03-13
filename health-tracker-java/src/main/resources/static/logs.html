@@ -76,8 +76,11 @@
         try {
           const res = await fetch(`/api/admin/logs/tail?lines=${lines}`);
           const data = await res.json();
-          logEl.textContent = (data.lines || []).join("\n");
-          statusEl.textContent = `共 ${data.size || 0} 行`;
+          const payload = data && data.data ? data.data : data;
+          const lines = (payload && payload.lines) ? payload.lines : [];
+          const size = payload && typeof payload.size === "number" ? payload.size : lines.length;
+          logEl.textContent = lines.join("\n");
+          statusEl.textContent = `共 ${size} 行`;
         } catch (e) {
           statusEl.textContent = "加载失败";
         }

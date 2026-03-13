@@ -29,6 +29,9 @@ springdoc:
     path: /api/docs
   swagger-ui:
     path: /api/docs-ui
+logging:
+  file:
+    name: logs/app.log
 
 wechat:
   mini:

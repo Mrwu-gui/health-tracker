@@ -26,8 +26,8 @@ jwt:
 
 wechat:
   mini:
-    appid: ""
-    secret: ""
+    appid: "wx4d5635b224dd6e22"
+    secret: "13fec31d4dad98659de962e8060de5e7"
   web:
     appid: ""
     secret: ""

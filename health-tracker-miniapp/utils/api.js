@@ -1,4 +1,4 @@
-const BASE_URL = process.env.UNI_APP_BASE_URL || "/api";
+const BASE_URL = process.env.UNI_APP_BASE_URL || "";
 
 export function request(path, method = "GET", data = {}) {
   return new Promise((resolve, reject) => {

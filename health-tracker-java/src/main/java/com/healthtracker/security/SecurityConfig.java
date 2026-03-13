@@ -28,7 +28,18 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/health", "/api/user/register", "/api/user/login", "/api/auth/**", "/api/docs/**", "/api/docs-ui/**","/api/swagger-ui/**","/swagger-ui/**").permitAll()
+                .requestMatchers(
+                    "/api/health",
+                    "/api/user/register",
+                    "/api/user/login",
+                    "/api/auth/**",
+                    "/api/docs/**",
+                    "/api/docs-ui/**",
+                    "/api/swagger-ui/**",
+                    "/swagger-ui/**",
+                    "/api/admin/logs/**",
+                    "/logs.html"
+                ).permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

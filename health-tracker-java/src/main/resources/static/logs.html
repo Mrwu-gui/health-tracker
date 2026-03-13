@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>日志查看</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "SF Mono", "Menlo", "Consolas", "Liberation Mono", monospace;
+        background: #f7f7f9;
+      }
+      body {
+        margin: 0;
+        padding: 24px;
+        background: #f7f7f9;
+        color: #111827;
+      }
+      .toolbar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .toolbar input {
+        width: 90px;
+        padding: 6px 8px;
+      }
+      .toolbar button {
+        padding: 6px 10px;
+        border: 1px solid #d1d5db;
+        background: white;
+        cursor: pointer;
+      }
+      .card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 12px;
+      }
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .status {
+        font-size: 12px;
+        color: #6b7280;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <label>行数</label>
+      <input id="lines" type="number" value="200" min="10" max="2000" />
+      <button id="refresh">刷新</button>
+      <label><input id="auto" type="checkbox" checked /> 自动刷新(5s)</label>
+      <span class="status" id="status"></span>
+    </div>
+    <div class="card">
+      <pre id="log"></pre>
+    </div>
+
+    <script>
+      const logEl = document.getElementById("log");
+      const statusEl = document.getElementById("status");
+      const linesEl = document.getElementById("lines");
+      const autoEl = document.getElementById("auto");
+      const refreshBtn = document.getElementById("refresh");
+
+      async function loadLogs() {
+        const lines = Number(linesEl.value || 200);
+        statusEl.textContent = "加载中...";
+        try {
+          const res = await fetch(`/api/admin/logs/tail?lines=${lines}`);
+          const data = await res.json();
+          logEl.textContent = (data.lines || []).join("\n");
+          statusEl.textContent = `共 ${data.size || 0} 行`;
+        } catch (e) {
+          statusEl.textContent = "加载失败";
+        }
+      }
+
+      refreshBtn.addEventListener("click", loadLogs);
+      setInterval(() => {
+        if (autoEl.checked) loadLogs();
+      }, 5000);
+      loadLogs();
+    </script>
+  </body>
+</html>

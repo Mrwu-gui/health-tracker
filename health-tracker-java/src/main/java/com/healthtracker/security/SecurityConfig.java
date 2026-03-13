@@ -49,24 +49,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOriginPattern("http://localhost:*");
-        config.addAllowedOriginPattern("http://127.0.0.1:*");
-        config.addAllowedOrigin("http://139.196.155.234");
-        config.addAllowedOrigin("http://172.24.51.229");
-        config.addAllowedOriginPattern("http://139.196.155.234:*");
-        config.addAllowedOriginPattern("http://172.24.51.229:*");
-        // TODO: Re-enable when domain is verified
-        // config.addAllowedOrigin("http://datewell.xyz");
-        // config.addAllowedOriginPattern("http://datewell.xyz:*");
-        // config.addAllowedOrigin("https://datewell.xyz");
-        // config.addAllowedOriginPattern("https://datewell.xyz:*");
-        // config.addAllowedOrigin("http://www.datewell.xyz");
-        // config.addAllowedOriginPattern("http://www.datewell.xyz:*");
-        // config.addAllowedOrigin("https://www.datewell.xyz");
-        // config.addAllowedOriginPattern("https://www.datewell.xyz:*");
-        config.addAllowedOriginPattern("https://139.196.155.234:*");
-        config.addAllowedOriginPattern("https://localhost:*");
-        config.addAllowedOriginPattern("https://127.0.0.1:*");
+        config.addAllowedOriginPattern("http://*:*");
+        config.addAllowedOriginPattern("https://*:*");
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         config.setMaxAge(3600L);

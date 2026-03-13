@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 public class WeChatMessageService {
+    private static final Logger log = LoggerFactory.getLogger(WeChatMessageService.class);
     private static final String TOKEN_KEY = "wechat:mini:access_token";
     private static final Duration TOKEN_TTL = Duration.ofMinutes(110);
 
@@ -31,10 +34,12 @@ public class WeChatMessageService {
     public void sendReminder(String openid, String title, String content, LocalDateTime remindTime) {
         String templateId = properties.getMini().getTemplateId();
         if (templateId == null || templateId.isBlank()) {
+            log.info("WeChat reminder skipped: templateId not configured");
             return;
         }
         String token = getAccessToken();
         if (token == null || token.isBlank()) {
+            log.warn("WeChat reminder failed: access token is empty");
             throw new IllegalArgumentException("微信服务不可用");
         }
         String url = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=" + token;
@@ -47,18 +52,22 @@ public class WeChatMessageService {
         try {
             body = objectMapper.writeValueAsString(payload);
         } catch (Exception ex) {
+            log.error("WeChat reminder payload build failed openid={}", mask(openid), ex);
             throw new IllegalArgumentException("微信推送失败");
         }
         String resp = restTemplate.postForObject(url, body, String.class);
+        log.info("WeChat reminder response openid={} {}", mask(openid), truncate(resp, 300));
         try {
             Map<String, Object> map = objectMapper.readValue(resp, Map.class);
             Object errcode = map.get("errcode");
             if (errcode != null && !"0".equals(String.valueOf(errcode))) {
+                log.warn("WeChat reminder errcode={} errmsg={}", errcode, map.get("errmsg"));
                 throw new IllegalArgumentException("微信推送失败");
             }
         } catch (IllegalArgumentException ex) {
             throw ex;
         } catch (Exception ex) {
+            log.error("WeChat reminder parse failed openid={}", mask(openid), ex);
             throw new IllegalArgumentException("微信推送失败");
         }
     }
@@ -89,6 +98,7 @@ public class WeChatMessageService {
         if (redisTemplate != null) {
             String cached = redisTemplate.opsForValue().get(TOKEN_KEY);
             if (cached != null && !cached.isBlank()) {
+                log.info("WeChat access token cache hit");
                 return cached;
             }
         }
@@ -103,16 +113,37 @@ public class WeChatMessageService {
         try {
             Map<String, Object> resp = objectMapper.readValue(body, Map.class);
             Object token = resp.get("access_token");
+            Object errcode = resp.get("errcode");
+            if (errcode != null && !"0".equals(String.valueOf(errcode))) {
+                log.warn("WeChat access token errcode={} errmsg={}", errcode, resp.get("errmsg"));
+            }
             if (token == null) {
+                log.warn("WeChat access token empty response={}", truncate(body, 300));
                 return null;
             }
             String value = token.toString();
             if (redisTemplate != null) {
                 redisTemplate.opsForValue().set(TOKEN_KEY, value, TOKEN_TTL);
             }
+            log.info("WeChat access token refreshed");
             return value;
         } catch (Exception ex) {
+            log.error("WeChat access token parse failed", ex);
             return null;
         }
+    }
+
+    private String mask(String value) {
+        if (value == null || value.length() <= 6) {
+            return "******";
+        }
+        return value.substring(0, 3) + "****" + value.substring(value.length() - 3);
+    }
+
+    private String truncate(String value, int max) {
+        if (value == null) {
+            return "";
+        }
+        return value.length() > max ? value.substring(0, max) + "..." : value;
     }
 }

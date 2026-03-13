@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private final UserService userService;
     private final WeChatService weChatService;
     private final WeChatCryptoService weChatCryptoService;
@@ -66,6 +69,7 @@ public class AuthController {
 
     @PostMapping("/mini/login")
     public Map<String, Object> miniLogin(@Valid @RequestBody MiniLoginRequest request) {
+        log.info("Mini login start: codeLen={}", safeLen(request.getCode()));
         Map<String, Object> session = weChatService.miniCode2Session(request.getCode());
         String openid = sessionValue(session, "openid");
         String unionid = sessionValue(session, "unionid");
@@ -75,13 +79,17 @@ public class AuthController {
         User user = userService.findByWxOpenid(openid);
         if (user == null) {
             user = userService.registerByWeChat(openid, unionid, null, null);
+            log.info("Mini login auto-registered userId={} openid={}", user.getId(), mask(openid));
         }
+        log.info("Mini login success userId={} openid={}", user.getId(), mask(openid));
         return buildTokenResponse(user);
     }
 
     @PostMapping("/mini/bind-phone")
     public Map<String, Object> miniBindPhone(@Valid @RequestBody MiniBindPhoneRequest request) {
         Long userId = currentUserId();
+        log.info("Mini bind phone start userId={} codeLen={} encryptedLen={} ivLen={}",
+            userId, safeLen(request.getCode()), safeLen(request.getEncryptedData()), safeLen(request.getIv()));
         User user = userService.getById(userId);
         Map<String, Object> session = weChatService.miniCode2Session(request.getCode());
         String sessionKey = sessionValue(session, "session_key");
@@ -98,6 +106,7 @@ public class AuthController {
             throw new IllegalArgumentException("该手机号已被绑定");
         }
         userService.bindWeChatPhone(user, phone);
+        log.info("Mini bind phone success userId={}", userId);
         Map<String, Object> body = new HashMap<>();
         body.put("phone", phone);
         return body;
@@ -107,6 +116,8 @@ public class AuthController {
     @SuppressWarnings("unchecked")
     public Map<String, Object> syncWeRun(@Valid @RequestBody MiniWeRunRequest request) {
         Long userId = currentUserId();
+        log.info("Mini werun sync start userId={} codeLen={} encryptedLen={} ivLen={}",
+            userId, safeLen(request.getCode()), safeLen(request.getEncryptedData()), safeLen(request.getIv()));
         Map<String, Object> session = weChatService.miniCode2Session(request.getCode());
         String sessionKey = sessionValue(session, "session_key");
         if (sessionKey == null || sessionKey.isBlank()) {
@@ -134,6 +145,7 @@ public class AuthController {
         Map<String, Object> body = new HashMap<>();
         body.put("steps", lastSteps);
         body.put("count", list.size());
+        log.info("Mini werun sync done userId={} steps={} count={}", userId, lastSteps, list.size());
         return body;
     }
 
@@ -229,5 +241,16 @@ public class AuthController {
         } catch (NumberFormatException ex) {
             throw new IllegalArgumentException("登录状态异常");
         }
+    }
+
+    private int safeLen(String value) {
+        return value == null ? 0 : value.length();
+    }
+
+    private String mask(String value) {
+        if (value == null || value.length() <= 6) {
+            return "******";
+        }
+        return value.substring(0, 3) + "****" + value.substring(value.length() - 3);
     }
 }

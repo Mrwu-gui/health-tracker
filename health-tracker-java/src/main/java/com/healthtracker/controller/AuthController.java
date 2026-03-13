@@ -7,6 +7,7 @@ import com.healthtracker.dto.SmsLoginRequest;
 import com.healthtracker.dto.SmsSendRequest;
 import com.healthtracker.entity.User;
 import com.healthtracker.security.JwtService;
+import com.healthtracker.service.CaptchaService;
 import com.healthtracker.service.SmsCodeService;
 import com.healthtracker.service.SmsService;
 import com.healthtracker.service.UserService;
@@ -39,6 +40,8 @@ public class AuthController {
     private final WeRunRecordService weRunRecordService;
     private final SmsService smsService;
     private final SmsCodeService smsCodeService;
+    private final CaptchaService captchaService;
+    private final com.healthtracker.config.SmsProperties smsProperties;
     private final JwtService jwtService;
 
     public AuthController(UserService userService,
@@ -47,6 +50,8 @@ public class AuthController {
                           WeRunRecordService weRunRecordService,
                           SmsService smsService,
                           SmsCodeService smsCodeService,
+                          CaptchaService captchaService,
+                          com.healthtracker.config.SmsProperties smsProperties,
                           JwtService jwtService) {
         this.userService = userService;
         this.weChatService = weChatService;
@@ -54,6 +59,8 @@ public class AuthController {
         this.weRunRecordService = weRunRecordService;
         this.smsService = smsService;
         this.smsCodeService = smsCodeService;
+        this.captchaService = captchaService;
+        this.smsProperties = smsProperties;
         this.jwtService = jwtService;
     }
 
@@ -132,9 +139,18 @@ public class AuthController {
 
     @PostMapping("/phone/send")
     public Map<String, Object> sendSms(@Valid @RequestBody SmsSendRequest request) {
+        boolean captchaOk = captchaService.verify(request.getCaptchaKey(), request.getCaptchaCode());
+        if (!captchaOk) {
+            throw new IllegalArgumentException("图形验证码错误或已过期");
+        }
+        if (smsCodeService.isCooldown(request.getPhone())) {
+            throw new IllegalArgumentException("操作过于频繁，请稍后再试");
+        }
         String code = smsService.sendCode(request.getPhone());
+        smsCodeService.markCooldown(request.getPhone(), smsProperties.getCooldownSeconds());
         Map<String, Object> body = new HashMap<>();
         body.put("message", "验证码已发送");
+        body.put("cooldown", smsProperties.getCooldownSeconds());
         if (!smsService.isEnabled()) {
             body.put("devCode", code);
         }
@@ -152,6 +168,11 @@ public class AuthController {
             user = userService.registerByPhone(request.getPhone());
         }
         return buildTokenResponse(user);
+    }
+
+    @GetMapping("/captcha")
+    public Map<String, String> captcha() {
+        return captchaService.create();
     }
 
     @GetMapping("/web/qr")

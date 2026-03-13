@@ -43,10 +43,12 @@ export default {
                   uni.setStorageSync("userId", data.userId);
                 }
                 uni.switchTab({ url: "/pages/index/index" });
+                uni.showToast({ title: "登录成功", icon: "success" });
               }
             })
-            .catch(() => {
-              this.message = "微信登录失败";
+            .catch((err) => {
+              this.message = err.message || "微信登录失败";
+              uni.showToast({ title: this.message, icon: "none" });
             })
             .finally(() => {
               this.loading = false;
@@ -54,6 +56,7 @@ export default {
         },
         fail: () => {
           this.message = "微信登录失败";
+          uni.showToast({ title: this.message, icon: "none" });
           this.loading = false;
         }
       });
@@ -69,10 +72,12 @@ export default {
               uni.setStorageSync("userId", data.userId);
             }
             uni.switchTab({ url: "/pages/index/index" });
+            uni.showToast({ title: "登录成功", icon: "success" });
           }
         })
-        .catch(() => {
-          this.message = "演示登录失败";
+        .catch((err) => {
+          this.message = err.message || "演示登录失败";
+          uni.showToast({ title: this.message, icon: "none" });
         })
         .finally(() => {
           this.loading = false;

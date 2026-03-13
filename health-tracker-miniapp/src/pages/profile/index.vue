@@ -46,6 +46,17 @@
         <view class="sms-row">
           <input
             class="input code"
+            v-model="phoneForm.captcha"
+            placeholder="图形验证码"
+          />
+          <view class="captcha-box" @tap="loadCaptcha">
+            <image v-if="captchaImage" :src="captchaImage" mode="aspectFill" />
+            <text v-else>点击刷新</text>
+          </view>
+        </view>
+        <view class="sms-row">
+          <input
+            class="input code"
             v-model="phoneForm.code"
             placeholder="验证码"
           />
@@ -85,9 +96,12 @@ export default {
       showPhoneModal: false,
       smsLoading: false,
       bindLoading: false,
+      captchaKey: "",
+      captchaImage: "",
       phoneForm: {
         phone: "",
-        code: ""
+        code: "",
+        captcha: ""
       }
     };
   },
@@ -121,6 +135,8 @@ export default {
       this.showPhoneModal = true;
       this.phoneForm.phone = "";
       this.phoneForm.code = "";
+      this.phoneForm.captcha = "";
+      this.loadCaptcha();
     },
     closePhoneModal() {
       this.showPhoneModal = false;
@@ -160,10 +176,12 @@ export default {
             .then((data) => {
               this.profile.phone = data.phone;
               this.message = "手机号绑定成功";
+              uni.showToast({ title: this.message, icon: "success" });
               this.showPhoneModal = false;
             })
             .catch((err) => {
               this.message = err.message || "手机号绑定失败";
+              uni.showToast({ title: this.message, icon: "none" });
             })
             .finally(() => {
               this.phoneLoading = false;
@@ -171,6 +189,7 @@ export default {
         },
         fail: () => {
           this.message = "微信登录失败";
+          uni.showToast({ title: this.message, icon: "none" });
           this.phoneLoading = false;
         }
       });
@@ -180,13 +199,24 @@ export default {
         this.message = "请输入手机号";
         return;
       }
+      if (!this.phoneForm.captcha || !this.captchaKey) {
+        this.message = "请先输入图形验证码";
+        return;
+      }
       this.smsLoading = true;
-      request("/api/auth/phone/send", "POST", { phone: this.phoneForm.phone })
+      request("/api/auth/phone/send", "POST", {
+        phone: this.phoneForm.phone,
+        captchaKey: this.captchaKey,
+        captchaCode: this.phoneForm.captcha
+      })
         .then(() => {
           this.message = "验证码已发送";
+          uni.showToast({ title: "验证码已发送", icon: "success" });
         })
         .catch((err) => {
           this.message = err.message || "发送失败";
+          uni.showToast({ title: this.message, icon: "none" });
+          this.loadCaptcha();
         })
         .finally(() => {
           this.smsLoading = false;
@@ -211,13 +241,25 @@ export default {
           }
           this.profile.phone = this.phoneForm.phone;
           this.message = "手机号绑定成功";
+          uni.showToast({ title: this.message, icon: "success" });
           this.showPhoneModal = false;
         })
         .catch((err) => {
           this.message = err.message || "绑定失败";
+          uni.showToast({ title: this.message, icon: "none" });
         })
         .finally(() => {
           this.bindLoading = false;
+        });
+    },
+    loadCaptcha() {
+      request("/api/auth/captcha", "GET")
+        .then((data) => {
+          this.captchaKey = data.key;
+          this.captchaImage = data.image;
+        })
+        .catch(() => {
+          this.message = "获取验证码失败";
         });
     }
   }
@@ -354,6 +396,24 @@ export default {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.captcha-box {
+  width: 100px;
+  height: 36px;
+  border-radius: 10px;
+  background: #f1ede6;
+  display: grid;
+  place-items: center;
+  color: #7c736b;
+  font-size: 12px;
+  border: 1px solid #efe7dd;
+}
+
+.captcha-box image {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
 }
 
 .code {

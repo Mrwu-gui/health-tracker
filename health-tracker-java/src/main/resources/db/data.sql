@@ -33,3 +33,7 @@ VALUES
 INSERT INTO we_run_record (user_id, record_date, steps, created_at)
 VALUES
   (1, CURDATE(), 8420, NOW());
+
+INSERT INTO reminder (user_id, title, type, content, remind_time, status, created_at)
+VALUES
+  (1, '晚间服药', '用药', '维生素D 1粒', DATE_ADD(NOW(), INTERVAL 2 HOUR), '待提醒', NOW());

@@ -20,6 +20,7 @@ public class WeChatProperties {
     public static class Mini {
         private String appid;
         private String secret;
+        private String templateId;
 
         public String getAppid() {
             return appid;
@@ -35,6 +36,14 @@ public class WeChatProperties {
 
         public void setSecret(String secret) {
             this.secret = secret;
+        }
+
+        public String getTemplateId() {
+            return templateId;
+        }
+
+        public void setTemplateId(String templateId) {
+            this.templateId = templateId;
         }
     }
 

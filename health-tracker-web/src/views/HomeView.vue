@@ -4,7 +4,7 @@
       <div class="hero__content">
         <span class="badge">健康管理工具</span>
         <h1>把运动、饮食、睡眠与用药放进一个清爽面板</h1>
-        <p>跨端同步，随时记录，数据可视化，支持微信登录与手机登录。</p>
+        <p>跨端同步，随时记录，数据可视化，支持手机号验证码登录。</p>
         <div class="actions">
           <a-button type="primary" @click="goLogin">登录 / 注册</a-button>
           <a-button ghost @click="goDemo">体验演示</a-button>

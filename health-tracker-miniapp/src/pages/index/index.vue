@@ -147,30 +147,38 @@ export default {
                         .then((data) => {
                           if (data?.steps) {
                             this.overview.steps = String(data.steps);
+                            uni.showToast({ title: "已同步步数", icon: "success" });
                           }
+                        })
+                        .catch((err) => {
+                          uni.showToast({ title: err.message || "同步失败", icon: "none" });
                         })
                         .finally(() => {
                           this.syncLoading = false;
                         });
                     },
                     fail: () => {
+                      uni.showToast({ title: "未授权微信运动", icon: "none" });
                       this.syncLoading = false;
                     }
                   });
                 },
                 fail: () => {
+                  uni.showToast({ title: "微信登录失败", icon: "none" });
                   this.syncLoading = false;
                 }
               });
             });
         },
         fail: () => {
+          uni.showToast({ title: "微信登录失败", icon: "none" });
           this.syncLoading = false;
         }
       });
       // #endif
       // #ifndef MP-WEIXIN
       this.syncLoading = false;
+      uni.showToast({ title: "请在微信小程序内操作", icon: "none" });
       // #endif
     }
   }

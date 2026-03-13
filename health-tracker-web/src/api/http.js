@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = import.meta.env.VITE_API_BASE || "http://localhost:8080";
 
 export function getToken() {
   return localStorage.getItem("token") || "";
@@ -61,17 +61,8 @@ export const api = {
       body: JSON.stringify(data)
     });
   },
-  register(data) {
-    return request("/api/user/register", {
-      method: "POST",
-      body: JSON.stringify(data)
-    });
-  },
-  wechatQr() {
-    return request("/api/auth/web/qr");
-  },
-  wechatCallback(code) {
-    return request(`/api/auth/web/callback?code=${encodeURIComponent(code)}`);
+  captcha() {
+    return request("/api/auth/captcha");
   },
   profile(userId) {
     return request(`/api/user/profile?userId=${userId}`);

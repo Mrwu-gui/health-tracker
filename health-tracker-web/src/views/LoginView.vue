@@ -8,66 +8,31 @@
           <div class="subtitle">欢迎回来</div>
         </div>
       </div>
-      <a-tabs v-model:activeKey="activeTab">
-        <a-tab-pane key="account" tab="账号登录">
-          <a-form layout="vertical">
-            <a-form-item label="用户名">
-              <a-input v-model:value="accountForm.username" placeholder="输入用户名" />
-            </a-form-item>
-            <a-form-item label="密码">
-              <a-input-password v-model:value="accountForm.password" placeholder="输入密码" />
-            </a-form-item>
-            <a-button type="primary" block :loading="loading" @click="submitAccount">
-              登录
-            </a-button>
-          </a-form>
-        </a-tab-pane>
-        <a-tab-pane key="phone" tab="手机号登录">
-          <a-form layout="vertical">
-            <a-form-item label="手机号">
-              <a-input v-model:value="phoneForm.phone" placeholder="输入手机号" />
-            </a-form-item>
-            <a-form-item label="验证码">
-              <div class="code-row">
-                <a-input v-model:value="phoneForm.code" placeholder="输入验证码" />
-                <a-button :loading="smsLoading" :disabled="smsCountdown > 0" @click="sendSms">
-                  {{ smsCountdown > 0 ? `${smsCountdown}s` : "获取验证码" }}
-                </a-button>
-              </div>
-            </a-form-item>
-            <a-button type="primary" block :loading="loading" @click="submitPhone">
-              登录 / 自动注册
-            </a-button>
-          </a-form>
-        </a-tab-pane>
-        <a-tab-pane key="wechat" tab="微信扫码">
-          <div class="wechat">
-            <div class="wechat__title">微信扫码快速登录</div>
-            <div class="wechat__box">
-              <img v-if="qrUrl" :src="qrUrl" alt="微信登录二维码" />
-              <div v-else class="wechat__placeholder">未获取二维码</div>
+      <a-form layout="vertical">
+        <a-form-item label="手机号">
+          <a-input v-model:value="phoneForm.phone" placeholder="输入手机号" />
+        </a-form-item>
+        <a-form-item label="图形验证码">
+          <div class="captcha-row">
+            <a-input v-model:value="phoneForm.captcha" placeholder="输入图形验证码" />
+            <div class="captcha-image" @click="loadCaptcha">
+              <img v-if="captchaImage" :src="captchaImage" alt="图形验证码" />
+              <span v-else>点击刷新</span>
             </div>
-            <a-button :loading="qrLoading" @click="loadQr">获取二维码</a-button>
-            <div class="wechat__hint">如未配置微信开放平台，请先完善后台配置</div>
           </div>
-        </a-tab-pane>
-        <a-tab-pane key="register" tab="注册账号">
-          <a-form layout="vertical">
-            <a-form-item label="用户名">
-              <a-input v-model:value="registerForm.username" placeholder="设置用户名" />
-            </a-form-item>
-            <a-form-item label="密码">
-              <a-input-password v-model:value="registerForm.password" placeholder="设置密码" />
-            </a-form-item>
-            <a-form-item label="确认密码">
-              <a-input-password v-model:value="registerForm.confirm" placeholder="再次输入密码" />
-            </a-form-item>
-            <a-button type="primary" block :loading="loading" @click="submitRegister">
-              注册
+        </a-form-item>
+        <a-form-item label="短信验证码">
+          <div class="code-row">
+            <a-input v-model:value="phoneForm.code" placeholder="输入短信验证码" />
+            <a-button :loading="smsLoading" :disabled="smsCountdown > 0" @click="sendSms">
+              {{ smsCountdown > 0 ? `${smsCountdown}s` : "获取验证码" }}
             </a-button>
-          </a-form>
-        </a-tab-pane>
-      </a-tabs>
+          </div>
+        </a-form-item>
+        <a-button type="primary" block :loading="loading" @click="submitPhone">
+          登录 / 自动注册
+        </a-button>
+      </a-form>
       <div class="hint">{{ message }}</div>
     </div>
     <div class="login__aside">
@@ -86,33 +51,14 @@ import { useRouter } from "vue-router";
 import { api, setToken } from "../api/http";
 
 const router = useRouter();
-const accountForm = reactive({ username: "demo", password: "demo" });
-const phoneForm = reactive({ phone: "", code: "" });
-const registerForm = reactive({ username: "", password: "", confirm: "" });
-const activeTab = ref("account");
+const phoneForm = reactive({ phone: "", code: "", captcha: "" });
 const loading = ref(false);
 const smsLoading = ref(false);
 const smsCountdown = ref(0);
-const qrUrl = ref("");
-const qrLoading = ref(false);
+const captchaKey = ref("");
+const captchaImage = ref("");
 const message = ref("");
 let countdownTimer = null;
-
-async function submitAccount() {
-  loading.value = true;
-  message.value = "";
-  try {
-    const resp = await api.login(accountForm);
-    setToken(resp.token);
-    localStorage.setItem("userId", String(resp.userId));
-    localStorage.setItem("username", accountForm.username);
-    router.push("/dashboard");
-  } catch (err) {
-    message.value = err.message || "登录失败";
-  } finally {
-    loading.value = false;
-  }
-}
 
 async function submitPhone() {
   loading.value = true;
@@ -135,11 +81,19 @@ async function sendSms() {
     message.value = "请先输入手机号";
     return;
   }
+  if (!phoneForm.captcha || !captchaKey.value) {
+    message.value = "请先完成图形验证码";
+    return;
+  }
   smsLoading.value = true;
   message.value = "";
   try {
-    const resp = await api.smsSend({ phone: phoneForm.phone });
-    startCountdown();
+    const resp = await api.smsSend({
+      phone: phoneForm.phone,
+      captchaKey: captchaKey.value,
+      captchaCode: phoneForm.captcha
+    });
+    startCountdown(resp?.cooldown || 60);
     if (resp?.devCode) {
       message.value = `验证码已发送（本地调试：${resp.devCode}）`;
     } else {
@@ -147,13 +101,14 @@ async function sendSms() {
     }
   } catch (err) {
     message.value = err.message || "验证码发送失败";
+    await loadCaptcha();
   } finally {
     smsLoading.value = false;
   }
 }
 
-function startCountdown() {
-  smsCountdown.value = 60;
+function startCountdown(seconds) {
+  smsCountdown.value = seconds;
   if (countdownTimer) clearInterval(countdownTimer);
   countdownTimer = setInterval(() => {
     smsCountdown.value -= 1;
@@ -164,52 +119,18 @@ function startCountdown() {
   }, 1000);
 }
 
-async function submitRegister() {
-  if (registerForm.password !== registerForm.confirm) {
-    message.value = "两次输入的密码不一致";
-    return;
-  }
-  loading.value = true;
-  message.value = "";
+async function loadCaptcha() {
   try {
-    await api.register({ username: registerForm.username, password: registerForm.password });
-    message.value = "注册成功，请使用新账号登录";
-    activeTab.value = "account";
+    const resp = await api.captcha();
+    captchaKey.value = resp.key;
+    captchaImage.value = resp.image;
   } catch (err) {
-    message.value = err.message || "注册失败";
-  } finally {
-    loading.value = false;
-  }
-}
-
-async function loadQr() {
-  qrLoading.value = true;
-  message.value = "";
-  try {
-    const resp = await api.wechatQr();
-    qrUrl.value = resp.qrUrl;
-  } catch (err) {
-    message.value = err.message || "二维码获取失败";
-  } finally {
-    qrLoading.value = false;
+    message.value = err.message || "验证码获取失败";
   }
 }
 
 onMounted(async () => {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get("code");
-  if (!code) return;
-  try {
-    loading.value = true;
-    const resp = await api.wechatCallback(code);
-    setToken(resp.token);
-    localStorage.setItem("userId", String(resp.userId));
-    router.push("/dashboard");
-  } catch (err) {
-    message.value = err.message || "微信登录失败";
-  } finally {
-    loading.value = false;
-  }
+  await loadCaptcha();
 });
 </script>
 
@@ -257,6 +178,30 @@ onMounted(async () => {
 .subtitle {
   color: #64748b;
   font-size: 0.85rem;
+}
+
+.captcha-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.captcha-image {
+  width: 110px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+}
+
+.captcha-image img {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  object-fit: cover;
 }
 
 .login__aside {

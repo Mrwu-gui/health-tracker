@@ -15,7 +15,7 @@
 
     <view class="list">
       <view v-if="filteredReminders.length === 0" class="empty-state">
-        <text class="empty-state-icon">🔔</text>
+        <image class="empty-state-icon" src="/static/tabbar/remind.png" mode="widthFix" />
         <text class="empty-state-title">暂无提醒</text>
         <text class="empty-state-desc">点击右上角 + 添加运动、饮食或睡眠提醒</text>
       </view>
@@ -491,9 +491,10 @@ export default {
 }
 
 .empty-state-icon {
-  font-size: 40px;
+  width: 40px;
+  height: auto;
   margin-bottom: 12px;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .empty-state-title {

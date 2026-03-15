@@ -12,7 +12,7 @@
 
     <view class="list">
       <view v-if="members.length === 0" class="empty-state">
-        <text class="empty-state-icon">👨‍👩‍👧</text>
+        <image class="empty-state-icon" src="/static/tabbar/family.png" mode="widthFix" />
         <text class="empty-state-title">暂无家庭成员</text>
         <text class="empty-state-desc">点击下方卡片或右上角 + 添加家人</text>
       </view>
@@ -23,9 +23,6 @@
           <text class="desc">{{ item.age }} 岁 · {{ item.conditionText || "健康" }}</text>
         </view>
         <text class="tag">{{ item.role || "成员" }}</text>
-      </view>
-      <view class="card dashed" @tap="openAdd">
-        <text class="desc">添加新的家庭成员</text>
       </view>
     </view>
 
@@ -240,9 +237,10 @@ export default {
 }
 
 .empty-state-icon {
-  font-size: 40px;
+  width: 40px;
+  height: auto;
   margin-bottom: 12px;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .empty-state-title {

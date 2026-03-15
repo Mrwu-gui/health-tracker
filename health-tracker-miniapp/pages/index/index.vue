@@ -103,7 +103,7 @@
       </view>
       <view class="section-card-body">
         <view v-if="reminders.length === 0" class="section-empty">
-          <text class="section-empty-icon">🔔</text>
+          <image class="section-empty-icon" src="/static/tabbar/remind.png" mode="widthFix" />
           <text class="section-empty-title">暂无今日提醒</text>
           <text class="section-empty-desc">在提醒设置里添加运动、饮食或睡眠提醒</text>
           <navigator class="section-empty-link" url="/pages/reminders/index">去添加</navigator>
@@ -131,7 +131,7 @@
       </view>
       <view class="section-card-body">
         <view v-if="todayGoals.length === 0" class="section-empty">
-          <text class="section-empty-icon">🎯</text>
+          <image class="section-empty-icon" src="/static/tabbar/goal.png" mode="widthFix" />
           <text class="section-empty-title">暂无今日目标</text>
           <text class="section-empty-desc">在目标管理里设置步数、睡眠或饮食目标</text>
           <navigator class="section-empty-link" url="/pages/goal/index">去设置</navigator>
@@ -781,7 +781,8 @@ export default {
 }
 
 .section-empty-icon {
-  font-size: 36px;
+  width: 36px;
+  height: auto;
   margin-bottom: 10px;
   opacity: 0.85;
 }

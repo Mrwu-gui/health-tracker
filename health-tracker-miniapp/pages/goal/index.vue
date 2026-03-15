@@ -13,7 +13,7 @@
 
       <view class="list">
         <view v-if="goals.length === 0" class="empty-state">
-          <text class="empty-state-icon">🎯</text>
+          <image class="empty-state-icon" src="/static/tabbar/goal.png" mode="widthFix" />
           <text class="empty-state-title">暂无目标</text>
           <text class="empty-state-desc">点击右上角 + 添加你的第一个目标吧</text>
         </view>
@@ -355,9 +355,10 @@ export default {
 }
 
 .empty-state-icon {
-  font-size: 40px;
+  width: 40px;
+  height: auto;
   margin-bottom: 12px;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .empty-state-title {

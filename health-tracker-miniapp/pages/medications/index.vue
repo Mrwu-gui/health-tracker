@@ -7,7 +7,7 @@
 
     <view class="list">
       <view v-if="meds.length === 0" class="empty-state">
-        <text class="empty-state-icon">💊</text>
+        <image class="empty-state-icon" src="/static/tabbar/pills.png" mode="widthFix" />
         <text class="empty-state-title">暂无药物记录</text>
         <text class="empty-state-desc">点击右上角 + 添加需要服用的药物</text>
       </view>
@@ -237,9 +237,10 @@ export default {
 }
 
 .empty-state-icon {
-  font-size: 40px;
+  width: 40px;
+  height: auto;
   margin-bottom: 12px;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .empty-state-title {

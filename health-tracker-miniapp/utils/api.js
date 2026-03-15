@@ -1,8 +1,13 @@
-const BASE_URL = process.env.UNI_APP_BASE_URL || "";
-
+const DEFAULT_BASE_URL =
+  process.env.NODE_ENV === "development" ? "http://127.0.0.1:8080" : "";
+const BASE_URL = process.env.UNI_APP_BASE_URL || DEFAULT_BASE_URL;
+export const API_BASE_URL = BASE_URL;
 export function request(path, method = "GET", data = {}) {
   return new Promise((resolve, reject) => {
     const token = uni.getStorageSync("token");
+    if (typeof console !== "undefined") {
+      console.log("[api.request]", method, `${BASE_URL}${path}`, data);
+    }
     uni.request({
       url: `${BASE_URL}${path}`,
       method,
@@ -14,8 +19,9 @@ export function request(path, method = "GET", data = {}) {
       success: (res) => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           const body = res.data;
-          if (body && typeof body.code === "number") {
-            if (body.code !== 0) {
+          if (body && (typeof body.code === "number" || typeof body.code === "string")) {
+            const code = Number(body.code);
+            if (code !== 0) {
               reject(new Error(body.message || "请求失败"));
               return;
             }

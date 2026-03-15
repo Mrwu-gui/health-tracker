@@ -9,7 +9,7 @@ public class Goal {
     @TableId(type = IdType.AUTO)
     private Long id;
     private Long userId;
-    private String goalType;
+    private Integer goalType;
     private Integer targetValue;
     private Integer currentValue;
     private String period;
@@ -30,11 +30,11 @@ public class Goal {
         this.userId = userId;
     }
 
-    public String getGoalType() {
+    public Integer getGoalType() {
         return goalType;
     }
 
-    public void setGoalType(String goalType) {
+    public void setGoalType(Integer goalType) {
         this.goalType = goalType;
     }
 

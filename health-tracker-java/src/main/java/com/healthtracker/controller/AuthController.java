@@ -169,6 +169,34 @@ public class AuthController {
         return body;
     }
 
+    @PostMapping("/sms/send")
+    public Map<String, Object> sendSmsLite(@RequestBody Map<String, String> request) {
+        String phone = request.get("phone");
+        if (phone == null || phone.isBlank()) {
+            throw new IllegalArgumentException("手机号不能为空");
+        }
+        String captchaKey = request.get("captchaKey");
+        String captchaCode = request.get("captchaCode");
+        if (captchaKey != null && captchaCode != null && !captchaKey.isBlank() && !captchaCode.isBlank()) {
+            boolean captchaOk = captchaService.verify(captchaKey, captchaCode);
+            if (!captchaOk) {
+                throw new IllegalArgumentException("图形验证码错误或已过期");
+            }
+        }
+        if (smsCodeService.isCooldown(phone)) {
+            throw new IllegalArgumentException("操作过于频繁，请稍后再试");
+        }
+        String code = smsService.sendCode(phone);
+        smsCodeService.markCooldown(phone, smsProperties.getCooldownSeconds());
+        Map<String, Object> body = new HashMap<>();
+        body.put("message", "验证码已发送");
+        body.put("cooldown", smsProperties.getCooldownSeconds());
+        if (!smsService.isEnabled()) {
+            body.put("devCode", code);
+        }
+        return body;
+    }
+
     @PostMapping("/phone/login")
     public Map<String, Object> loginBySms(@Valid @RequestBody SmsLoginRequest request) {
         boolean ok = smsCodeService.verifyAndConsume(request.getPhone(), request.getCode());
@@ -180,6 +208,11 @@ public class AuthController {
             user = userService.registerByPhone(request.getPhone());
         }
         return buildTokenResponse(user);
+    }
+
+    @PostMapping("/sms/login")
+    public Map<String, Object> loginBySmsAlias(@Valid @RequestBody SmsLoginRequest request) {
+        return loginBySms(request);
     }
 
     @GetMapping("/captcha")

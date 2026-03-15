@@ -11,6 +11,7 @@ public class ExerciseRecord {
     private Long id;
     private Long userId;
     private String type;
+    private Integer steps;
     private Integer duration;
     private Integer calories;
     private LocalDate date;
@@ -37,6 +38,14 @@ public class ExerciseRecord {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public Integer getSteps() {
+        return steps;
+    }
+
+    public void setSteps(Integer steps) {
+        this.steps = steps;
     }
 
     public Integer getDuration() {

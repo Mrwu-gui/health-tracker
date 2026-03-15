@@ -11,6 +11,8 @@ public class ExerciseRecordRequest {
     @NotBlank
     private String type;
 
+    private Integer steps;
+
     @NotNull
     private Integer duration;
 
@@ -34,6 +36,14 @@ public class ExerciseRecordRequest {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public Integer getSteps() {
+        return steps;
+    }
+
+    public void setSteps(Integer steps) {
+        this.steps = steps;
     }
 
     public Integer getDuration() {

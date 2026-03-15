@@ -16,6 +16,7 @@ public class DietRecord {
     private Double protein;
     private Double carbs;
     private Double fat;
+    private String note;
     private LocalDate date;
 
     public Long getId() {
@@ -80,6 +81,14 @@ public class DietRecord {
 
     public void setFat(Double fat) {
         this.fat = fat;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 
     public LocalDate getDate() {

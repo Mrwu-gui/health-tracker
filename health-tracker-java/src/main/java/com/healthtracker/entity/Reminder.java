@@ -11,7 +11,7 @@ public class Reminder {
     private Long id;
     private Long userId;
     private String title;
-    private String type;
+    private Integer type;
     private String content;
     private LocalDateTime remindTime;
     private String status;
@@ -41,11 +41,11 @@ public class Reminder {
         this.title = title;
     }
 
-    public String getType() {
+    public Integer getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(Integer type) {
         this.type = type;
     }
 

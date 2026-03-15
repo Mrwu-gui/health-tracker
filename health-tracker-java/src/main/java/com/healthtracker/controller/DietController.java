@@ -32,6 +32,7 @@ public class DietController {
         record.setProtein(request.getProtein());
         record.setCarbs(request.getCarbs());
         record.setFat(request.getFat());
+        record.setNote(request.getNote());
         record.setDate(request.getDate());
         dietRecordService.save(record);
         return record;

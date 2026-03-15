@@ -27,6 +27,7 @@ public class ExerciseController {
         ExerciseRecord record = new ExerciseRecord();
         record.setUserId(request.getUserId());
         record.setType(request.getType());
+        record.setSteps(request.getSteps());
         record.setDuration(request.getDuration());
         record.setCalories(request.getCalories());
         record.setDate(request.getDate());

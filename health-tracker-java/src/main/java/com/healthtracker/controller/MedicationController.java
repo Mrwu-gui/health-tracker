@@ -1,6 +1,7 @@
 package com.healthtracker.controller;
 
 import com.healthtracker.dto.MedicationRequest;
+import com.healthtracker.dto.MedicationUpdateRequest;
 import com.healthtracker.entity.Medication;
 import com.healthtracker.service.MedicationService;
 import jakarta.validation.Valid;
@@ -41,5 +42,24 @@ public class MedicationController {
     @GetMapping("/list")
     public List<Medication> list(@RequestParam Long userId) {
         return medicationService.listByUser(userId);
+    }
+
+    @PostMapping("/update")
+    public Medication update(@Valid @RequestBody MedicationUpdateRequest request) {
+        Medication medication = medicationService.getById(request.getId());
+        if (medication == null) {
+            throw new IllegalArgumentException("药物不存在");
+        }
+        medication.setDrugName(request.getDrugName());
+        medication.setDosage(request.getDosage());
+        medication.setFrequency(request.getFrequency());
+        medication.setRemindTime(request.getRemindTime());
+        medication.setStock(request.getStock());
+        medication.setStockThreshold(request.getStockThreshold());
+        medication.setStartDate(request.getStartDate());
+        medication.setEndDate(request.getEndDate());
+        medication.setNotes(request.getNotes());
+        medicationService.updateById(medication);
+        return medication;
     }
 }

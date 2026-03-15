@@ -21,6 +21,9 @@ public class User {
     private Integer age;
     private Integer height;
     private Double weight;
+    private Integer systolic;
+    private Integer diastolic;
+    private Integer heartRate;
     private LocalDateTime createdAt;
 
     public Long getId() {
@@ -125,6 +128,30 @@ public class User {
 
     public void setWeight(Double weight) {
         this.weight = weight;
+    }
+
+    public Integer getSystolic() {
+        return systolic;
+    }
+
+    public void setSystolic(Integer systolic) {
+        this.systolic = systolic;
+    }
+
+    public Integer getDiastolic() {
+        return diastolic;
+    }
+
+    public void setDiastolic(Integer diastolic) {
+        this.diastolic = diastolic;
+    }
+
+    public Integer getHeartRate() {
+        return heartRate;
+    }
+
+    public void setHeartRate(Integer heartRate) {
+        this.heartRate = heartRate;
     }
 
     public LocalDateTime getCreatedAt() {

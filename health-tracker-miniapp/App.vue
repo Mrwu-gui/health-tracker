@@ -1,6 +1,14 @@
 <script>
+import { ensureDevLogin } from "./utils/dev-auth";
 export default {
-  onLaunch() {},
+  onLaunch() {
+    ensureDevLogin();
+    if (typeof wx !== "undefined" && wx.cloud) {
+      wx.cloud.init({
+        env: "health-4gt7erwb330dae07"
+      });
+    }
+  },
   onShow() {},
   onHide() {}
 };

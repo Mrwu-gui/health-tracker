@@ -1,12 +1,13 @@
 package com.healthtracker.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class ReminderRequest {
     @NotBlank
     private String title;
-    @NotBlank
-    private String type;
+    @NotNull
+    private Integer type;
     private String content;
     private String remindTime;
 
@@ -18,11 +19,11 @@ public class ReminderRequest {
         this.title = title;
     }
 
-    public String getType() {
+    public Integer getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(Integer type) {
         this.type = type;
     }
 

@@ -2,6 +2,7 @@ package com.healthtracker.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.healthtracker.dto.ReminderRequest;
+import com.healthtracker.dto.ReminderUpdateRequest;
 import com.healthtracker.entity.Reminder;
 import com.healthtracker.entity.User;
 import com.healthtracker.service.ReminderService;
@@ -42,7 +43,7 @@ public class ReminderController {
         Long userId = currentUserId();
         Reminder reminder = new Reminder();
         reminder.setUserId(userId);
-        reminder.setTitle(request.getTitle());
+        reminder.setTitle(resolveTitle(request.getTitle(), request.getType()));
         reminder.setType(request.getType());
         reminder.setContent(request.getContent());
         reminder.setRemindTime(parseTime(request.getRemindTime()));
@@ -63,6 +64,20 @@ public class ReminderController {
         return body;
     }
 
+    @PostMapping("/update")
+    public Reminder update(@Valid @RequestBody ReminderUpdateRequest request) {
+        Reminder reminder = reminderService.getById(request.getId());
+        if (reminder == null) {
+            throw new IllegalArgumentException("提醒不存在");
+        }
+        reminder.setTitle(resolveTitle(request.getTitle(), request.getType()));
+        reminder.setType(request.getType());
+        reminder.setContent(request.getContent());
+        reminder.setRemindTime(parseTime(request.getRemindTime()));
+        reminderService.updateById(reminder);
+        return reminder;
+    }
+
     @GetMapping("/list")
     public List<Reminder> list(@RequestParam Long userId) {
         return reminderService.list(new LambdaQueryWrapper<Reminder>()
@@ -70,11 +85,36 @@ public class ReminderController {
             .orderByDesc(Reminder::getRemindTime));
     }
 
+    private String resolveTitle(String title, Integer type) {
+        if (title != null && !title.isBlank()) {
+            return title;
+        }
+        if (type == null) {
+            return "提醒";
+        }
+        switch (type) {
+            case 1:
+                return "运动提醒";
+            case 2:
+                return "饮食提醒";
+            case 3:
+                return "睡眠提醒";
+            case 4:
+                return "用药提醒";
+            default:
+                return "提醒";
+        }
+    }
+
     private LocalDateTime parseTime(String value) {
         if (value == null || value.isBlank()) {
             return null;
         }
-        return LocalDateTime.parse(value, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        String normalized = value.trim();
+        if (normalized.length() == 16) {
+            normalized = normalized + ":00";
+        }
+        return LocalDateTime.parse(normalized, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 
     private Long currentUserId() {

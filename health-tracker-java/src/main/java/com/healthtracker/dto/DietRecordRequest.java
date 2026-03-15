@@ -20,6 +20,7 @@ public class DietRecordRequest {
     private Double protein;
     private Double carbs;
     private Double fat;
+    private String note;
 
     @NotNull
     private LocalDate date;
@@ -78,6 +79,14 @@ public class DietRecordRequest {
 
     public void setFat(Double fat) {
         this.fat = fat;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 
     public LocalDate getDate() {

@@ -7,8 +7,8 @@ public class GoalRequest {
     @NotNull
     private Long userId;
 
-    @NotBlank
-    private String goalType;
+    @NotNull
+    private Integer goalType;
 
     @NotNull
     private Integer targetValue;
@@ -24,11 +24,11 @@ public class GoalRequest {
         this.userId = userId;
     }
 
-    public String getGoalType() {
+    public Integer getGoalType() {
         return goalType;
     }
 
-    public void setGoalType(String goalType) {
+    public void setGoalType(Integer goalType) {
         this.goalType = goalType;
     }
 

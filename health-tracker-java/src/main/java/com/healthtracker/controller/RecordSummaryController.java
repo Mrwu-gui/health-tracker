@@ -67,9 +67,14 @@ public class RecordSummaryController {
             .last("LIMIT 1")
             .one();
         Map<String, Object> exerciseMap = new HashMap<>();
-        exerciseMap.put("steps", steps == null ? 0 : steps.getSteps());
+        int stepCount = steps == null ? 0 : steps.getSteps();
+        if (stepCount == 0 && exercise != null && exercise.getSteps() != null) {
+            stepCount = exercise.getSteps();
+        }
+        exerciseMap.put("steps", stepCount);
         if (exercise != null) {
             exerciseMap.put("type", exercise.getType());
+            exerciseMap.put("steps", exercise.getSteps());
             exerciseMap.put("duration", exercise.getDuration());
             exerciseMap.put("calories", exercise.getCalories());
         }

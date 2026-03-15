@@ -1,6 +1,7 @@
 package com.healthtracker.controller;
 
 import com.healthtracker.dto.GoalRequest;
+import com.healthtracker.dto.GoalUpdateRequest;
 import com.healthtracker.entity.Goal;
 import com.healthtracker.service.GoalService;
 import jakarta.validation.Valid;
@@ -34,7 +35,22 @@ public class GoalController {
     }
 
     @GetMapping("/list")
-    public List<Goal> list(@RequestParam Long userId) {
-        return goalService.listByUser(userId);
+    public List<Goal> list(@RequestParam Long userId,
+                           @RequestParam(required = false) String period) {
+        return goalService.listByUserAndPeriod(userId, period);
+    }
+
+    @PostMapping("/update")
+    public Goal update(@Valid @RequestBody GoalUpdateRequest request) {
+        Goal goal = goalService.getById(request.getId());
+        if (goal == null) {
+            throw new IllegalArgumentException("目标不存在");
+        }
+        goal.setGoalType(request.getGoalType());
+        goal.setTargetValue(request.getTargetValue());
+        goal.setCurrentValue(request.getCurrentValue());
+        goal.setPeriod(request.getPeriod());
+        goalService.updateById(goal);
+        return goal;
     }
 }

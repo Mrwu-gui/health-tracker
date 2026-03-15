@@ -1,33 +1,59 @@
 <template>
   <view class="page">
     <view class="header">
-      <text class="title">提醒</text>
-      <text class="subtitle">保持规律作息</text>
+      <text class="title">提醒管理</text>
+      <button class="btn-dark" @tap="openAdd">新增提醒</button>
     </view>
-    <view class="actions">
-      <button class="primary" @tap="openModal">新增提醒</button>
-      <button class="ghost" @tap="subscribeMessage">开启微信推送</button>
+
+    <view class="tabs">
+      <button class="tab" :class="{ active: tabFilter === 0 }" @tap="tabFilter = 0">全部</button>
+      <button class="tab" :class="{ active: tabFilter === 1 }" @tap="tabFilter = 1">运动</button>
+      <button class="tab" :class="{ active: tabFilter === 2 }" @tap="tabFilter = 2">饮食</button>
+      <button class="tab" :class="{ active: tabFilter === 3 }" @tap="tabFilter = 3">睡眠</button>
+      
     </view>
-    <view class="card" v-for="item in reminders" :key="item.id">
-      <view class="row">
-        <text class="label">{{ item.title }}</text>
-        <text class="badge">{{ item.type }}</text>
+
+    <view class="list">
+      <view v-for="item in filteredReminders" :key="item.id" class="card" @tap="openEdit(item)">
+        <view class="row">
+          <view>
+            <text class="name">{{ item.title }}</text>
+            <text class="desc">{{ item.timeLabel }} · {{ item.content }}</text>
+          </view>
+          <text class="tag">{{ item.tagLabel }}</text>
+        </view>
+        <text v-if="item.countdown" class="countdown">{{ item.countdown }}</text>
       </view>
-      <text class="hint">{{ item.time }}</text>
     </view>
-    <text class="disabled-hint" v-if="!reminders.length && !loading">暂无提醒</text>
-    <text v-if="loading" class="status">加载中...</text>
-    <text v-if="error" class="status error">{{ error }}</text>
+
+    <text class="note">提醒依赖微信订阅消息，请在授权与隐私中开启权限。</text>
 
     <view v-if="showModal" class="modal-mask" @tap="closeModal">
       <view class="modal" @tap.stop>
-        <text class="modal-title">新增提醒</text>
-        <input class="input" v-model="form.title" placeholder="提醒标题" />
-        <input class="input" v-model="form.type" placeholder="类型（如 用药/运动）" />
-        <input class="input" v-model="form.content" placeholder="提醒内容" />
-        <input class="input" v-model="form.remindTime" placeholder="提醒时间 2026-03-13 18:30" />
-        <button class="primary" @tap="createReminder" :disabled="saving">
-          {{ saving ? "创建中..." : "创建提醒" }}
+        <text class="modal-title">{{ editingId ? "编辑提醒" : "新增提醒" }}</text>
+        <view class="field">
+          <text class="field-label">提醒标题</text>
+          <picker mode="selector" :range="titleLabels" :value="titleIndex" @change="onTitleChange">
+            <view class="picker">{{ titleLabel }}</view>
+          </picker>
+        </view>
+        <view class="field">
+          <text class="field-label">提醒内容</text>
+          <input class="input" v-model="form.content" placeholder="提醒内容" />
+        </view>
+        <view class="field">
+          <text class="field-label">提醒时间</text>
+          <view class="picker-group">
+            <picker mode="date" @change="onDateChange">
+              <view class="picker">{{ form.remindDate || "选择日期" }}</view>
+            </picker>
+            <picker mode="time" @change="onTimeChange">
+              <view class="picker">{{ form.remindTime || "选择时间" }}</view>
+            </picker>
+          </view>
+        </view>
+        <button class="primary" @tap="submitAdd" :disabled="saving">
+          {{ saving ? "保存中..." : editingId ? "保存修改" : "保存提醒" }}
         </button>
       </view>
     </view>
@@ -36,94 +62,237 @@
 
 <script>
 import { request } from "../../utils/api";
-const TEMPLATE_ID = process.env.UNI_WX_TEMPLATE_ID || "";
 
 export default {
   data() {
     return {
-      loading: false,
-      error: "",
       reminders: [],
+      tabFilter: 0,
       showModal: false,
       saving: false,
+      editingId: null,
+      titleOptions: [
+        { label: "运动提醒", type: 1 },
+        { label: "饮食提醒", type: 2 },
+        { label: "睡眠提醒", type: 3 }
+      ],
       form: {
         title: "",
-        type: "",
+        type: 1,
         content: "",
+        remindDate: "",
         remindTime: ""
       }
     };
   },
+  computed: {
+    titleLabel() {
+      const match = this.titleOptions.find((item) => item.type === this.form.type);
+      return match ? match.label : "请选择标题";
+    },
+    titleLabels() {
+      return this.titleOptions.map((item) => item.label);
+    },
+    titleIndex() {
+      const idx = this.titleOptions.findIndex((item) => item.type === this.form.type);
+      return idx === -1 ? 0 : idx;
+    },
+    filteredReminders() {
+      if (this.tabFilter === 0) return this.reminders;
+      return this.reminders.filter((item) => Number(item.type) === this.tabFilter);
+    }
+  },
   onLoad() {
+    this.useDefaultReminders();
+  },
+  onShow() {
     this.fetchReminders();
   },
   methods: {
     fetchReminders() {
-      this.loading = true;
-      this.error = "";
       const userId = uni.getStorageSync("userId") || 1;
       request("/api/reminder/list", "GET", { userId })
         .then((data) => {
           if (Array.isArray(data)) {
-            this.reminders = data.map((item) => ({
-              id: item.id,
-              title: item.title,
-              type: item.type,
-              time: item.remindTime || "未设置"
-            }));
+            const mapped = data
+              .filter((item) => Number(item.type) !== 4)
+              .map((item) => ({
+                id: item.id,
+                title: item.title,
+                content: item.content || "提醒事项",
+                time: item.remindTime || "",
+                type: Number(item.type || 0)
+              }));
+            this.setReminders(this.decorate(mapped));
+            if (this.reminders.length === 0) {
+              this.useDefaultReminders();
+            }
           }
         })
         .catch(() => {
-          this.error = "获取提醒失败";
-        })
-        .finally(() => {
-          this.loading = false;
+          this.useDefaultReminders();
         });
     },
-    openModal() {
+    setReminders(list) {
+      if (typeof this.$set === "function") {
+        this.$set(this, "reminders", list);
+      } else {
+        this.reminders = list;
+      }
+    },
+    useDefaultReminders() {
+      this.setReminders(
+        this.decorate([
+          { id: 1, title: "每日步数提醒", content: "提醒补足今日目标步数", time: "20:30:00", type: 1 },
+          { id: 2, title: "午餐前饮食提醒", content: "提醒记录午餐", time: "11:50:00", type: 2 },
+          { id: 3, title: "睡前提醒", content: "提醒按时休息", time: "21:30:00", type: 3 }
+        ])
+      );
+    },
+    openAdd() {
       this.showModal = true;
-      this.form = { title: "", type: "", content: "", remindTime: "" };
+      this.editingId = null;
+      this.form = { title: "", type: 1, content: "", remindDate: "", remindTime: "" };
+    },
+    openEdit(item) {
+      if (!item) return;
+      const parts = this.splitDateTime(item.time);
+      this.editingId = item.id;
+      this.showModal = true;
+      this.form = {
+        title: item.title || "",
+        type: Number(item.type || 1),
+        content: item.content || "",
+        remindDate: parts.date,
+        remindTime: parts.time
+      };
     },
     closeModal() {
       this.showModal = false;
     },
-    createReminder() {
-      if (!this.form.title || !this.form.type) {
-        uni.showToast({ title: "请完善提醒信息", icon: "none" });
+    onTitleChange(e) {
+      const idx = Number(e.detail.value || 0);
+      const option = this.titleOptions[idx];
+      if (option) {
+        this.form.type = option.type;
+        this.form.title = option.label;
+      }
+    },
+    onDateChange(e) {
+      this.form.remindDate = e.detail.value;
+    },
+    onTimeChange(e) {
+      this.form.remindTime = e.detail.value;
+    },
+    submitAdd() {
+      if (!this.form.remindDate || !this.form.remindTime) {
+        uni.showToast({ title: "请选择提醒时间", icon: "none" });
+        return;
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(this.form.remindDate)) {
+        uni.showToast({ title: "日期格式不正确", icon: "none" });
+        return;
+      }
+      if (!/^\d{2}:\d{2}$/.test(this.form.remindTime)) {
+        uni.showToast({ title: "时间格式不正确", icon: "none" });
         return;
       }
       this.saving = true;
-      request("/api/reminder/add", "POST", this.form)
+      const userId = uni.getStorageSync("userId") || 1;
+      const remindTime = `${this.form.remindDate} ${this.form.remindTime}:00`;
+      const payload = {
+        userId,
+        title: this.form.title || this.titleLabel,
+        type: this.form.type,
+        content: this.form.content,
+        remindTime
+      };
+      const url = this.editingId ? "/api/reminder/update" : "/api/reminder/add";
+      if (this.editingId) {
+        payload.id = this.editingId;
+      }
+      request(url, "POST", payload)
         .then(() => {
-          uni.showToast({ title: "已创建提醒", icon: "success" });
-          this.showModal = false;
+          uni.showToast({ title: "已保存", icon: "success" });
+          this.closeModal();
           this.fetchReminders();
         })
         .catch((err) => {
-          uni.showToast({ title: err.message || "创建失败", icon: "none" });
+          uni.showToast({ title: err.message || "保存失败", icon: "none" });
         })
         .finally(() => {
           this.saving = false;
         });
     },
-    subscribeMessage() {
-      if (!TEMPLATE_ID) {
-        uni.showToast({ title: "请配置模板ID", icon: "none" });
-        return;
-      }
-      if (process.env.UNI_PLATFORM !== "mp-weixin") {
-        uni.showToast({ title: "请在微信小程序内操作", icon: "none" });
-        return;
-      }
-      uni.requestSubscribeMessage({
-        tmplIds: [TEMPLATE_ID],
-        success: () => {
-          uni.showToast({ title: "已开启提醒", icon: "success" });
-        },
-        fail: () => {
-          uni.showToast({ title: "订阅失败", icon: "none" });
-        }
+    decorate(list) {
+      return list.map((item) => {
+        const timeLabel = this.formatTime(item.time);
+        const tagLabel = this.tagLabel(item.type);
+        const countdown = item.type === 4 ? this.timeLeft(item.time) : "";
+        return { ...item, timeLabel, tagLabel, countdown };
       });
+    },
+    tagLabel(type) {
+      switch (Number(type)) {
+        case 1:
+          return "运动";
+        case 2:
+          return "饮食";
+        case 3:
+          return "睡眠";
+        default:
+          return "提醒";
+      }
+    },
+    formatTime(value) {
+      if (!value) return "未设置";
+      const normalized = value.includes("T") ? value.replace("T", " ") : value;
+      if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(normalized)) {
+        return `${normalized}:00`;
+      }
+      return normalized;
+    },
+    timeLeft(value) {
+      if (!value) return "";
+      const timeStr = value.includes("T") ? value.replace("T", " ") : value;
+      const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(timeStr)
+        ? `${timeStr}:00`
+        : timeStr;
+      const date = new Date(normalized.replace(/-/g, "/"));
+      if (Number.isNaN(date.getTime())) {
+        return "";
+      }
+      const diff = date.getTime() - Date.now();
+      if (diff <= 0) {
+        return "已到提醒时间";
+      }
+      const mins = Math.floor(diff / 60000);
+      const hours = Math.floor(mins / 60);
+      const leftMins = mins % 60;
+      if (hours <= 0) {
+        return `还有 ${leftMins} 分钟`;
+      }
+      return `还有 ${hours} 小时 ${leftMins} 分钟`;
+    },
+    splitDateTime(value) {
+      if (!value) {
+        return { date: "", time: "" };
+      }
+      const timeStr = value.includes("T") ? value.replace("T", " ") : value;
+      const parts = timeStr.split(" ");
+      if (parts.length >= 2) {
+        const date = parts[0];
+        const time = parts[1].slice(0, 5);
+        return { date, time };
+      }
+      if (/^\d{2}:\d{2}/.test(timeStr)) {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        const d = String(now.getDate()).padStart(2, "0");
+        return { date: `${y}-${m}-${d}`, time: timeStr.slice(0, 5) };
+      }
+      return { date: "", time: "" };
     }
   }
 };
@@ -131,32 +300,19 @@ export default {
 
 <style>
 .page {
-  padding: 22px;
+  padding: 18px;
   min-height: 100vh;
-  background: #f7f4ef;
-  color: #2d2a26;
+  background: #f4f5f7;
+  color: #0f172a;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .header {
-  margin-bottom: 14px;
-}
-
-.actions {
   display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.primary {
-  background: #5a4b3b;
-  color: #ffffff;
-  border-radius: 12px;
-}
-
-.ghost {
-  background: #f1ede6;
-  color: #6a5f55;
-  border-radius: 12px;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .title {
@@ -164,89 +320,157 @@ export default {
   font-weight: 600;
 }
 
-.subtitle {
-  display: block;
-  color: #7c736b;
-  margin-top: 4px;
+.btn-dark {
+  background: #0f172a;
+  color: #ffffff;
+  border-radius: 12px;
+  font-size: 11px;
+  padding: 6px 12px;
+  text-align: center;
 }
 
-.card {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 14px 16px;
-  margin-bottom: 12px;
-  border: 1px solid #efe7dd;
-  box-shadow: 0 8px 18px rgba(30, 25, 18, 0.05);
-}
-
-.row {
-  display: flex;
-  justify-content: space-between;
-}
-
-.label {
-  font-weight: 600;
-}
-
-.badge {
-  background: #f3ece4;
-  color: #6a5f55;
+.tabs {
+  display: inline-flex;
+  background: #e2e8f0;
   border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 12px;
+  padding: 2px;
+  gap: 4px;
 }
 
-.hint {
-  color: #8d847c;
-  font-size: 12px;
+.tab {
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #64748b;
+}
+
+.tab.active {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.tag {
+  font-size: 10px;
+  color: #2563eb;
+  background: #dbeafe;
+  padding: 4px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.countdown {
+  display: block;
   margin-top: 6px;
-  display: block;
-}
-
-.status {
-  display: block;
-  color: #7c736b;
-  margin-top: 8px;
-}
-
-.status.error {
-  color: #ef4444;
-}
-
-.disabled-hint {
-  display: block;
-  color: #8d847c;
-  font-size: 12px;
-  margin-top: 8px;
+  font-size: 10px;
+  color: #f59e0b;
 }
 
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.3);
-  display: grid;
-  place-items: center;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
 }
 
 .modal {
-  width: 80%;
-  background: #ffffff;
-  border-radius: 18px;
+  width: 100%;
+  max-width: 320px;
+  background: #fff;
+  border-radius: 16px;
   padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .modal-title {
+  font-size: 15px;
   font-weight: 600;
-  display: block;
-  margin-bottom: 10px;
+  color: #0f172a;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.picker {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: #fff;
+  color: #0f172a;
+}
+
+.picker-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .input {
-  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #efe7dd;
-  margin-bottom: 10px;
-  background: #fbf9f6;
+  font-size: 14px;
+  color: #0f172a;
+  background: #fff;
+}
+
+.primary {
+  width: 100%;
+  padding: 12px 0;
+  border-radius: 12px;
+  background: #0f172a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.list {
+  display: grid;
+  gap: 10px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.name {
+  font-size: 12px;
+  font-weight: 600;
+  display: block;
+}
+
+.desc {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 4px;
+  display: block;
+}
+
+.note {
+  font-size: 10px;
+  color: #94a3b8;
 }
 </style>

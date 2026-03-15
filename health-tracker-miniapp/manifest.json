@@ -2,6 +2,7 @@
   "name": "健康管理小程序",
   "appid": "__UNI__HEALTHTRACKER",
   "description": "健康管理小程序",
+  "vueVersion": "2",
   "versionName": "0.0.1",
   "versionCode": "1",
   "transformPx": false,

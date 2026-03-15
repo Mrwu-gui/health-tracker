@@ -41,6 +41,7 @@ public class SecurityConfig {
                 } else {
                     auth.requestMatchers(
                         "/api/health",
+                        "/api/ai/**",
                         "/api/ai/callback",
                         "/api/user/register",
                         "/api/user/login",

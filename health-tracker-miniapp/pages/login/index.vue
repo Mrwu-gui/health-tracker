@@ -2,8 +2,7 @@
   <view class="page">
     <view class="hero">
       <view class="logo-wrap">
-        <image v-if="logoImgOk" class="logo-img" src="/static/logo.png" mode="aspectFit" @error="logoImgError" />
-        <view v-else class="logo">智康</view>
+        <view class="logo">智康</view>
       </view>
       <text class="app-name">智康AI</text>
       <text class="slogan">懂你的健康，一问即得</text>
@@ -11,19 +10,20 @@
     </view>
 
     <view class="bottom-wrap">
-      <view class="login-card">
-        <!-- #ifdef MP-WEIXIN -->
+      <!-- #ifdef MP-WEIXIN -->
         <button class="btn-wx" @tap="loginWeChat" :disabled="loading">
           <text>{{ loading ? "登录中..." : "微信一键登录" }}</text>
         </button>
-        <!-- #endif -->
-        <!-- #ifndef MP-WEIXIN -->
-        <view class="btn-wx disabled">
-          <text class="btn-wx-icon">微</text>
-          <text>请使用微信小程序打开</text>
-        </view>
-        <!-- #endif -->
+        <button class="btn-test" @tap="testNetwork" :disabled="loading">
+          <text>测试网络连接</text>
+        </button>
+      <!-- #endif -->
+      <!-- #ifndef MP-WEIXIN -->
+      <view class="btn-wx disabled">
+        <text class="btn-wx-icon">微</text>
+        <text>请使用微信小程序打开</text>
       </view>
+      <!-- #endif -->
       <view class="policy-wrap">
         <text class="policy">登录即表示同意</text>
         <text class="policy-link" @tap="openAgreement('user')">《用户协议》</text>
@@ -42,8 +42,7 @@ export default {
   data() {
     return {
       loading: false,
-      message: "",
-      logoImgOk: true
+      message: ""
     };
   },
   onShow() {
@@ -54,9 +53,6 @@ export default {
     }
   },
   methods: {
-    logoImgError() {
-      this.logoImgOk = false;
-    },
     openAgreement(type) {
       const path = type === "user" ? "/pages/agreement/user" : "/pages/agreement/privacy";
       uni.navigateTo({ url: path });
@@ -73,6 +69,22 @@ export default {
           this.message = "微信登录失败";
           uni.showToast({ title: this.message, icon: "none" });
           this.loading = false;
+        }
+      });
+    },
+    testNetwork() {
+      this.message = "";
+      uni.request({
+        url: "https://datewell.xyz/api/health",
+        method: "GET",
+        success: (res) => {
+          this.message = `测试成功：${res.statusCode}`;
+          uni.showToast({ title: this.message, icon: "none" });
+        },
+        fail: (err) => {
+          const msg = err?.errMsg || "测试失败";
+          this.message = msg;
+          uni.showToast({ title: msg, icon: "none" });
         }
       });
     },
@@ -118,10 +130,13 @@ export default {
 
 <style>
 .page {
-  min-height: 100vh;
-  padding: 32px 24px 28px;
-  padding-top: calc(48px + env(safe-area-inset-top));
-  padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  padding: 0 24px;
+  padding-top: calc(env(safe-area-inset-top) + 24px);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
+  box-sizing: border-box;
   background: linear-gradient(180deg, #fef9f3 0%, #fef5eb 35%, #fef3c7 100%);
   color: #1c1917;
   display: flex;
@@ -131,75 +146,61 @@ export default {
 
 .hero {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px 0 40px;
+  padding: 12px 0 16px;
 }
 
 .logo-wrap {
-  margin-bottom: 20px;
-}
-
-.logo-img {
-  width: 72px;
-  height: 72px;
-  border-radius: 22px;
-  box-shadow: 0 12px 32px rgba(245, 158, 11, 0.35);
+  margin-bottom: 12px;
 }
 
 .logo {
-  width: 72px;
-  height: 72px;
-  border-radius: 22px;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
   background: linear-gradient(145deg, #f59e0b 0%, #ea580c 100%);
   color: #fff;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 12px 32px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.35);
 }
 
 .app-name {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
   color: #1c1917;
-  letter-spacing: 1px;
-  margin-bottom: 10px;
-}
-
-.slogan {
-  font-size: 15px;
-  color: #78716c;
+  letter-spacing: 0.5px;
   margin-bottom: 6px;
 }
 
-.slogan-sub {
+.slogan {
   font-size: 13px;
+  color: #78716c;
+  margin-bottom: 4px;
+}
+
+.slogan-sub {
+  font-size: 12px;
   color: #a8a29e;
 }
 
 .bottom-wrap {
+  flex-shrink: 0;
   width: 100%;
   max-width: 320px;
-  padding-top: 16px;
-}
-
-.login-card {
-  background: #fff;
-  border-radius: 20px;
-  padding: 24px;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 32px rgba(28, 25, 23, 0.06);
-  border: 1px solid rgba(245, 158, 11, 0.12);
+  padding-top: 12px;
 }
 
 .btn-wx {
   width: 100%;
-  height: 52px;
+  height: 48px;
   border-radius: 14px;
   background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
   color: #fff;
@@ -211,6 +212,27 @@ export default {
   justify-content: center;
   gap: 10px;
   box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
+  margin-bottom: 14px;
+}
+
+.btn-test {
+  width: 100%;
+  height: 48px;
+  border-radius: 14px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid rgba(251, 146, 60, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  box-shadow: 0 4px 16px rgba(251, 146, 60, 0.18);
+}
+
+.btn-test::after {
+  border: none;
 }
 
 .btn-wx::after {

@@ -15,5 +15,12 @@ export default {
 </script>
 
 <style>
-/* global styles are defined in pages */
+/* 健康类小程序 - 暖色主题（可整体替换为冷色时搜索 #faf8f5 / #e8e2db 等还原） */
+page {
+  --page-bg: #faf8f5;
+  --page-bg-soft: #f5f1eb;
+  --card-bg-light: #fefcf9;
+  --border-warm: #e8e2db;
+  --border-warm-light: #f2ede8;
+}
 </style>

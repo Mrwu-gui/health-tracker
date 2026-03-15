@@ -108,7 +108,7 @@ export default {
 .page {
   padding: 18px;
   min-height: 100vh;
-  background: #f4f5f7;
+  background: #faf8f5;
   color: #0f172a;
   display: flex;
   flex-direction: column;
@@ -130,7 +130,7 @@ export default {
   background: #ffffff;
   border-radius: 16px;
   padding: 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e8e2db;
   display: grid;
   gap: 12px;
 }
@@ -190,7 +190,7 @@ export default {
   width: 20px;
   height: 20px;
   border-radius: 10px;
-  background: #f1f5f9;
+  background: #f5f1eb;
   color: #94a3b8;
   font-size: 12px;
   display: flex;

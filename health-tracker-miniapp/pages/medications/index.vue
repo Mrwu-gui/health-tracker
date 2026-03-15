@@ -189,7 +189,7 @@ export default {
 .page {
   padding: 18px;
   min-height: 100vh;
-  background: #f4f5f7;
+  background: #faf8f5;
   color: #0f172a;
   display: flex;
   flex-direction: column;
@@ -226,14 +226,14 @@ export default {
 }
 
 .empty-state {
-  background: #f8fafc;
+  background: #fefcf9;
   border-radius: 16px;
   padding: 32px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  border: 1px dashed #e2e8f0;
+  border: 1px dashed #e8e2db;
 }
 
 .empty-state-icon {
@@ -259,7 +259,7 @@ export default {
   background: #ffffff;
   border-radius: 16px;
   padding: 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e8e2db;
 }
 
 .row {
@@ -296,7 +296,7 @@ export default {
 
 .bar {
   height: 6px;
-  background: #e2e8f0;
+  background: #e8e2db;
   border-radius: 999px;
   overflow: hidden;
   margin-top: 8px;
@@ -345,7 +345,7 @@ export default {
   width: 36px;
   height: 4px;
   border-radius: 2px;
-  background: #e2e8f0;
+  background: #e8e2db;
   margin: 10px auto 0;
 }
 
@@ -354,7 +354,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f2ede8;
 }
 
 .modal-sheet-title {
@@ -390,7 +390,7 @@ export default {
 }
 
 .input {
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e8e2db;
   border-radius: 12px;
   padding: 12px 14px;
   font-size: 14px;

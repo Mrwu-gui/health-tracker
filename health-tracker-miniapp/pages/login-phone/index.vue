@@ -43,9 +43,12 @@
         登录
       </button>
 
-      <text class="policy">
-        登录即表示您已阅读并同意《用户协议》和《隐私政策》
-      </text>
+      <view class="policy-wrap">
+        <text class="policy">登录即表示您已阅读并同意</text>
+        <text class="policy-link" @tap="openAgreement('user')">《用户协议》</text>
+        <text class="policy">和</text>
+        <text class="policy-link" @tap="openAgreement('privacy')">《隐私政策》</text>
+      </view>
     </view>
   </view>
 </template>
@@ -72,6 +75,10 @@ export default {
     }
   },
   methods: {
+    openAgreement(type) {
+      const path = type === "user" ? "/pages/agreement/user" : "/pages/agreement/privacy";
+      uni.navigateTo({ url: path });
+    },
     goBack() {
       uni.navigateBack();
     },
@@ -237,7 +244,7 @@ export default {
   padding: 10px 14px;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
-  background: #f8fafc;
+  background: #fefcf9;
   font-size: 12px;
   color: #334155;
 }
@@ -274,10 +281,24 @@ export default {
   box-shadow: none;
 }
 
+.policy-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  line-height: 1.6;
+}
+
 .policy {
   font-size: 11px;
   color: #94a3b8;
-  text-align: center;
-  line-height: 1.6;
+}
+
+.policy-link {
+  font-size: 11px;
+  color: #6366f1;
+  font-weight: 600;
+  text-decoration: underline;
 }
 </style>

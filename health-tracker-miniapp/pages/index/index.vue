@@ -12,7 +12,7 @@
       <view class="ai-hero-inner">
         <view class="ai-hero-label">
           <text class="ai-hero-dot">✨</text>
-          <text>AI 健康助手</text>
+          <text>智康AI</text>
         </view>
         <text class="ai-hero-desc">{{ aiGreeting || "有什么想问的？问饮食、运动、睡眠都可以。" }}</text>
         <view class="ai-quick-actions">
@@ -30,7 +30,7 @@
           </view>
         </view>
         <navigator class="ai-hero-btn" url="/pages/ai/index" open-type="switchTab">
-          <text>去和 AI 对话</text>
+          <text>去和智康对话</text>
           <text class="ai-hero-arrow">›</text>
         </navigator>
       </view>
@@ -517,7 +517,7 @@ export default {
   padding: 18px;
   padding-bottom: calc(60px + env(safe-area-inset-bottom));
   min-height: 100vh;
-  background: #f4f5f7;
+  background: #faf8f5;
   color: #0f172a;
   display: flex;
   flex-direction: column;
@@ -526,7 +526,7 @@ export default {
 
 .page-root {
   min-height: 100vh;
-  background: #f4f5f7;
+  background: #faf8f5;
 }
 
 .header {
@@ -548,7 +548,7 @@ export default {
   border-radius: 20px;
   background: #fff;
   color: #64748b;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e8e2db;
   font-size: 16px;
   padding: 0;
   line-height: 1;
@@ -593,7 +593,7 @@ export default {
 
 .ai-hero-desc {
   font-size: 14px;
-  color: #e2e8f0;
+  color: #ebe6df;
   line-height: 1.5;
 }
 
@@ -650,7 +650,7 @@ export default {
   background: #ffffff;
   border-radius: 18px;
   padding: 0;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e8e2db;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -661,7 +661,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f2ede8;
 }
 
 .section-title-wrap {
@@ -719,7 +719,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f8fafc;
+  background: #fefcf9;
   padding: 12px 14px;
   border-radius: 12px;
 }
@@ -775,9 +775,9 @@ export default {
   align-items: center;
   text-align: center;
   padding: 24px 16px;
-  background: #f8fafc;
+  background: #fefcf9;
   border-radius: 14px;
-  border: 1px dashed #e2e8f0;
+  border: 1px dashed #e8e2db;
 }
 
 .section-empty-icon {
@@ -848,7 +848,7 @@ export default {
   width: 64px;
   height: 64px;
   border-radius: 32px;
-  background: #e2e8f0;
+  background: #e8e2db;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -870,7 +870,7 @@ export default {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-  border-top: 1px dashed #e2e8f0;
+  border-top: 1px dashed #e8e2db;
   padding-top: 10px;
 }
 
@@ -910,7 +910,7 @@ export default {
 }
 
 .quick-item {
-  background: #f8fafc;
+  background: #fefcf9;
   border-radius: 14px;
   padding: 12px;
   display: flex;
@@ -923,7 +923,7 @@ export default {
 
 .quick-item-hover {
   opacity: 0.85;
-  background: #e2e8f0;
+  background: #e8e2db;
 }
 
 .quick-icon {
@@ -1010,7 +1010,7 @@ export default {
 
 .modal-head {
   padding: 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f2ede8;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1063,7 +1063,7 @@ export default {
 .pill {
   padding: 6px 12px;
   border-radius: 12px;
-  background: #f1f5f9;
+  background: #f5f1eb;
   color: #64748b;
   font-size: 11px;
 }
@@ -1094,7 +1094,7 @@ export default {
 
 .input {
   width: 100%;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e8e2db;
   border-radius: 12px;
   padding: 8px 10px;
   font-size: 12px;

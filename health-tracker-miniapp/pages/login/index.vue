@@ -1,24 +1,13 @@
 <template>
   <view class="page">
-    <view class="topbar">
-      <view class="brand">
-        <view class="logo">HT</view>
-        <text class="brand-cn">健康管家</text>
+    <view class="hero">
+      <view class="logo-wrap">
+        <image v-if="logoImgOk" class="logo-img" src="/static/logo.png" mode="aspectFit" @error="logoImgError" />
+        <view v-else class="logo">智康</view>
       </view>
-      <text class="version">v1.0</text>
-    </view>
-
-    <view class="banner">
-      <view class="banner-bg" />
-      <view class="banner-glow" />
-      <view class="banner-content">
-        <view class="banner-icon-wrap">
-          <text class="banner-icon">✨</text>
-        </view>
-        <text class="banner-tag">AI 健康助手</text>
-        <text class="banner-title">懂你的健康，随时为你解答</text>
-        <text class="banner-sub">饮食、运动、睡眠，一问即得</text>
-      </view>
+      <text class="app-name">智康AI</text>
+      <text class="slogan">懂你的健康，一问即得</text>
+      <text class="slogan-sub">饮食 · 运动 · 睡眠</text>
     </view>
 
     <view class="bottom-wrap">
@@ -35,7 +24,12 @@
         </view>
         <!-- #endif -->
       </view>
-      <text class="policy">登录即表示同意《用户协议》与《隐私政策》</text>
+      <view class="policy-wrap">
+        <text class="policy">登录即表示同意</text>
+        <text class="policy-link" @tap="openAgreement('user')">《用户协议》</text>
+        <text class="policy">与</text>
+        <text class="policy-link" @tap="openAgreement('privacy')">《隐私政策》</text>
+      </view>
       <text v-if="message" class="message">{{ message }}</text>
     </view>
   </view>
@@ -49,13 +43,21 @@ export default {
   data() {
     return {
       loading: false,
-      message: ""
+      message: "",
+      logoImgOk: true
     };
   },
   onShow() {
     ensureDevLogin();
   },
   methods: {
+    logoImgError() {
+      this.logoImgOk = false;
+    },
+    openAgreement(type) {
+      const path = type === "user" ? "/pages/agreement/user" : "/pages/agreement/privacy";
+      uni.navigateTo({ url: path });
+    },
     loginWeChat() {
       this.loading = true;
       this.message = "";
@@ -117,142 +119,89 @@ export default {
 <style>
 .page {
   min-height: 100vh;
-  padding: 24px 20px 28px;
-  padding-top: calc(24px + env(safe-area-inset-top));
+  padding: 32px 24px 28px;
+  padding-top: calc(48px + env(safe-area-inset-top));
   padding-bottom: calc(28px + env(safe-area-inset-bottom));
-  background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 30%, #f5f3ff 100%);
-  color: #0f172a;
+  background: linear-gradient(180deg, #fef9f3 0%, #fef5eb 35%, #fef3c7 100%);
+  color: #1c1917;
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
-.topbar {
+.hero {
+  flex: 1;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  padding: 20px 0 40px;
+}
+
+.logo-wrap {
   margin-bottom: 20px;
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.logo-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  box-shadow: 0 12px 32px rgba(245, 158, 11, 0.35);
 }
 
 .logo {
-  width: 38px;
-  height: 38px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #4338ca 0%, #6366f1 50%, #818cf8 100%);
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  background: linear-gradient(145deg, #f59e0b 0%, #ea580c 100%);
   color: #fff;
-  font-size: 14px;
+  font-size: 22px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+  box-shadow: 0 12px 32px rgba(245, 158, 11, 0.35);
 }
 
-.brand-cn {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1e1b4b;
-}
-
-.version {
-  font-size: 11px;
-  color: #6366f1;
-  opacity: 0.8;
-}
-
-.banner {
-  position: relative;
-  border-radius: 24px;
-  overflow: hidden;
-  height: 220px;
-  margin-bottom: 20px;
-  box-shadow: 0 12px 40px rgba(67, 56, 202, 0.25);
-}
-
-.banner-bg {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #312e81 0%, #4338ca 30%, #4f46e5 60%, #6366f1 100%);
-}
-
-.banner-glow {
-  position: absolute;
-  top: -50%;
-  right: -30%;
-  width: 90%;
-  height: 120%;
-  background: radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 60%);
-  border-radius: 50%;
-}
-
-.banner-content {
-  position: relative;
-  height: 100%;
-  padding: 24px 24px 32px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  color: #fff;
-}
-
-.banner-icon-wrap {
-  width: 50px;
-  height: 50px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.28);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-}
-
-.banner-icon {
-  font-size: 28px;
-}
-
-.banner-tag {
-  font-size: 12px;
-  opacity: 0.98;
-  letter-spacing: 0.5px;
-  margin-bottom: 6px;
-}
-
-.banner-title {
-  font-size: 18px;
+.app-name {
+  font-size: 26px;
   font-weight: 700;
-  line-height: 1.35;
+  color: #1c1917;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.slogan {
+  font-size: 15px;
+  color: #78716c;
   margin-bottom: 6px;
 }
 
-.banner-sub {
+.slogan-sub {
   font-size: 13px;
-  opacity: 0.92;
+  color: #a8a29e;
 }
 
 .bottom-wrap {
-  margin-top: auto;
-  padding-top: 8px;
+  width: 100%;
+  max-width: 320px;
+  padding-top: 16px;
 }
 
 .login-card {
   background: #fff;
-  border-radius: 22px;
-  padding: 22px;
-  box-shadow: 0 10px 40px rgba(67, 56, 202, 0.12);
-  margin-bottom: 14px;
-  border: 1px solid rgba(99, 102, 241, 0.12);
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 32px rgba(28, 25, 23, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.12);
 }
 
 .btn-wx {
   width: 100%;
-  height: 54px;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #06c755 0%, #05b04d 100%);
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
   color: #fff;
   font-size: 16px;
   font-weight: 600;
@@ -261,7 +210,7 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  box-shadow: 0 6px 20px rgba(5, 176, 77, 0.35);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
 }
 
 .btn-wx::after {
@@ -269,8 +218,8 @@ export default {
 }
 
 .btn-wx.disabled {
-  background: #cbd5e1;
-  color: #64748b;
+  background: #d6d3d1;
+  color: #78716c;
   box-shadow: none;
 }
 
@@ -279,13 +228,25 @@ export default {
   font-weight: 600;
 }
 
+.policy-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  line-height: 1.5;
+}
+
 .policy {
   font-size: 11px;
-  color: #6366f1;
-  opacity: 0.85;
-  text-align: center;
-  display: block;
-  line-height: 1.5;
+  color: #a8a29e;
+}
+
+.policy-link {
+  font-size: 11px;
+  color: #ea580c;
+  font-weight: 500;
+  text-decoration: underline;
 }
 
 .message {

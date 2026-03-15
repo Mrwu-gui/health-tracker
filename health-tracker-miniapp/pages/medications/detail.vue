@@ -38,11 +38,11 @@ export default {
 </script>
 
 <style scoped>
-.page { padding: 20px; min-height: 100vh; background: #f4f5f7; }
+.page { padding: 20px; min-height: 100vh; background: #faf8f5; }
 .card { background: #fff; border-radius: 16px; padding: 16px; }
 .row { margin-bottom: 12px; }
 .name { font-size: 16px; font-weight: 600; }
-.block { margin-top: 14px; padding-top: 14px; border-top: 1px solid #f1f5f9; }
+.block { margin-top: 14px; padding-top: 14px; border-top: 1px solid #f2ede8; }
 .label { font-size: 12px; color: #64748b; display: block; margin-bottom: 6px; }
 .value { font-size: 14px; color: #0f172a; }
 .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }

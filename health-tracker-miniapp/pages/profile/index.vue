@@ -412,7 +412,7 @@ export default {
 <style>
 .page {
   min-height: 100vh;
-  background: #f1f5f9;
+  background: #f5f1eb;
   padding: 16px 16px 24px;
   padding-bottom: calc(24px + env(safe-area-inset-bottom));
 }
@@ -425,7 +425,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e8e2db;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
@@ -433,7 +433,7 @@ export default {
   width: 48px;
   height: 48px;
   border-radius: 24px;
-  background: #e2e8f0;
+  background: #e8e2db;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -475,7 +475,7 @@ export default {
   background: #fff;
   border-radius: 16px;
   margin-bottom: 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e8e2db;
   overflow: hidden;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
@@ -488,7 +488,7 @@ export default {
   text-align: left;
   background: none;
   border: none;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f2ede8;
 }
 
 .menu-item:last-child {
@@ -543,7 +543,7 @@ export default {
 /* 授权（icon-s）：安全/隐私属性 → 稳重的浅灰+深灰背景 */
 .menu-icon.icon-s {
 	border-radius: 18px;
-	background: #f8fafc; /* 浅灰背景，体现安全/中立 */
+	background: #fefcf9; /* 浅灰背景，体现安全/中立 */
 	color: #334155;      /* 深灰文字/图标，符合隐私授权的视觉调性 */
 }
 
@@ -588,8 +588,8 @@ export default {
   padding: 14px;
   font-size: 15px;
   color: #64748b;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #fefcf9;
+  border: 1px solid #e8e2db;
   border-radius: 14px;
 }
 
@@ -619,7 +619,7 @@ export default {
   width: 36px;
   height: 4px;
   border-radius: 2px;
-  background: #e2e8f0;
+  background: #e8e2db;
   margin: 10px auto 0;
 }
 
@@ -628,7 +628,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f2ede8;
 }
 
 .modal-sheet-title {
@@ -659,14 +659,14 @@ export default {
   align-items: center;
   gap: 10px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f2ede8;
 }
 
 .info-avatar-wrap {
   width: 64px;
   height: 64px;
   border-radius: 32px;
-  background: #e2e8f0;
+  background: #e8e2db;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -701,7 +701,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid #fefcf9;
 }
 
 .info-label {
@@ -731,7 +731,7 @@ export default {
 }
 
 .modal-sheet-btn.secondary {
-  background: #f1f5f9;
+  background: #f5f1eb;
   color: #475569;
 }
 
@@ -747,7 +747,7 @@ export default {
 }
 
 .input {
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e8e2db;
   border-radius: 12px;
   padding: 12px 14px;
   font-size: 14px;
@@ -774,7 +774,7 @@ export default {
   text-align: center;
   padding: 12px 0;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e8e2db;
   color: #64748b;
   font-size: 14px;
   background: #fff;
@@ -790,8 +790,8 @@ export default {
   padding: 12px 14px;
   font-size: 13px;
   color: #475569;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #fefcf9;
+  border: 1px solid #e8e2db;
   border-radius: 12px;
   width: 100%;
 }

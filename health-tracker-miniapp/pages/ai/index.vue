@@ -10,7 +10,7 @@
       <view v-if="!loading && messages.length === 0" class="empty-state">
         <text class="empty-state-icon">💬</text>
         <text class="empty-state-title">暂无对话记录</text>
-        <text class="empty-state-desc">在下方输入问题，开始和 AI 健康助手对话吧</text>
+        <text class="empty-state-desc">在下方输入问题，开始和智康对话吧</text>
       </view>
       <template v-else>
         <view
@@ -20,8 +20,9 @@
           class="chat-item"
           :class="{ mine: item.role === 'user' }"
         >
-          <view v-if="item.role === 'assistant'" class="avatar assistant">
-            <text>AI</text>
+          <view v-if="item.role === 'assistant'" class="avatar assistant" :class="{ 'avatar-logo-wrap': aiLogoOk }">
+            <image v-if="aiLogoOk" class="avatar-logo" src="/static/logo.png" mode="aspectFill" @error="aiLogoOk = false" />
+            <text v-else>智康</text>
           </view>
           <view class="bubble-wrap">
             <view class="bubble">
@@ -36,8 +37,9 @@
           </view>
         </view>
         <view v-if="loading" class="chat-item" id="msg-loading">
-          <view class="avatar assistant">
-            <text>AI</text>
+          <view class="avatar assistant" :class="{ 'avatar-logo-wrap': aiLogoOk }">
+            <image v-if="aiLogoOk" class="avatar-logo" src="/static/logo.png" mode="aspectFill" @error="aiLogoOk = false" />
+            <text v-else>智康</text>
           </view>
           <view class="bubble-wrap">
             <view class="bubble typing">
@@ -112,8 +114,9 @@ export default {
       pendingImage: "",
       pendingAudio: "",
       showPlusMenu: false,
+      aiLogoOk: true,
       messages: [
-        { role: "assistant", content: "你好，我是你的健康助手，可以帮你解读数据或给出建议。" }
+        { role: "assistant", content: "你好，我是智康AI，可以帮你解读数据或给出建议。" }
       ],
       listHeight: 400,
       scrollIntoView: ""
@@ -301,7 +304,7 @@ export default {
 <style>
 .page {
   min-height: 100vh;
-  background: #f1f5f9;
+  background: #f5f1eb;
   display: flex;
   flex-direction: column;
   padding-bottom: env(safe-area-inset-bottom);
@@ -311,7 +314,7 @@ export default {
   flex: 1;
   padding: 16px 16px 20px;
   box-sizing: border-box;
-  background: #f1f5f9;
+  background: #f5f1eb;
 }
 
 .empty-state {
@@ -367,7 +370,20 @@ export default {
 }
 
 .avatar.assistant {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+  font-size: 12px;
+}
+
+.avatar.assistant.avatar-logo-wrap {
+  background: transparent;
+  overflow: hidden;
+}
+
+.avatar-logo {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 50%;
 }
 
 .avatar.user {
@@ -460,7 +476,7 @@ export default {
 /* 加号展开菜单 */
 .plus-menu {
   background: #ffffff;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #e8e2db;
   padding: 12px 16px;
   flex-shrink: 0;
 }
@@ -482,7 +498,7 @@ export default {
   width: 48px;
   height: 48px;
   border-radius: 14px;
-  background: #f1f5f9;
+  background: #f5f1eb;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -497,7 +513,7 @@ export default {
 /* 底部输入栏 */
 .composer {
   background: #ffffff;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #e8e2db;
   padding: 10px 16px 16px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom));
   flex-shrink: 0;
@@ -507,7 +523,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #f1f5f9;
+  background: #f5f1eb;
   border-radius: 22px;
   padding: 6px 6px 6px 16px;
   min-height: 44px;
@@ -550,7 +566,7 @@ export default {
 .pending-preview {
   margin-top: 10px;
   padding: 8px 12px;
-  background: #f1f5f9;
+  background: #f5f1eb;
   border-radius: 12px;
   display: flex;
   align-items: center;

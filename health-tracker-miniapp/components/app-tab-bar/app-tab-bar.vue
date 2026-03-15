@@ -53,7 +53,7 @@ export default {
   height: 50px;
   padding-bottom: env(safe-area-inset-bottom);
   background: #fff;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #e8e2db;
   display: flex;
   align-items: center;
   justify-content: space-around;

@@ -66,7 +66,7 @@ export default {
   height: 56px;
   padding-bottom: env(safe-area-inset-bottom);
   background: #ffffff;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid #f2ede8;
   display: flex;
   align-items: center;
   justify-content: space-around;

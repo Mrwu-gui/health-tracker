@@ -209,15 +209,15 @@ export default {
 </script>
 
 <style scoped>
-.page { padding: 20px; min-height: 100vh; background: #f4f5f7; }
+.page { padding: 20px; min-height: 100vh; background: #faf8f5; }
 .card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 20px; }
 .title { font-size: 16px; font-weight: 600; display: block; margin-bottom: 16px; }
 .form { display: flex; flex-direction: column; gap: 14px; }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .label { font-size: 12px; color: #64748b; }
-.input { border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.input { border: 1px solid #e8e2db; border-radius: 10px; padding: 10px 12px; font-size: 14px; }
 .pill-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
-.pill { padding: 8px 14px; border-radius: 20px; background: #f1f5f9; color: #64748b; font-size: 13px; }
+.pill { padding: 8px 14px; border-radius: 20px; background: #f5f1eb; color: #64748b; font-size: 13px; }
 .pill.active { background: #2563eb; color: #fff; }
 .save-btn-view { background: #2563eb; color: #fff; text-align: center; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; }
 </style>

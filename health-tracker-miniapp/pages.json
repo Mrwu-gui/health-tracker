@@ -5,10 +5,18 @@
       "style": { "navigationBarTitleText": "登录" }
     },
     {
+      "path": "pages/agreement/user",
+      "style": { "navigationBarTitleText": "用户协议" }
+    },
+    {
+      "path": "pages/agreement/privacy",
+      "style": { "navigationBarTitleText": "隐私政策" }
+    },
+    {
       "path": "pages/index/index",
       "style": {
-        "navigationBarTitleText": "健康管家",
-        "navigationBarBackgroundColor": "#f4f5f7",
+        "navigationBarTitleText": "智康AI",
+        "navigationBarBackgroundColor": "#faf8f5",
         "navigationBarTextStyle": "black"
       }
     },
@@ -22,7 +30,7 @@
     },
     {
       "path": "pages/ai/index",
-      "style": { "navigationBarTitleText": "AI 健康助手" }
+      "style": { "navigationBarTitleText": "智康AI" }
     },
     {
       "path": "pages/goal/index",

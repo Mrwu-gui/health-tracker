@@ -89,11 +89,11 @@ export default {
 </script>
 
 <style scoped>
-.page { padding: 20px; min-height: 100vh; background: #f4f5f7; }
+.page { padding: 20px; min-height: 100vh; background: #faf8f5; }
 .card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 20px; }
 .field { margin-bottom: 14px; }
 .label { font-size: 12px; color: #64748b; display: block; margin-bottom: 6px; }
-.input { border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 14px; width: 100%; box-sizing: border-box; }
-.picker { border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 14px; color: #0f172a; background: #fff; }
+.input { border: 1px solid #e8e2db; border-radius: 10px; padding: 10px 12px; font-size: 14px; width: 100%; box-sizing: border-box; }
+.picker { border: 1px solid #e8e2db; border-radius: 10px; padding: 10px 12px; font-size: 14px; color: #0f172a; background: #fff; }
 .save-btn { background: #2563eb; color: #fff; text-align: center; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; }
 </style>

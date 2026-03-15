@@ -14,9 +14,6 @@
         <button class="btn-wx" @tap="loginWeChat" :disabled="loading">
           <text>{{ loading ? "登录中..." : "微信一键登录" }}</text>
         </button>
-        <button class="btn-test" @tap="testNetwork" :disabled="loading">
-          <text>测试网络连接</text>
-        </button>
       <!-- #endif -->
       <!-- #ifndef MP-WEIXIN -->
       <view class="btn-wx disabled">
@@ -69,22 +66,6 @@ export default {
           this.message = "微信登录失败";
           uni.showToast({ title: this.message, icon: "none" });
           this.loading = false;
-        }
-      });
-    },
-    testNetwork() {
-      this.message = "";
-      uni.request({
-        url: "https://datewell.xyz/api/health",
-        method: "GET",
-        success: (res) => {
-          this.message = `测试成功：${res.statusCode}`;
-          uni.showModal({ title: "网络测试", content: this.message, showCancel: false });
-        },
-        fail: (err) => {
-          const msg = err?.errMsg || "测试失败";
-          this.message = msg;
-          uni.showModal({ title: "网络测试", content: msg, showCancel: false });
         }
       });
     },

@@ -85,6 +85,16 @@ ALTER TABLE weight_record
   MODIFY date DATE NOT NULL COMMENT 'Record date',
   COMMENT='Weight records';
 
+ALTER TABLE period_record
+  MODIFY id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
+  MODIFY user_id BIGINT NOT NULL COMMENT 'User id',
+  MODIFY start_date DATE NOT NULL COMMENT 'Period start date',
+  MODIFY end_date DATE NOT NULL COMMENT 'Period end date',
+  MODIFY flow INT COMMENT 'Flow level (int)',
+  MODIFY note VARCHAR(255) COMMENT 'Notes',
+  MODIFY created_at DATETIME COMMENT 'Created time',
+  COMMENT='Period records';
+
 ALTER TABLE health_record
   MODIFY id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
   MODIFY user_id BIGINT NOT NULL COMMENT 'User id',

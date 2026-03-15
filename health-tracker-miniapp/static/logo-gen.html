@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智康 Logo 导出</title>
+  <style>
+    body { font-family: sans-serif; padding: 24px; background: #f5f1eb; }
+    .preview { margin: 20px 0; }
+    canvas { display: block; border-radius: 22px; box-shadow: 0 12px 32px rgba(245,158,11,0.35); }
+    button { padding: 12px 24px; font-size: 16px; background: #ea580c; color: #fff; border: none; border-radius: 12px; cursor: pointer; }
+    button:hover { background: #f59e0b; }
+    p { color: #78716c; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <h1>智康 Logo（72×72）</h1>
+  <div class="preview">
+    <canvas id="c" width="72" height="72"></canvas>
+  </div>
+  <button id="btn">下载 logo.png</button>
+  <p>点击按钮保存到项目 static 目录，命名为 logo.png</p>
+
+  <script>
+    const size = 72;
+    const radius = 22;
+    const c = document.getElementById('c');
+    const ctx = c.getContext('2d');
+
+    // 圆角矩形
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    // 渐变背景
+    const g = ctx.createLinearGradient(0, 0, size, size);
+    g.addColorStop(0, '#f59e0b');
+    g.addColorStop(1, '#ea580c');
+    roundRect(0, 0, size, size, radius);
+    ctx.fillStyle = g;
+    ctx.fill();
+
+    // 白色「智康」
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 22px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('智康', size / 2, size / 2 + 2);
+
+    document.getElementById('btn').onclick = function () {
+      const a = document.createElement('a');
+      a.download = 'logo.png';
+      a.href = c.toDataURL('image/png');
+      a.click();
+    };
+  </script>
+</body>
+</html>

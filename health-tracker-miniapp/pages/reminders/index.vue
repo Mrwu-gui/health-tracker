@@ -31,7 +31,7 @@
       </view>
     </view>
 
-    <text class="note">提醒依赖微信订阅消息，请在授权与隐私中开启权限。</text>
+    <text class="note">需在「授权与隐私」中开启订阅消息</text>
 
     <view v-if="showModal" class="modal-mask" @tap="closeModal">
       <view class="modal-sheet" @tap.stop>
@@ -54,7 +54,7 @@
         <view class="field">
           <text class="field-label">提醒时间</text>
           <view class="picker-group">
-            <picker mode="date" @change="onDateChange">
+            <picker mode="date" :value="form.remindDate" :start="minDate" :end="maxDate" @change="onDateChange">
               <view class="picker">{{ form.remindDate || "选择日期" }}</view>
             </picker>
             <picker mode="time" @change="onTimeChange">
@@ -97,6 +97,15 @@ export default {
     };
   },
   computed: {
+    minDate() {
+      const n = new Date();
+      return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+    },
+    maxDate() {
+      const d = new Date();
+      d.setFullYear(d.getFullYear() + 10);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    },
     titleLabel() {
       const match = this.titleOptions.find((item) => item.type === this.form.type);
       return match ? match.label : "请选择标题";
@@ -121,21 +130,17 @@ export default {
       const userId = uni.getStorageSync("userId") || 1;
       request("/api/reminder/list", "GET", { userId })
         .then((data) => {
-          if (Array.isArray(data)) {
-            const mapped = data
-              .filter((item) => Number(item.type) !== 4)
-              .map((item) => ({
-                id: item.id,
-                title: item.title,
-                content: item.content || "提醒事项",
-                time: item.remindTime || "",
-                type: Number(item.type || 0)
-              }));
-            this.setReminders(this.decorate(mapped));
-            if (this.reminders.length === 0) {
-              this.setReminders([]);
-            }
-          }
+          const raw = Array.isArray(data) ? data : (data?.list || data?.records || []);
+          const mapped = raw
+            .filter((item) => Number(item.type) !== 4)
+            .map((item) => ({
+              id: item.id,
+              title: item.title,
+              content: item.content || "提醒事项",
+              time: item.remindTime || "",
+              type: Number(item.type || 0)
+            }));
+          this.setReminders(this.decorate(mapped));
         })
         .catch(() => {
           this.setReminders([]);
@@ -195,6 +200,17 @@ export default {
       if (!/^\d{2}:\d{2}$/.test(this.form.remindTime)) {
         uni.showToast({ title: "时间格式不正确", icon: "none" });
         return;
+      }
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      if (this.form.remindDate === todayStr) {
+        const [h, m] = this.form.remindTime.split(":").map(Number);
+        const chosenMin = h * 60 + (m || 0);
+        const currentMin = now.getHours() * 60 + now.getMinutes();
+        if (chosenMin <= currentMin) {
+          uni.showToast({ title: "请选择未来的时间", icon: "none" });
+          return;
+        }
       }
       this.saving = true;
       const userId = uni.getStorageSync("userId") || 1;

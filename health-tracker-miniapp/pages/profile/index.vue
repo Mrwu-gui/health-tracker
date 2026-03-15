@@ -2,7 +2,7 @@
   <view class="page">
     <view class="profile-card" @tap="openProfileModal">
       <view class="avatar-wrap">
-        <image v-if="profile.avatar" class="avatar-img" :src="profile.avatar" mode="aspectFill" />
+        <image v-if="profile.avatar" class="avatar-img" :src="String(profile.avatar)" mode="aspectFill" />
         <text v-else class="avatar-letter">{{ profile.name ? profile.name.slice(0, 1) : "?" }}</text>
       </view>
       <view class="profile-info">
@@ -32,13 +32,23 @@
         </view>
         <text class="menu-arrow">›</text>
       </navigator>
-      <navigator class="menu-item" url="/pages/reminders/index" hover-class="none">
+      <navigator class="menu-item" url="/pages/reminders/index" open-type="navigateTo" hover-class="none">
         <view class="menu-icon icon-t">
           <image class="icon-img" src="/static/tabbar/remind.png" mode="widthFix"></image>
         </view>
         <view class="menu-content">
           <text class="menu-title">提醒设置</text>
           <text class="menu-desc">运动 · 饮食 · 睡眠</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </navigator>
+      <navigator class="menu-item" url="/pages/period/index" hover-class="none">
+        <view class="menu-icon icon-p">
+          <image class="icon-img" src="/static/tabbar/period.png" mode="widthFix"></image>
+        </view>
+        <view class="menu-content">
+          <text class="menu-title">经期记录</text>
+          <text class="menu-desc">记录经期 · 预估下次</text>
         </view>
         <text class="menu-arrow">›</text>
       </navigator>
@@ -89,7 +99,7 @@
           <template v-if="bodyModalMode === 'view'">
             <view class="info-block">
               <view class="info-avatar-wrap">
-                <image v-if="profile.avatar" class="info-avatar" :src="profile.avatar" mode="aspectFill" />
+                <image v-if="profile.avatar" class="info-avatar" :src="String(profile.avatar)" mode="aspectFill" />
                 <text v-else class="info-avatar-letter">{{ (profile.name || '?').slice(0, 1) }}</text>
               </view>
               <text class="info-name">{{ profile.name || '未设置' }}</text>
@@ -220,9 +230,7 @@ export default {
             const bp = data.systolic && data.diastolic ? `${data.systolic}/${data.diastolic}` : "--";
             const hr = data.heartRate ? `${data.heartRate}` : "--";
             this.profile.summary = `${data.sex || "未知"} · ${data.age || "--"}岁 · ${height} · ${weight} ${bmi} · 血压 ${bp} · 心率 ${hr}`.trim();
-            if (data.wxAvatar) {
-              this.profile.avatar = data.wxAvatar;
-            }
+            this.profile.avatar = (data.wxAvatar != null && data.wxAvatar !== "") ? String(data.wxAvatar) : "";
             this.profile.sex = data.sex || "";
             this.profile.age = data.age || "";
             this.profile.height = data.height || "";
@@ -251,7 +259,7 @@ export default {
         this.profile.name = wxProfile.nickName;
       }
       if (wxProfile.avatarUrl) {
-        this.profile.avatar = wxProfile.avatarUrl;
+        this.profile.avatar = String(wxProfile.avatarUrl);
       }
     },
     goReports() {
@@ -398,7 +406,7 @@ export default {
         uni.showToast({ title: "未获取头像", icon: "none" });
         return;
       }
-      this.profile.avatar = avatarUrl;
+      this.profile.avatar = String(avatarUrl);
       request("/api/user/profile/update", "POST", {
         userId: uni.getStorageSync("userId") || 1,
         wxNickname: this.bodyForm.nickname || this.profile.name || "",
@@ -414,7 +422,7 @@ export default {
   min-height: 100vh;
   background: #f5f1eb;
   padding: 16px 16px 24px;
-  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  padding-bottom: calc(56px + env(safe-area-inset-bottom));
 }
 
 .profile-card {
@@ -531,6 +539,12 @@ export default {
 	border-radius: 18px;
 	background: #ecfdf5; /* 浅绿背景，体现温暖/健康 */
 	color: #059669;      /* 深绿文字/图标，符合家庭健康的视觉认知 */
+}
+
+/* 经期记录（icon-p）：经期/女性健康 → 柔和粉紫 */
+.menu-icon.icon-p {
+	border-radius: 18px;
+	background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
 }
 
 /* 报表（icon-r）：数据/统计属性 → 专业的浅橙+深橙背景 */

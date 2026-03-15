@@ -26,8 +26,9 @@
           </view>
           <view class="bubble-wrap">
             <view class="bubble">
-              <!-- 图片/语音消息暂时隐藏 -->
-              <rich-text v-else-if="item.role === 'assistant' && item.content" class="bubble-rich" :nodes="formatContent(item.content)" />
+              <image v-if="item.role === 'user' && item.imageUrl" class="bubble-img" :src="item.imageUrl" mode="widthFix" />
+              <text v-if="item.role === 'user' && item.audioUrl" class="bubble-audio-tag">🎤 语音</text>
+              <rich-text v-if="item.role === 'assistant' && item.content" class="bubble-rich" :nodes="formatContent(item.content)" />
               <text v-else-if="item.content" class="bubble-text">{{ item.content }}</text>
             </view>
           </view>
@@ -62,12 +63,27 @@
           placeholder-class="input-placeholder"
           confirm-type="send"
           :adjust-position="true"
+          :disabled="recording"
           @confirm="sendMessage"
         />
+        <view class="composer-plus" @tap="expandComposer = !expandComposer">
+          <text class="composer-plus-icon">{{ expandComposer ? '−' : '+' }}</text>
+        </view>
         <view class="composer-btn-wrap" @tap="sendMessage">
           <text class="composer-send">发送</text>
         </view>
       </view>
+      <view v-if="expandComposer" class="composer-expand">
+        <view class="composer-expand-item" @tap="onChooseImage">
+          <text class="composer-expand-icon">📷</text>
+          <text class="composer-expand-label">相册</text>
+        </view>
+        <view class="composer-expand-item" @tap="toggleRecord">
+          <text class="composer-expand-icon">🎤</text>
+          <text class="composer-expand-label">语音</text>
+        </view>
+      </view>
+      <text v-if="recording" class="composer-recording-tip">录音中… 再次点击语音结束</text>
     </view>
   </view>
 </template>
@@ -82,10 +98,13 @@ export default {
       loading: false,
       aiLogoOk: true,
       messages: [
-        { role: "assistant", content: "你好，我是智康AI，可以帮你解读数据或给出建议。" }
+        { role: "assistant", content: "你好，我是智康，有健康问题可以问我。" }
       ],
       listHeight: 400,
-      scrollIntoView: ""
+      scrollIntoView: "",
+      recording: false,
+      recorderManager: null,
+      expandComposer: false
     };
   },
   computed: {
@@ -93,9 +112,15 @@ export default {
       return this.input && this.input.trim();
     }
   },
+  watch: {
+    expandComposer() {
+      this.$nextTick(() => this.setListHeight());
+    }
+  },
   onLoad() {
     this.setListHeight();
     this.loadHistory();
+    this.recorderManager = uni.getRecorderManager?.() || null;
   },
   onShow() {
     const pages = getCurrentPages();
@@ -115,8 +140,10 @@ export default {
     setListHeight() {
       try {
         const sys = uni.getSystemInfoSync();
-        const composerH = 120;
-        this.listHeight = (sys.windowHeight || sys.screenHeight || 400) - composerH;
+        const winH = sys.windowHeight || sys.screenHeight || 400;
+        const tabBarH = 50;
+        const composerH = this.expandComposer ? 100 : 54;
+        this.listHeight = Math.max(300, winH - tabBarH - composerH);
       } catch (e) {
         this.listHeight = 400;
       }
@@ -130,11 +157,68 @@ export default {
     },
     async sendMessage() {
       const content = (this.input || "").trim();
-      if (!content || this.loading) {
-        return;
-      }
+      if (this.loading) return;
+      if (!content) return;
       this.input = "";
       await this.sendMessageWithText(content, "", "");
+    },
+    onChooseImage() {
+      if (this.loading) return;
+      uni.chooseImage({
+        count: 1,
+        sizeType: ["compressed"],
+        sourceType: ["album", "camera"],
+        success: (res) => {
+          const path = res.tempFilePaths && res.tempFilePaths[0];
+          if (path) this.sendMessageWithText(this.input.trim(), path, "");
+        }
+      });
+    },
+    toggleRecord() {
+      if (this.loading || !this.recorderManager) {
+        if (!this.recorderManager) uni.showToast({ title: "当前环境不支持语音", icon: "none" });
+        return;
+      }
+      if (this.recording) {
+        this.recorderManager.stop();
+        return;
+      }
+      this.recording = true;
+      this.recorderManager.start({ duration: 60000, sampleRate: 16000, format: "mp3" });
+      this.recorderManager.onStop((res) => {
+        this.recording = false;
+        const path = res.tempFilePath;
+        if (path) this.sendMessageWithText(this.input.trim(), "", path);
+      });
+      this.recorderManager.onError(() => {
+        this.recording = false;
+        uni.showToast({ title: "录音失败", icon: "none" });
+      });
+    },
+    async getPeriodSummary() {
+      const STORAGE_KEY = "periodRecords";
+      let list = [];
+      try {
+        const data = await request("/api/period/list", "GET", { userId: uni.getStorageSync("userId") || 1 });
+        if (Array.isArray(data)) list = data;
+      } catch (e) {
+        try {
+          const raw = uni.getStorageSync(STORAGE_KEY);
+          if (raw) list = JSON.parse(raw);
+        } catch (_) {}
+      }
+      if (list.length === 0) return "";
+      const sorted = list
+        .map((item) => ({ start: item.startDate || item.start_date }))
+        .filter((item) => item.start)
+        .sort((a, b) => (b.start || "").localeCompare(a.start || ""));
+      const last = sorted[0];
+      if (!last) return "";
+      const lastStr = last.start;
+      const d = new Date(lastStr.replace(/-/g, "/"));
+      d.setDate(d.getDate() + 28);
+      const nextStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      return `最近经期 ${lastStr}，预计下次 ${nextStr}`;
     },
     async sendMessageWithText(content, imageUrl, audioUrl) {
       if ((!content && !imageUrl && !audioUrl) || this.loading) return;
@@ -147,8 +231,12 @@ export default {
       this.loading = true;
       this.$nextTick(() => this.scrollToBottom());
       try {
+        const periodCtx = await this.getPeriodSummary();
+        const messageToSend = periodCtx
+          ? `【参考：${periodCtx}】\n\n${content || "请识别图片内容"}`
+          : (content || "请识别图片内容");
         const data = await request("/api/ai/chat", "POST", {
-          message: content || "请识别图片内容",
+          message: messageToSend,
           imageUrl: imageUrl || "",
           audioUrl: audioUrl || ""
         });
@@ -193,7 +281,7 @@ export default {
   background: #f5f1eb;
   display: flex;
   flex-direction: column;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: 0;
 }
 
 .chat-list {
@@ -348,23 +436,89 @@ export default {
 }
 
 
-/* 底部输入栏 */
 .composer {
   background: #ffffff;
   border-top: 1px solid #e8e2db;
-  padding: 10px 16px 16px;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  padding: 6px 16px;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom));
   flex-shrink: 0;
 }
 
 .composer-inner {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: #f5f1eb;
   border-radius: 22px;
-  padding: 6px 6px 6px 16px;
+  padding: 6px 6px 6px 14px;
   min-height: 44px;
+}
+
+.composer-plus {
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.composer-plus-icon {
+  font-size: 20px;
+  font-weight: 300;
+  color: #64748b;
+  line-height: 1;
+}
+
+.composer-expand {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 10px 0 4px;
+  border-top: 1px solid #f2ede8;
+  margin-top: 6px;
+}
+
+.composer-expand-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #f5f1eb;
+  border-radius: 12px;
+}
+
+.composer-expand-icon {
+  font-size: 18px;
+}
+
+.composer-expand-label {
+  font-size: 13px;
+  color: #475569;
+}
+
+.composer-recording-tip {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.bubble-img {
+  max-width: 200px;
+  border-radius: 8px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.bubble-audio-tag {
+  font-size: 13px;
+  opacity: 0.9;
+  display: block;
+  margin-bottom: 4px;
 }
 
 .composer-input {

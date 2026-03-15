@@ -2,7 +2,7 @@
   <view class="page">
     <view class="doc">
       <text class="doc-title">智康AI隐私政策</text>
-      <text class="doc-updated">更新日期：2025年1月</text>
+      <text class="doc-updated">更新日期：2026年3月</text>
 
       <text class="body intro">
         智康AI（以下简称「我们」）重视您的隐私。本政策说明我们如何收集、使用、存储与保护您的个人信息，以及您享有的权利。请您在使用本产品前仔细阅读。

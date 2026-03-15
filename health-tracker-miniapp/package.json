@@ -4,7 +4,9 @@
   "version": "0.0.1",
   "scripts": {
     "dev:h5": "UNI_INPUT_DIR=./src UNI_PLATFORM=h5 vite --host 0.0.0.0 --port 3101",
-    "build:h5": "UNI_INPUT_DIR=./src UNI_PLATFORM=h5 vite build"
+    "build:h5": "UNI_INPUT_DIR=./src UNI_PLATFORM=h5 vite build",
+    "dev:mp-weixin": "UNI_PLATFORM=mp-weixin vite build --watch",
+    "build:mp-weixin": "UNI_PLATFORM=mp-weixin vite build"
   },
   "dependencies": {
     "@dcloudio/uni-app": "3.0.0-4080720251210001",

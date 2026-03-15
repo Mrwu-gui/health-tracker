@@ -278,7 +278,7 @@ export default {
 <style>
 .page {
   padding: 18px;
-  padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  padding-bottom: calc(56px + env(safe-area-inset-bottom));
   min-height: 100vh;
   background: #faf8f5;
   color: #0f172a;

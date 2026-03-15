@@ -67,6 +67,18 @@ export default {
         uni.showToast({ title: "请填写标题和时间", icon: "none" });
         return;
       }
+      if (!/^\d{2}:\d{2}$/.test(this.form.remindTime)) {
+        uni.showToast({ title: "请选择有效时间", icon: "none" });
+        return;
+      }
+      const now = new Date();
+      const [h, m] = this.form.remindTime.split(":").map(Number);
+      const chosenMin = h * 60 + (m || 0);
+      const currentMin = now.getHours() * 60 + now.getMinutes();
+      if (chosenMin <= currentMin) {
+        uni.showToast({ title: "请选择未来的时间", icon: "none" });
+        return;
+      }
       const userId = uni.getStorageSync("userId") || 1;
       const remindTime = `${this.todayDate()} ${this.form.remindTime}`;
       request("/api/reminder/add", "POST", {

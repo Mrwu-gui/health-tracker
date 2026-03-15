@@ -17,7 +17,6 @@
       </view>
     </view>
 
-    <!-- 本周期数据摘要（供智康分析用） -->
     <view class="section-card">
       <view class="section-head">
         <view class="section-title-wrap">
@@ -35,12 +34,8 @@
           <text class="data-value">{{ overview.sleep }}</text>
         </view>
         <view class="data-item">
-          <text class="data-label">体重</text>
-          <text class="data-value">{{ overview.weight ? overview.weight + ' kg' : '--' }}</text>
-        </view>
-        <view class="data-item">
-          <text class="data-label">BMI</text>
-          <text class="data-value">{{ overview.bmi || '--' }}</text>
+          <text class="data-label">体重/BMI</text>
+          <text class="data-value">{{ overview.weightBmi }}</text>
         </view>
         <view class="data-item">
           <text class="data-label">运动</text>
@@ -50,10 +45,13 @@
           <text class="data-label">饮食</text>
           <text class="data-value">{{ overview.dietCount || '--' }}</text>
         </view>
+        <view class="data-item data-item-period">
+          <text class="data-label">经期</text>
+          <text class="data-value data-value-period">{{ overview.periodSummary || '--' }}</text>
+        </view>
       </view>
     </view>
 
-    <!-- AI 解读主卡 -->
     <view class="section-card ai-card">
       <view class="section-head">
         <view class="section-title-wrap">
@@ -65,7 +63,7 @@
       <view class="ai-body">
         <view v-if="aiLoading" class="ai-loading">
           <text class="ai-loading-dot">·</text>
-          <text class="ai-loading-text">正在分析你的数据...</text>
+          <text class="ai-loading-text">分析中…</text>
         </view>
         <view v-else-if="aiError" class="ai-error">
           <text>{{ aiError }}</text>
@@ -75,18 +73,12 @@
           <text class="ai-text">{{ aiContent }}</text>
         </view>
         <view v-else class="ai-empty">
-          <text>暂无解读，请确保已记录步数、睡眠等数据后重试。</text>
+          <text>暂无解读</text>
           <text class="ai-retry" @tap="refreshAnalysis">点击生成</text>
         </view>
       </view>
     </view>
 
-    <view class="footer-tip">
-      <text>想追问细节？</text>
-      <navigator class="footer-link" url="/pages/ai/index">去和智康对话</navigator>
-    </view>
-
-    <!-- 健康小贴士：可滚动半屏 -->
     <view class="tips-section">
       <view class="tips-head">
         <view class="section-icon section-icon-tips"><text>💡</text></view>
@@ -120,8 +112,12 @@ export default {
         sleep: "0小时0分",
         weight: "",
         bmi: "",
+        weightBmi: "--",
         exerciseMinutes: "0",
-        dietCount: ""
+        dietCount: "",
+        periodSummary: "",
+        periodLastDate: "",
+        periodNextDate: ""
       },
       aiContent: "",
       aiLoading: false,
@@ -156,6 +152,46 @@ export default {
           tag: "心态",
           title: "健康习惯坚持不下来怎么办？",
           content: "从小目标开始：先养成一个习惯（如每天多走 1000 步或固定睡觉时间），再叠加下一个。记录进度、找同伴互相督促，比一次改很多更容易坚持。"
+        },
+        {
+          tag: "早餐",
+          title: "早餐怎么吃更健康？",
+          content: "建议有优质蛋白（蛋、奶、豆）和适量碳水，搭配一点蔬果。避免只吃精制主食或高糖糕点，早餐吃好有助稳定上午血糖和精力。"
+        },
+        {
+          tag: "久坐",
+          title: "久坐族怎么动？",
+          content: "每 30～45 分钟起身活动 2～3 分钟，做做伸展、走动。下班后可步行一段、爬楼梯，或在家做 10～15 分钟徒手训练，减少久坐带来的风险。"
+        },
+        {
+          tag: "压力",
+          title: "压力大时怎么调节？",
+          content: "试试深呼吸、短时散步或听音乐；保证睡眠、少熬夜。规律运动有助释放压力，必要时可与人倾诉或寻求专业支持。"
+        },
+        {
+          tag: "护眼",
+          title: "长时间用眼怎么护眼？",
+          content: "遵循 20-20-20 法则：每 20 分钟看 20 英尺外约 20 秒。屏幕亮度适中、保持距离，多眨眼；户外活动也有益眼健康。"
+        },
+        {
+          tag: "体重",
+          title: "体重波动正常吗？",
+          content: "日内或几天内 1～2 斤波动多与水分、饮食有关，属正常。更关注长期趋势：每周固定时间、空腹称重并记录，比单次数值更有参考意义。"
+        },
+        {
+          tag: "经期",
+          title: "经期可以运动吗？",
+          content: "可以。经期适度运动有助缓解不适、改善情绪。建议选择快走、瑜伽、拉伸等中低强度，避免剧烈跑跳和腹部挤压。量力而行，不适时休息。"
+        },
+        {
+          tag: "经期",
+          title: "经期饮食要注意什么？",
+          content: "多吃含铁食物（红肉、动物血、深色蔬菜）和维生素 C 助吸收；少喝冷饮、少吃生冷，可喝温水、红糖姜茶。保证睡眠、少熬夜，有助周期稳定。"
+        },
+        {
+          tag: "经期",
+          title: "经期周期多少天算正常？",
+          content: "一般 21～35 天为常见范围，经期 3～7 天。偶尔提前或推后几天多与压力、作息有关。建议记录周期，若长期不规律或异常出血，可咨询医生。"
         }
       ]
     };
@@ -188,13 +224,59 @@ export default {
         this.overview.sleep = data.sleep || "0小时0分";
         this.overview.weight = data.weight != null ? String(data.weight) : "";
         this.overview.bmi = data.bmi != null ? String(data.bmi) : "";
+        if (this.overview.weight || this.overview.bmi) {
+          this.overview.weightBmi = this.overview.weight ? `${this.overview.weight} kg` : "";
+          if (this.overview.bmi) this.overview.weightBmi += (this.overview.weightBmi ? " · " : "") + this.overview.bmi;
+        } else {
+          this.overview.weightBmi = "--";
+        }
         this.overview.exerciseMinutes = data.exerciseMinutes != null ? String(data.exerciseMinutes) : "0";
         this.overview.dietCount = data.dietCount != null ? `已记录 ${data.dietCount} 餐` : "";
+        await this.loadPeriodSummary();
         this.fetchAiAnalysis();
       } catch (err) {
         this.aiError = "获取数据失败，请稍后重试";
         this.aiContent = "";
       }
+    },
+    async loadPeriodSummary() {
+      const STORAGE_KEY = "periodRecords";
+      let list = [];
+      try {
+        const data = await request("/api/period/list", "GET", { userId: uni.getStorageSync("userId") || 1 });
+        if (Array.isArray(data)) list = data;
+      } catch (e) {
+        try {
+          const raw = uni.getStorageSync(STORAGE_KEY);
+          if (raw) list = JSON.parse(raw);
+        } catch (_) {}
+      }
+      if (list.length === 0) {
+        this.overview.periodSummary = "";
+        this.overview.periodLastDate = "";
+        this.overview.periodNextDate = "";
+        return;
+      }
+      const sorted = list
+        .map((item) => ({ start: item.startDate || item.start_date, end: item.endDate || item.end_date }))
+        .filter((item) => item.start)
+        .sort((a, b) => (b.start || "").localeCompare(a.start || ""));
+      const last = sorted[0];
+      if (!last) {
+        this.overview.periodSummary = "";
+        this.overview.periodLastDate = "";
+        this.overview.periodNextDate = "";
+        return;
+      }
+      const lastStr = last.start;
+      const d = new Date(lastStr.replace(/-/g, "/"));
+      d.setDate(d.getDate() + 28);
+      const nextStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      this.overview.periodLastDate = lastStr;
+      this.overview.periodNextDate = nextStr;
+      const shortLast = lastStr.length >= 5 ? lastStr.slice(-5) : lastStr;
+      const shortNext = nextStr.length >= 5 ? nextStr.slice(-5) : nextStr;
+      this.overview.periodSummary = `${shortLast} → ${shortNext}`;
     },
     getCacheKey() {
       const today = new Date();
@@ -215,9 +297,15 @@ export default {
       this.aiError = "";
       this.aiContent = "";
       const periodLabel = this.period === "day" ? "今日" : this.period === "week" ? "本周" : "本月";
-      const prompt = `你是一位贴心的健康顾问。请根据以下${periodLabel}的健康数据，用 2～4 句话简要总结健康状况，然后给出 2～3 条具体、可执行的改进建议。每条建议一行，简洁明了，每条不超过 25 字。不要寒暄，直接输出分析和建议。
+      let dataLine = `步数 ${this.overview.steps} 步，睡眠 ${this.overview.sleep}，体重/BMI ${this.overview.weightBmi || "未记录"}，运动 ${this.overview.exerciseMinutes} 分钟，饮食 ${this.overview.dietCount || "未记录"}`;
+      let periodInstruction = "";
+      if (this.overview.periodLastDate && this.overview.periodNextDate) {
+        dataLine += `，经期：最近一次 ${this.overview.periodLastDate}，预计下次 ${this.overview.periodNextDate}`;
+        periodInstruction = "上述数据中包含经期信息，请在总结或建议中至少包含一句与经期相关的健康提醒或注意事项。";
+      }
+      const prompt = `你是一位贴心的健康顾问。请根据以下${periodLabel}的健康数据，用 2～4 句话简要总结健康状况，然后给出 2～3 条具体、可执行的改进建议。每条建议一行，简洁明了，每条不超过 25 字。不要寒暄，直接输出分析和建议。${periodInstruction ? "\n\n" + periodInstruction : ""}
 
-数据：步数 ${this.overview.steps} 步，睡眠 ${this.overview.sleep}，体重 ${this.overview.weight || "未记录"} kg，BMI ${this.overview.bmi || "未记录"}，运动 ${this.overview.exerciseMinutes} 分钟，饮食 ${this.overview.dietCount || "未记录"}。`;
+数据：${dataLine}。`;
       try {
         const data = await request("/api/ai/chat", "POST", { message: prompt, store: false });
         const content = (data && data.content) ? String(data.content).trim() : "";
@@ -245,7 +333,7 @@ export default {
 <style>
 .page {
   padding: 20px 18px;
-  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  padding-bottom: calc(56px + env(safe-area-inset-bottom));
   min-height: 100vh;
   background: linear-gradient(180deg, #f5f1eb 0%, #e8e2db 50%, #fefcf9 100%);
   color: #0f172a;
@@ -381,6 +469,16 @@ export default {
   color: #1e293b;
 }
 
+.data-item-period .data-value-period {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  word-break: break-all;
+  white-space: normal;
+  text-align: center;
+  display: block;
+}
+
 .ai-card {
   box-shadow: 0 4px 20px rgba(79, 70, 229, 0.08);
 }
@@ -445,22 +543,6 @@ export default {
   display: block;
 }
 
-.footer-tip {
-  font-size: 13px;
-  color: #64748b;
-  text-align: center;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 14px;
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
-}
-
-.footer-link {
-  color: #4f46e5;
-  margin-left: 4px;
-  font-weight: 500;
-}
-
 .tips-section {
   background: #ffffff;
   border-radius: 20px;
@@ -493,8 +575,8 @@ export default {
 }
 
 .tips-scroll {
-  height: 42vh;
-  max-height: 340px;
+  height: 56vh;
+  max-height: 480px;
   padding: 16px 18px 24px;
   box-sizing: border-box;
 }

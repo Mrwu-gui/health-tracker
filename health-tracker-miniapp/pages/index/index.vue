@@ -6,7 +6,6 @@
       <navigator class="icon-btn" url="/pages/profile/index" open-type="switchTab">⚙</navigator>
     </view>
 
-    <!-- AI 入口：凸显 AI 能力 -->
     <view class="ai-hero">
       <view class="ai-hero-bg" />
       <view class="ai-hero-inner">
@@ -36,7 +35,6 @@
       </view>
     </view>
 
-    <!-- 今日概览 -->
     <view class="section-card">
       <view class="section-card-head">
         <view class="section-title-wrap">
@@ -51,14 +49,7 @@
               {{ overview.steps }}
               <text class="unit">步</text>
             </text>
-            <text class="meta">
-              运动 {{ overview.exerciseMinutes }} 分钟 · 卡路里约
-              <text class="strong">{{ overview.calories }} kcal</text>
-            </text>
-          </view>
-          <view class="progress">
-            <text class="progress-label">完成</text>
-            <text class="progress-value">{{ overview.progress }}%</text>
+            <text class="meta">约 <text class="strong">{{ overview.calories }}</text> kcal</text>
           </view>
         </view>
         <view class="overview-grid">
@@ -92,7 +83,6 @@
       </view>
     </view>
 
-    <!-- 今日提醒 -->
     <view class="section-card">
       <view class="section-card-head">
         <view class="section-title-wrap">
@@ -105,7 +95,7 @@
         <view v-if="reminders.length === 0" class="section-empty">
           <image class="section-empty-icon" src="/static/tabbar/remind.png" mode="widthFix" />
           <text class="section-empty-title">暂无今日提醒</text>
-          <text class="section-empty-desc">在提醒设置里添加运动、饮食或睡眠提醒</text>
+          <text class="section-empty-desc">添加提醒后在此展示</text>
           <navigator class="section-empty-link" url="/pages/reminders/index">去添加</navigator>
         </view>
         <view v-else class="reminder-list">
@@ -120,7 +110,6 @@
       </view>
     </view>
 
-    <!-- 今日目标 -->
     <view class="section-card">
       <view class="section-card-head">
         <view class="section-title-wrap">
@@ -133,7 +122,7 @@
         <view v-if="todayGoals.length === 0" class="section-empty">
           <image class="section-empty-icon" src="/static/tabbar/goal.png" mode="widthFix" />
           <text class="section-empty-title">暂无今日目标</text>
-          <text class="section-empty-desc">在目标管理里设置步数、睡眠或饮食目标</text>
+          <text class="section-empty-desc">设置目标后在此展示</text>
           <navigator class="section-empty-link" url="/pages/goal/index">去设置</navigator>
         </view>
         <view v-else class="goal-list">
@@ -161,9 +150,7 @@ export default {
     return {
       overview: {
         steps: "0",
-        exerciseMinutes: "0",
         calories: "0",
-        progress: "0",
         sleep: "0小时0分",
         weightBmi: "暂无",
         dietCount: "已记录 0 餐",
@@ -217,18 +204,15 @@ export default {
       try {
         const data = await request("/api/statistics/overview", "GET", { userId, period: "day" });
         if (data) {
-          this.overview.steps = data.steps || this.overview.steps;
+          this.overview.steps = data.steps != null ? String(data.steps) : this.overview.steps;
           this.overview.sleep = data.sleep || this.overview.sleep;
-          this.overview.calories = data.calories || this.overview.calories;
-          this.overview.exerciseMinutes = data.exerciseMinutes || "0";
           const weight = data.weight ? `${data.weight} kg` : "";
           const bmi = data.bmi ? ` · ${data.bmi}` : "";
           this.overview.weightBmi = weight ? `${weight}${bmi}` : "";
           this.overview.dietCount = `已记录 ${data.dietCount || 0} 餐`;
           this.overview.bpStatus = data.bpStatus || "";
-          const steps = parseInt(this.overview.steps, 10);
-          const progress = Math.min(100, Math.round((steps / 10000) * 100));
-          this.overview.progress = String(isNaN(progress) ? 0 : progress);
+          const stepsNum = parseInt(this.overview.steps, 10) || 0;
+          this.overview.calories = String(Math.round(stepsNum * 0.04));
         }
       } catch (err) {
         this.error = "获取概览失败";
@@ -302,14 +286,14 @@ export default {
       const period = this.timePeriod(hour);
       this.greetingTitle = `${period}好，${this.userName || "朋友"}`;
       const slot = Math.floor(hour / 3);
-      const key = `ai_greeting_${period}_${slot}_${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+      const key = `ai_greeting_norepeat_${period}_${slot}_${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
       const cached = uni.getStorageSync(key);
       if (cached) {
         this.aiGreeting = cached;
         return;
       }
       try {
-        const prompt = `请根据当前时间段生成一句简短温暖的问候语，称呼用户${this.userName || "朋友"}，不超过20字。时间段：${period}。`;
+        const prompt = `页面顶部已经显示了「${period}好，${this.userName || "朋友"}」，你不要再重复「${period}好」。请直接生成一句简短的承接语或引导语（例如愿您今日舒心、有什么想问的都可以问我等），不要包含「${period}好」或「早上好/下午好/晚上好」等时段问候，不超过20字。`;
         const data = await request("/api/ai/chat", "POST", { message: prompt, store: false });
         if (data && data.content) {
           this.aiGreeting = data.content;
@@ -330,7 +314,6 @@ export default {
     },
     applyDefaultOverview() {
       this.overview.steps = "0";
-      this.overview.exerciseMinutes = "0";
       this.overview.calories = "0";
       this.overview.sleep = "0小时0分";
       this.overview.weightBmi = "暂无";
@@ -515,7 +498,7 @@ export default {
 <style>
 .page {
   padding: 18px;
-  padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  padding-bottom: calc(56px + env(safe-area-inset-bottom));
   min-height: 100vh;
   background: #faf8f5;
   color: #0f172a;
@@ -842,28 +825,6 @@ export default {
 .strong {
   font-weight: 600;
   color: #0f172a;
-}
-
-.progress {
-  width: 64px;
-  height: 64px;
-  border-radius: 32px;
-  background: #e8e2db;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #0f172a;
-}
-
-.progress-label {
-  font-size: 10px;
-  color: #94a3b8;
-}
-
-.progress-value {
-  font-size: 14px;
-  font-weight: 600;
 }
 
 .overview-grid {

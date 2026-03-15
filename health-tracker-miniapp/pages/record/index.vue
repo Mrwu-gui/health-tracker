@@ -74,6 +74,32 @@
           <input class="input" type="number" placeholder="170" v-model="form.height" />
         </view>
       </view>
+      <view v-else-if="type === 'period'" class="form">
+        <view class="field">
+          <text class="label">经期开始日期</text>
+          <picker mode="date" :value="form.periodStart" @change="onPeriodStartChange">
+            <view class="picker">{{ form.periodStart || "选择日期" }}</view>
+          </picker>
+        </view>
+        <view class="field">
+          <text class="label">经期结束日期</text>
+          <picker mode="date" :value="form.periodEnd" @change="onPeriodEndChange">
+            <view class="picker">{{ form.periodEnd || "选择日期" }}</view>
+          </picker>
+        </view>
+        <view class="field">
+          <text class="label">经量</text>
+          <view class="pill-wrap">
+            <view
+              v-for="opt in periodFlowOptions"
+              :key="opt.value"
+              class="pill"
+              :class="{ active: form.periodFlow === opt.value }"
+              @tap="form.periodFlow = opt.value"
+            >{{ opt.label }}</view>
+          </view>
+        </view>
+      </view>
     </view>
     <view class="save-btn-view" @tap="saveThenBack">保存并返回</view>
   </view>
@@ -99,15 +125,23 @@ export default {
         sleepEnd: "",
         sleepDuration: "",
         weight: "",
-        height: ""
+        height: "",
+        periodStart: "",
+        periodEnd: "",
+        periodFlow: "medium"
       },
       exerciseTypes: ["步行", "跑步", "骑行"],
-      dietTypes: ["早餐", "午餐", "晚餐", "加餐"]
+      dietTypes: ["早餐", "午餐", "晚餐", "加餐"],
+      periodFlowOptions: [
+        { value: "light", label: "少" },
+        { value: "medium", label: "中" },
+        { value: "heavy", label: "多" }
+      ]
     };
   },
   computed: {
     pageTitle() {
-      const t = { exercise: "记录运动", diet: "记录饮食", sleep: "记录睡眠", weight: "记录体重" };
+      const t = { exercise: "记录运动", diet: "记录饮食", sleep: "记录睡眠", weight: "记录体重", period: "记录经期" };
       return t[this.type] || "记录";
     }
   },
@@ -118,6 +152,7 @@ export default {
     applyType(nextType) {
       const type = nextType || "exercise";
       this.type = type;
+      const today = this.todayDate();
       this.form = {
         exerciseType: "步行",
         steps: "",
@@ -131,8 +166,18 @@ export default {
         sleepEnd: "",
         sleepDuration: "",
         weight: "",
-        height: ""
+        height: "",
+        periodStart: today,
+        periodEnd: today,
+        periodFlow: "medium"
       };
+    },
+    onPeriodStartChange(e) {
+      this.form.periodStart = e.detail.value || "";
+      if (!this.form.periodEnd || this.form.periodEnd < this.form.periodStart) this.form.periodEnd = this.form.periodStart;
+    },
+    onPeriodEndChange(e) {
+      this.form.periodEnd = e.detail.value || "";
     },
     normalizeDateTime(date, time) {
       if (!time) return "";
@@ -197,6 +242,29 @@ export default {
             bmi,
             date: today
           });
+        } else if (this.type === "period") {
+          const payload = {
+            userId,
+            startDate: this.form.periodStart || today,
+            endDate: this.form.periodEnd || this.form.periodStart || today,
+            flow: this.form.periodFlow || "medium",
+            note: ""
+          };
+          try {
+            await request("/api/period/add", "POST", payload);
+          } catch (e) {
+            const key = "periodRecords";
+            const raw = uni.getStorageSync(key);
+            const arr = raw ? JSON.parse(raw) : [];
+            arr.unshift({
+              id: "local_" + Date.now(),
+              startDate: payload.startDate,
+              endDate: payload.endDate,
+              flow: payload.flow,
+              note: payload.note
+            });
+            uni.setStorageSync(key, JSON.stringify(arr));
+          }
         }
         uni.showToast({ title: "已保存", icon: "success" });
         setTimeout(() => uni.navigateBack(), 500);
@@ -216,6 +284,7 @@ export default {
 .field { display: flex; flex-direction: column; gap: 6px; }
 .label { font-size: 12px; color: #64748b; }
 .input { border: 1px solid #e8e2db; border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.picker { border: 1px solid #e8e2db; border-radius: 10px; padding: 10px 12px; font-size: 14px; color: #0f172a; background: #fff; }
 .pill-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
 .pill { padding: 8px 14px; border-radius: 20px; background: #f5f1eb; color: #64748b; font-size: 13px; }
 .pill.active { background: #2563eb; color: #fff; }

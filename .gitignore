@@ -11,3 +11,5 @@ health-tracker-web/dist/
 health-tracker-miniapp/node_modules/
 health-tracker-miniapp/unpackage/
 health-tracker-miniapp/.hbuilderx/
+.ssh/
+health-tracker-java/uploads/

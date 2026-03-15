@@ -83,6 +83,16 @@ CREATE TABLE IF NOT EXISTS weight_record (
   date DATE NOT NULL COMMENT 'Record date'
 ) COMMENT='Weight records';
 
+CREATE TABLE IF NOT EXISTS period_record (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
+  user_id BIGINT NOT NULL COMMENT 'User id',
+  start_date DATE NOT NULL COMMENT 'Period start date',
+  end_date DATE NOT NULL COMMENT 'Period end date',
+  flow INT COMMENT 'Flow level (int)',
+  note VARCHAR(255) COMMENT 'Notes',
+  created_at DATETIME COMMENT 'Created time'
+) COMMENT='Period records';
+
 CREATE TABLE IF NOT EXISTS health_record (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
   user_id BIGINT NOT NULL COMMENT 'User id',

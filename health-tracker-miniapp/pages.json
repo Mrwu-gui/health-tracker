@@ -1,8 +1,17 @@
 {
+  "globalStyle": {
+    "navigationBarBackgroundColor": "#faf8f5",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#faf8f5"
+  },
   "pages": [
     {
       "path": "pages/login/index",
-      "style": { "navigationBarTitleText": "登录" }
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationBarBackgroundColor": "#fef9f3",
+        "navigationStyle": "custom"
+      }
     },
     {
       "path": "pages/agreement/user",
@@ -22,7 +31,7 @@
     },
     {
       "path": "pages/data/index",
-      "style": { "navigationBarTitleText": "数据统计" }
+      "style": { "navigationBarTitleText": "分析" }
     },
     {
       "path": "pages/data/export",
@@ -75,6 +84,10 @@
     {
       "path": "pages/family/add",
       "style": { "navigationBarTitleText": "添加家庭成员" }
+    },
+    {
+      "path": "pages/period/index",
+      "style": { "navigationBarTitleText": "经期记录" }
     },
     {
       "path": "pages/privacy/index",

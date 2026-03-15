@@ -1,5 +1,5 @@
-const PRIMARY_BASE_URL = process.env.UNI_APP_BASE_URL || "https://datewell.xyz";
-const FALLBACK_BASE_URL = "https://www.datewell.xyz";
+const PRIMARY_BASE_URL = process.env.UNI_APP_BASE_URL || "http://127.0.0.1:8080";
+const FALLBACK_BASE_URL = "";
 export const API_BASE_URL = PRIMARY_BASE_URL;
 export function request(path, method = "GET", data = {}) {
   const token = uni.getStorageSync("token");

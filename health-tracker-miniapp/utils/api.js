@@ -1,13 +1,12 @@
 const DEFAULT_BASE_URL =
-  process.env.NODE_ENV === "development" ? "http://127.0.0.1:8080" : "";
+  process.env.NODE_ENV === "development"
+    ? "http://127.0.0.1:8080"
+    : "https://www.datewell.xyz";
 const BASE_URL = process.env.UNI_APP_BASE_URL || DEFAULT_BASE_URL;
 export const API_BASE_URL = BASE_URL;
 export function request(path, method = "GET", data = {}) {
   return new Promise((resolve, reject) => {
     const token = uni.getStorageSync("token");
-    if (typeof console !== "undefined") {
-      console.log("[api.request]", method, `${BASE_URL}${path}`, data);
-    }
     uni.request({
       url: `${BASE_URL}${path}`,
       method,

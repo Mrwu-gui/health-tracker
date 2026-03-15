@@ -7,6 +7,7 @@ export const API_BASE_URL = BASE_URL;
 export function request(path, method = "GET", data = {}) {
   return new Promise((resolve, reject) => {
     const token = uni.getStorageSync("token");
+    console.log("[api.request]", method, `${BASE_URL}${path}`, data);
     uni.request({
       url: `${BASE_URL}${path}`,
       method,

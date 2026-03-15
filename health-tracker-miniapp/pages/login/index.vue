@@ -37,7 +37,6 @@
 
 <script>
 import { request } from "../../utils/api";
-import { ensureDevLogin } from "../../utils/dev-auth";
 
 export default {
   data() {
@@ -48,7 +47,11 @@ export default {
     };
   },
   onShow() {
-    ensureDevLogin();
+    const token = uni.getStorageSync("token");
+    const userId = uni.getStorageSync("userId");
+    if (token && userId) {
+      uni.switchTab({ url: "/pages/index/index" });
+    }
   },
   methods: {
     logoImgError() {
@@ -61,8 +64,6 @@ export default {
     loginWeChat() {
       this.loading = true;
       this.message = "";
-      uni.removeStorageSync("__devLoginTriedAt");
-      uni.removeStorageSync("loginSource");
       uni.login({
         provider: "weixin",
         success: (res) => {
@@ -81,7 +82,6 @@ export default {
           if (data?.token) {
             uni.setStorageSync("token", data.token);
             if (data.userId) uni.setStorageSync("userId", data.userId);
-            uni.setStorageSync("loginSource", "wechat");
             const userId = data.userId;
             if (userId) {
               request("/api/user/profile", "GET", { userId })

@@ -120,6 +120,35 @@
 }
 ```
 
+## 3.3 元器回调插件配置（必须）
+**接口地址：**
+- `http://139.196.155.234:8080/api/ai/callback`
+
+**请求方式：**
+- `POST`
+
+**请求头：**
+- `Content-Type: application/json`
+
+**请求体：**
+- 必须包含 `userId`、`intent`、`payload`
+- `payload` 为意图对应字段
+
+**示例：**
+```json
+{
+  "userId": 1,
+  "intent": "reminder",
+  "payload": {
+    "title": "吃药提醒",
+    "type": 4,
+    "content": "吃药",
+    "remind_time": "2026-03-16 07:00:00",
+    "status": "待提醒"
+  }
+}
+```
+
 ---
 
 ## 4. 大量示例（每类 3 个）

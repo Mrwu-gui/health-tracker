@@ -1,8 +1,8 @@
 <template>
   <view class="page">
     <view class="header">
-      <text class="title">数据统计</text>
-      <navigator class="btn-dark btn-export" url="/pages/data/export">导出周报</navigator>
+      <text class="title">AI 健康分析</text>
+      <navigator class="btn-link" url="/pages/ai/index">去对话</navigator>
     </view>
 
     <view class="tabs">
@@ -17,85 +17,74 @@
       </view>
     </view>
 
-    <view class="summary">
-      <text class="summary-title">
-        <text class="fa-solid fa-lightbulb summary-icon">💡</text>
-        AI 健康建议
-      </text>
-      <text class="summary-note">基于你的运动、睡眠与体重数据生成</text>
-      <text v-for="(item, idx) in aiSummary" :key="idx" class="summary-item">· {{ item }}</text>
-      <text v-if="aiSummary.length === 0" class="summary-item">· 暂无智能解读。</text>
-    </view>
-
-    <view class="grid">
-      <view class="card">
-        <text class="label">体重</text>
-        <text class="value">{{ overview.weight || "--" }} kg</text>
-        <text class="sub">较上周 {{ weightDelta }}</text>
-      </view>
-      <view class="card">
-        <text class="label">步数</text>
-        <text class="value">{{ overview.steps }} 步</text>
-        <text class="sub">完成 {{ overview.progress }}%</text>
-      </view>
-      <view class="card">
-        <text class="label">睡眠</text>
-        <text class="value">{{ overview.sleep }}</text>
-        <text class="sub">评分 {{ sleepScore }}</text>
-      </view>
-      <view class="card">
-        <text class="label">用药完成率</text>
-        <text class="value">{{ medRate }}</text>
-        <text class="sub">本周漏服 {{ medMiss }} 次</text>
-      </view>
-    </view>
-
-    <view class="card large">
-      <view class="card-head">
-        <text class="card-title">体重变化</text>
-        <text class="card-sub">最近 7 天</text>
-      </view>
-      <view class="line">
-        <view class="line-row" v-for="n in 3" :key="n"></view>
-        <view class="line-path"></view>
-      </view>
-    </view>
-
-    <view class="card large">
-      <view class="card-head">
-        <text class="card-title">
-          <text class="fa-solid fa-person-running card-icon">🏃</text>
-          运动数据
-        </text>
-        <view class="pill">
-          <text class="pill-item active">步数</text>
-          <text class="pill-item">时长</text>
+    <!-- 本周期数据摘要（供 AI 分析用） -->
+    <view class="section-card">
+      <view class="section-head">
+        <view class="section-title-wrap">
+          <view class="section-icon section-icon-data"><text>📋</text></view>
+          <text class="section-title">本{{ periodLabel }}数据</text>
         </view>
       </view>
-      <view class="bars">
-        <view v-for="(v, idx) in stepBars" :key="idx" class="bar">
-          <view class="bar-fill" :style="{ height: `${v}%` }"></view>
+      <view class="data-grid">
+        <view class="data-item">
+          <text class="data-label">步数</text>
+          <text class="data-value">{{ overview.steps }} 步</text>
+        </view>
+        <view class="data-item">
+          <text class="data-label">睡眠</text>
+          <text class="data-value">{{ overview.sleep }}</text>
+        </view>
+        <view class="data-item">
+          <text class="data-label">体重</text>
+          <text class="data-value">{{ overview.weight ? overview.weight + ' kg' : '--' }}</text>
+        </view>
+        <view class="data-item">
+          <text class="data-label">BMI</text>
+          <text class="data-value">{{ overview.bmi || '--' }}</text>
+        </view>
+        <view class="data-item">
+          <text class="data-label">运动</text>
+          <text class="data-value">{{ overview.exerciseMinutes || '0' }} 分钟</text>
+        </view>
+        <view class="data-item">
+          <text class="data-label">饮食</text>
+          <text class="data-value">{{ overview.dietCount || '--' }}</text>
         </view>
       </view>
     </view>
 
-    <view class="grid two">
-      <view class="card">
-        <text class="label">睡眠结构</text>
-        <view class="progress">
-          <view class="progress-fill" :style="{ width: `${sleepDeep}%` }"></view>
+    <!-- AI 解读主卡 -->
+    <view class="section-card ai-card">
+      <view class="section-head">
+        <view class="section-title-wrap">
+          <view class="section-icon section-icon-ai"><text>✨</text></view>
+          <text class="section-title">AI 为你解读</text>
         </view>
-        <text class="sub">深睡 {{ sleepDeep }}% · 浅睡 {{ 100 - sleepDeep }}%</text>
+        <text v-if="!aiLoading && aiContent" class="btn-text" @tap="refreshAnalysis">重新分析</text>
       </view>
-      <view class="card">
-        <text class="label">用药完成率</text>
-        <view class="ring">
-          <text class="ring-value">{{ medRate }}</text>
+      <view class="ai-body">
+        <view v-if="aiLoading" class="ai-loading">
+          <text class="ai-loading-dot">·</text>
+          <text class="ai-loading-text">正在分析你的数据...</text>
         </view>
-        <text class="sub">本周漏服 {{ medMiss }} 次</text>
+        <view v-else-if="aiError" class="ai-error">
+          <text>{{ aiError }}</text>
+          <text class="ai-retry" @tap="refreshAnalysis">点击重试</text>
+        </view>
+        <view v-else-if="aiContent" class="ai-content">
+          <text class="ai-text">{{ aiContent }}</text>
+        </view>
+        <view v-else class="ai-empty">
+          <text>暂无解读，请确保已记录步数、睡眠等数据后重试。</text>
+          <text class="ai-retry" @tap="refreshAnalysis">点击生成</text>
+        </view>
       </view>
     </view>
 
+    <view class="footer-tip">
+      <text>想追问细节？</text>
+      <navigator class="footer-link" url="/pages/ai/index">去和 AI 健康助手对话</navigator>
+    </view>
   </view>
 </template>
 
@@ -107,29 +96,36 @@ export default {
     return {
       period: "day",
       periods: [
-        { label: "日", value: "day" },
-        { label: "周", value: "week" },
-        { label: "月", value: "month" }
+        { label: "今日", value: "day" },
+        { label: "本周", value: "week" },
+        { label: "本月", value: "month" }
       ],
       overview: {
         steps: "0",
-        progress: "0",
         sleep: "0小时0分",
         weight: "",
-        bmi: ""
+        bmi: "",
+        exerciseMinutes: "0",
+        dietCount: ""
       },
-      stepBars: [0, 0, 0, 0, 0, 0, 0],
-      sleepDeep: 0,
-      weightDelta: "--",
-      sleepScore: "--",
-      medRate: "--",
-      medMiss: "0",
-      aiSummary: []
+      aiContent: "",
+      aiLoading: false,
+      aiError: ""
     };
   },
-  onLoad() {
+  computed: {
+    periodLabel() {
+      const map = { day: "日", week: "周", month: "月" };
+      return map[this.period] || "期";
+    }
   },
   onShow() {
+    const pages = getCurrentPages();
+    const page = pages[pages.length - 1];
+    if (page && typeof page.getTabBar === "function") {
+      const tabBar = page.getTabBar();
+      if (tabBar && typeof tabBar.setData === "function") tabBar.setData({ selected: 1 });
+    }
     this.fetchOverview();
   },
   methods: {
@@ -137,62 +133,63 @@ export default {
       this.period = value;
       this.fetchOverview();
     },
-    fetchOverview() {
+    async fetchOverview() {
       const userId = uni.getStorageSync("userId") || 1;
-      request("/api/statistics/overview", "GET", { userId, period: this.period })
-        .then((data) => {
-          this.overview.steps = data.steps || "0";
-          this.overview.sleep = data.sleep || "0小时0分";
-          this.overview.weight = data.weight || "";
-          this.overview.bmi = data.bmi || "";
-          const steps = parseInt(this.overview.steps, 10);
-          const progress = Math.min(100, Math.round((steps / 10000) * 100));
-          this.overview.progress = String(isNaN(progress) ? 0 : progress);
-          this.fetchAiSummary();
-        })
-        .catch(() => {});
-    },
-    applyDefaultData() {
-      this.overview.steps = "0";
-      this.overview.progress = "0";
-      this.overview.sleep = "0小时0分";
-      this.overview.weight = "";
-      this.overview.bmi = "";
-      this.stepBars = [0, 0, 0, 0, 0, 0, 0];
-      this.sleepDeep = 0;
-      this.weightDelta = "--";
-      this.sleepScore = "--";
-      this.medRate = "--";
-      this.medMiss = "0";
-    },
-    exportReport() {
-      uni.showToast({ title: "已生成周报", icon: "success" });
-    },
-    async fetchAiSummary() {
-      const today = new Date();
-      const key = `ai_summary_${this.period}_${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
-      const cached = uni.getStorageSync(key);
-      if (cached && Array.isArray(cached) && cached.length) {
-        this.aiSummary = cached;
-        return;
-      }
       try {
-        const prompt = `请根据以下健康数据生成3条可执行建议，每条不超过20字：步数${this.overview.steps}，睡眠${this.overview.sleep}，体重${this.overview.weight}，BMI${this.overview.bmi}。`;
+        const data = await request("/api/statistics/overview", "GET", { userId, period: this.period });
+        this.overview.steps = data.steps != null ? String(data.steps) : "0";
+        this.overview.sleep = data.sleep || "0小时0分";
+        this.overview.weight = data.weight != null ? String(data.weight) : "";
+        this.overview.bmi = data.bmi != null ? String(data.bmi) : "";
+        this.overview.exerciseMinutes = data.exerciseMinutes != null ? String(data.exerciseMinutes) : "0";
+        this.overview.dietCount = data.dietCount != null ? `已记录 ${data.dietCount} 餐` : "";
+        this.fetchAiAnalysis();
+      } catch (err) {
+        this.aiError = "获取数据失败，请稍后重试";
+        this.aiContent = "";
+      }
+    },
+    getCacheKey() {
+      const today = new Date();
+      return `ai_analysis_${this.period}_${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+    },
+    async fetchAiAnalysis(forceRefresh) {
+      if (this.aiLoading) return;
+      const key = this.getCacheKey();
+      if (!forceRefresh) {
+        const cached = uni.getStorageSync(key);
+        if (cached && typeof cached === "string" && cached.length > 0) {
+          this.aiContent = cached;
+          this.aiError = "";
+          return;
+        }
+      }
+      this.aiLoading = true;
+      this.aiError = "";
+      this.aiContent = "";
+      const periodLabel = this.period === "day" ? "今日" : this.period === "week" ? "本周" : "本月";
+      const prompt = `你是一位贴心的健康顾问。请根据以下${periodLabel}的健康数据，用 2～4 句话简要总结健康状况，然后给出 2～3 条具体、可执行的改进建议。每条建议一行，简洁明了，每条不超过 25 字。不要寒暄，直接输出分析和建议。
+
+数据：步数 ${this.overview.steps} 步，睡眠 ${this.overview.sleep}，体重 ${this.overview.weight || "未记录"} kg，BMI ${this.overview.bmi || "未记录"}，运动 ${this.overview.exerciseMinutes} 分钟，饮食 ${this.overview.dietCount || "未记录"}。`;
+      try {
         const data = await request("/api/ai/chat", "POST", { message: prompt, store: false });
-        if (data && data.content) {
-          const items = data.content
-            .split(/\n|。|；|;/)
-            .map((item) => item.replace(/^·\s*/, "").trim())
-            .filter((item) => item.length > 0)
-            .slice(0, 3);
-          this.aiSummary = items;
-          if (items.length) {
-            uni.setStorageSync(key, items);
-          }
+        const content = (data && data.content) ? String(data.content).trim() : "";
+        if (content) {
+          this.aiContent = content;
+          uni.setStorageSync(key, content);
+        } else {
+          this.aiError = "AI 暂未返回解读";
         }
       } catch (err) {
-        this.aiSummary = [];
+        this.aiError = err.message || "分析失败，请稍后重试";
+      } finally {
+        this.aiLoading = false;
       }
+    },
+    refreshAnalysis() {
+      const key = this.getCacheKey();
+      uni.removeStorageSync(key);
+      this.fetchAiAnalysis(true);
     }
   }
 };
@@ -214,30 +211,17 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
-  margin-left: -18px;
-  margin-right: -18px;
-  padding-left: 18px;
-  padding-right: 18px;
-  box-sizing: border-box;
 }
 
 .title {
   font-size: 18px;
   font-weight: 600;
+  color: #0f172a;
 }
 
-.btn-dark {
-  background: #2563eb;
-  color: #ffffff;
-  border-radius: 12px;
-  font-size: 11px;
-  padding: 6px 12px;
-}
-
-.btn-export {
-  flex-shrink: 0;
-  margin-right: 0;
+.btn-link {
+  font-size: 13px;
+  color: #2563eb;
 }
 
 .tabs {
@@ -246,12 +230,11 @@ export default {
   border-radius: 999px;
   padding: 2px;
   gap: 4px;
-  align-self: flex-start;
 }
 
 .tab {
-  font-size: 11px;
-  padding: 4px 10px;
+  font-size: 12px;
+  padding: 6px 14px;
   border-radius: 999px;
   color: #64748b;
 }
@@ -259,194 +242,153 @@ export default {
 .tab.active {
   background: #ffffff;
   color: #0f172a;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.grid.two {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.card {
+.section-card {
   background: #ffffff;
-  border-radius: 16px;
-  padding: 12px;
+  border-radius: 18px;
+  padding: 0;
   border: 1px solid #e2e8f0;
+  overflow: hidden;
 }
 
-.card.large {
-  grid-column: span 2;
-}
-
-.label {
-  font-size: 11px;
-  color: #94a3b8;
-  display: block;
-}
-
-.value {
-  font-size: 14px;
-  font-weight: 600;
-  margin-top: 6px;
-  display: block;
-}
-
-.sub {
-  font-size: 10px;
-  color: #64748b;
-  margin-top: 4px;
-  display: block;
-}
-
-.card-head {
+.section-head {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.card-title {
-  font-size: 12px;
+.section-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.section-icon-data {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+.section-icon-ai {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #b45309;
+}
+
+.section-title {
+  font-size: 15px;
   font-weight: 600;
-}
-
-.card-sub {
-  font-size: 10px;
-  color: #94a3b8;
-}
-
-.line {
-  height: 100px;
-  position: relative;
-}
-
-.line-row {
-  height: 33%;
-  border-top: 1px dashed #e2e8f0;
-}
-
-.line-path {
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  top: 30px;
-  height: 40px;
-  border-bottom: 2px solid #2563eb;
-  border-left: 2px solid #2563eb;
-  border-top-right-radius: 12px;
-}
-
-.pill {
-  display: inline-flex;
-  background: #e2e8f0;
-  border-radius: 999px;
-  padding: 2px;
-  gap: 4px;
-}
-
-.pill-item {
-  font-size: 10px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  color: #64748b;
-}
-
-.pill-item.active {
-  background: #ffffff;
   color: #0f172a;
 }
 
-.bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  height: 80px;
-}
-
-.bar {
-  flex: 1;
-  background: #dbeafe;
-  border-radius: 999px;
-  overflow: hidden;
-  display: flex;
-  align-items: flex-end;
-}
-
-.bar-fill {
-  width: 100%;
-  background: #2563eb;
-}
-
-.progress {
-  width: 100%;
-  height: 8px;
-  background: #e2e8f0;
-  border-radius: 999px;
-  overflow: hidden;
-  margin-top: 8px;
-}
-
-.progress-fill {
-  height: 100%;
-  background: #6366f1;
-}
-
-.ring {
-  width: 60px;
-  height: 60px;
-  border-radius: 30px;
-  border: 6px solid #e2e8f0;
-  display: grid;
-  place-items: center;
-  margin: 8px auto;
-}
-
-.ring-value {
+.btn-text {
   font-size: 12px;
-  font-weight: 600;
+  color: #64748b;
 }
 
-.summary {
-  background: #0f172a;
-  color: #e2e8f0;
-  border-radius: 16px;
-  padding: 12px;
+.data-grid {
   display: grid;
-  gap: 6px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 14px 16px;
 }
 
-.summary-title {
-  font-size: 12px;
-  font-weight: 600;
+.data-item {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.summary-note {
+.data-label {
   font-size: 11px;
   color: #94a3b8;
-  margin-top: 2px;
 }
 
-.summary-item {
-  font-size: 11px;
-  color: #cbd5f5;
+.data-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
 }
 
-.summary-icon {
-  color: #fbbf24;
-  font-size: 12px;
+.ai-card .section-head {
+  border-bottom-color: #fef3c7;
 }
 
-.card-icon {
+.ai-body {
+  padding: 16px;
+  min-height: 100px;
+}
+
+.ai-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+}
+
+.ai-loading-dot {
+  font-size: 18px;
+  animation: blink 0.8s ease-in-out infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.3; }
+}
+
+.ai-loading-text {
+  font-size: 13px;
+}
+
+.ai-error,
+.ai-empty {
+  font-size: 13px;
+  color: #64748b;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-retry {
   font-size: 12px;
   color: #2563eb;
-  margin-right: 6px;
+}
+
+.ai-content {
+  width: 100%;
+}
+
+.ai-text {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #334155;
+  white-space: pre-wrap;
+  word-break: break-word;
+  display: block;
+}
+
+.footer-tip {
+  font-size: 12px;
+  color: #94a3b8;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.footer-link {
+  color: #2563eb;
+  margin-left: 4px;
 }
 </style>

@@ -2,104 +2,149 @@
   <view class="page-root">
     <view class="page">
     <view class="header">
-      <text class="header-title">健康管家</text>
+      <text class="greeting-text">{{ greetingTitle }}</text>
       <navigator class="icon-btn" url="/pages/profile/index" open-type="switchTab">⚙</navigator>
     </view>
 
-    <view class="care-card">
-      <view class="care-icon">
-        <text class="fa-solid fa-sun">☀</text>
-      </view>
-      <view class="care-body">
-        <text class="care-title">{{ greetingTitle }}</text>
-        <text class="care-sub">
-          {{ aiGreeting || "今天也坚持记录一下吧，每一小步，都是向健康靠近的一大步。" }}
-        </text>
-      </view>
-    </view>
-
-    <view class="overview-card">
-      <view class="overview-main">
-        <view class="overview-left">
-          <text class="label">今日概览</text>
-          <text class="steps">
-            {{ overview.steps }}
-            <text class="unit">步</text>
-          </text>
-          <text class="meta">
-            运动 {{ overview.exerciseMinutes }} 分钟 · 卡路里约
-            <text class="strong">{{ overview.calories }} kcal</text>
-          </text>
+    <!-- AI 入口：凸显 AI 能力 -->
+    <view class="ai-hero">
+      <view class="ai-hero-bg" />
+      <view class="ai-hero-inner">
+        <view class="ai-hero-label">
+          <text class="ai-hero-dot">✨</text>
+          <text>AI 健康助手</text>
         </view>
-        <view class="progress">
-          <text class="progress-label">完成</text>
-          <text class="progress-value">{{ overview.progress }}%</text>
-        </view>
-      </view>
-      <view class="overview-grid">
-        <view class="overview-item">
-          <text class="label">睡眠</text>
-          <text class="value">{{ overview.sleep }}</text>
-        </view>
-        <view class="overview-item">
-          <text class="label">体重 / BMI</text>
-          <text class="value">{{ overview.weightBmi }}</text>
-        </view>
-        <view class="overview-item">
-          <text class="label">饮食记录</text>
-          <text class="value">{{ overview.dietCount }}</text>
-        </view>
-        <view class="overview-item">
-          <text class="label">血压 / 心率</text>
-          <text class="value">{{ overview.bpStatus }}</text>
-        </view>
-      </view>
-      <!-- #ifdef MP-WEIXIN -->
-      <button
-        v-if="needsSteps"
-        class="sync-btn"
-        @tap="syncSteps"
-        :disabled="syncLoading"
-      >
-        {{ syncLoading ? "同步中..." : "获取步数" }}
-      </button>
-      <button v-if="needsSteps" class="manual-btn" @tap="manualSteps">
-        手动填写步数（本地测试）
-      </button>
-      <!-- #endif -->
-    </view>
-
-    <view class="card">
-      <view class="card-head">
-        <text class="card-title">今日提醒</text>
-        <navigator class="link" url="/pages/reminders/index">查看全部</navigator>
-      </view>
-      <view class="reminder-list overview-list">
-      <view v-for="item in reminders" :key="item.id" class="reminder-item">
-          <view>
-            <text class="reminder-title">{{ item.title }}</text>
-            <text class="reminder-meta">{{ item.time }} · {{ item.content }}</text>
+        <text class="ai-hero-desc">{{ aiGreeting || "有什么想问的？问饮食、运动、睡眠都可以。" }}</text>
+        <view class="ai-quick-actions">
+          <view class="ai-quick-item" @tap="goAiWithQuery('今天吃什么比较健康？')">
+            <text class="ai-quick-icon">🍽</text>
+            <text class="ai-quick-text">今天吃什么</text>
           </view>
-          <text class="reminder-tag">{{ item.typeLabel || "提醒" }}</text>
+          <view class="ai-quick-item" @tap="goAiWithQuery('给我一些适合今天的运动建议')">
+            <text class="ai-quick-icon">🏃</text>
+            <text class="ai-quick-text">运动建议</text>
+          </view>
+          <view class="ai-quick-item" @tap="goAiWithQuery('如何改善睡眠质量？')">
+            <text class="ai-quick-icon">😴</text>
+            <text class="ai-quick-text">睡眠建议</text>
+          </view>
         </view>
-        <text v-if="reminders.length === 0" class="empty">今天还没有提醒，记得在提醒设置里添加哦。</text>
+        <navigator class="ai-hero-btn" url="/pages/ai/index" open-type="switchTab">
+          <text>去和 AI 对话</text>
+          <text class="ai-hero-arrow">›</text>
+        </navigator>
       </view>
     </view>
 
-    <view class="card">
-      <view class="card-head">
-        <text class="card-title">今日目标</text>
-        <navigator class="link" url="/pages/goal/index">查看目标</navigator>
-      </view>
-      <view class="goal-list overview-list">
-        <view v-for="item in todayGoals" :key="item.id" class="goal-item">
-          <view class="goalinfo">
-            <text class="goal-name">{{ item.goalLabel }}目标</text>
-            <text class="goal-desc">已完成 {{ item.currentValue }} / {{ item.targetValue }}{{ item.unit }}</text>
-          </view>
-          <text class="goal-progress">{{ item.progress }}%</text>
+    <!-- 今日概览 -->
+    <view class="section-card">
+      <view class="section-card-head">
+        <view class="section-title-wrap">
+          <view class="section-icon section-icon-overview"><text>📊</text></view>
+          <text class="section-title">今日概览</text>
         </view>
-        <text v-if="todayGoals.length === 0" class="empty">还没有设置目标，去目标管理里设置一下吧。</text>
+      </view>
+      <view class="section-card-body">
+        <view class="overview-main">
+          <view class="overview-left">
+            <text class="steps">
+              {{ overview.steps }}
+              <text class="unit">步</text>
+            </text>
+            <text class="meta">
+              运动 {{ overview.exerciseMinutes }} 分钟 · 卡路里约
+              <text class="strong">{{ overview.calories }} kcal</text>
+            </text>
+          </view>
+          <view class="progress">
+            <text class="progress-label">完成</text>
+            <text class="progress-value">{{ overview.progress }}%</text>
+          </view>
+        </view>
+        <view class="overview-grid">
+          <view class="overview-item">
+            <text class="label">睡眠</text>
+            <text class="value">{{ overview.sleep }}</text>
+          </view>
+          <view class="overview-item">
+            <text class="label">体重 / BMI</text>
+            <template v-if="overview.weightBmi && overview.weightBmi !== '暂无'">
+              <text class="value">{{ overview.weightBmi }}</text>
+            </template>
+            <view v-else class="overview-empty-cell" @tap="goProfileAndOpenModal">
+              <text class="overview-empty-link">去记录</text>
+            </view>
+          </view>
+          <view class="overview-item">
+            <text class="label">饮食记录</text>
+            <text class="value">{{ overview.dietCount }}</text>
+          </view>
+          <view class="overview-item">
+            <text class="label">血压 / 心率</text>
+            <template v-if="overview.bpStatus && overview.bpStatus !== '暂无'">
+              <text class="value">{{ overview.bpStatus }}</text>
+            </template>
+            <view v-else class="overview-empty-cell" @tap="goProfileAndOpenModal">
+              <text class="overview-empty-link">去记录</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 今日提醒 -->
+    <view class="section-card">
+      <view class="section-card-head">
+        <view class="section-title-wrap">
+          <view class="section-icon section-icon-reminder"><text>🔔</text></view>
+          <text class="section-title">今日提醒</text>
+        </view>
+        <navigator class="section-link" url="/pages/reminders/index">查看全部</navigator>
+      </view>
+      <view class="section-card-body">
+        <view v-if="reminders.length === 0" class="section-empty">
+          <text class="section-empty-icon">🔔</text>
+          <text class="section-empty-title">暂无今日提醒</text>
+          <text class="section-empty-desc">在提醒设置里添加运动、饮食或睡眠提醒</text>
+          <navigator class="section-empty-link" url="/pages/reminders/index">去添加</navigator>
+        </view>
+        <view v-else class="reminder-list">
+          <view v-for="item in reminders" :key="item.id" class="list-item">
+            <view class="list-item-main">
+              <text class="list-item-title">{{ item.title }}</text>
+              <text class="list-item-meta">{{ item.time }} · {{ item.content }}</text>
+            </view>
+            <text class="list-item-tag list-item-tag-reminder">{{ item.typeLabel || "提醒" }}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 今日目标 -->
+    <view class="section-card">
+      <view class="section-card-head">
+        <view class="section-title-wrap">
+          <view class="section-icon section-icon-goal"><text>🎯</text></view>
+          <text class="section-title">今日目标</text>
+        </view>
+        <navigator class="section-link" url="/pages/goal/index">查看目标</navigator>
+      </view>
+      <view class="section-card-body">
+        <view v-if="todayGoals.length === 0" class="section-empty">
+          <text class="section-empty-icon">🎯</text>
+          <text class="section-empty-title">暂无今日目标</text>
+          <text class="section-empty-desc">在目标管理里设置步数、睡眠或饮食目标</text>
+          <navigator class="section-empty-link" url="/pages/goal/index">去设置</navigator>
+        </view>
+        <view v-else class="goal-list">
+          <view v-for="item in todayGoals" :key="item.id" class="list-item">
+            <view class="list-item-main">
+              <text class="list-item-title">{{ item.goalLabel }}目标</text>
+              <text class="list-item-meta">已完成 {{ item.currentValue }} / {{ item.targetValue }}{{ item.unit }}</text>
+            </view>
+            <text class="list-item-tag list-item-tag-goal">{{ item.progress }}%</text>
+          </view>
+        </view>
       </view>
     </view>
 
@@ -149,6 +194,7 @@ export default {
     // #endif
   },
   onShow() {
+    this.updateTabBarSelected(0);
     this.fetchOverview();
   },
   computed: {
@@ -205,7 +251,7 @@ export default {
             id: item.id,
             title: item.title,
             content: item.content || "提醒事项",
-            time: item.remindTime || "未设置",
+            time: this.formatReminderTime(item.remindTime),
             typeLabel: this.reminderTagLabel(item.type)
           }));
 		this.reminders = mapped
@@ -416,10 +462,44 @@ export default {
           return "目标";
       }
     },
+    formatReminderTime(value) {
+      if (!value) return "未设置";
+      if (typeof value === "string" && value.length <= 8 && value.includes(":")) {
+        return value;
+      }
+      const date = new Date(value);
+      if (isNaN(date.getTime())) return String(value);
+      const pad = (num) => String(num).padStart(2, "0");
+      const yyyy = date.getFullYear();
+      const mm = pad(date.getMonth() + 1);
+      const dd = pad(date.getDate());
+      const hh = pad(date.getHours());
+      const mi = pad(date.getMinutes());
+      const ss = pad(date.getSeconds());
+      return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+    },
     goStats() {
       uni.switchTab({ url: "/pages/data/index" });
     },
+    updateTabBarSelected(index) {
+      const pages = getCurrentPages();
+      const page = pages[pages.length - 1];
+      if (page && typeof page.getTabBar === "function") {
+        const tabBar = page.getTabBar();
+        if (tabBar && typeof tabBar.setData === "function") {
+          tabBar.setData({ selected: index });
+        }
+      }
+    },
     goProfile() {
+      uni.switchTab({ url: "/pages/profile/index" });
+    },
+    goAiWithQuery(query) {
+      uni.setStorageSync("aiInitialMessage", query || "");
+      uni.switchTab({ url: "/pages/ai/index" });
+    },
+    goProfileAndOpenModal() {
+      uni.setStorageSync("openProfileModal", "1");
       uni.switchTab({ url: "/pages/profile/index" });
     },
     openRecord(type) {
@@ -453,16 +533,10 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
-.header-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.header .title {
+.greeting-text {
   font-size: 18px;
   font-weight: 600;
   color: #0f172a;
@@ -483,48 +557,253 @@ export default {
   justify-content: center;
 }
 
-.care-card {
-  background: #0f172a;
-  color: #ffffff;
-  border-radius: 18px;
-  padding: 12px;
-  display: flex;
-  gap: 12px;
-  align-items: center;
+/* AI 入口大卡 */
+.ai-hero {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 4px;
 }
 
-.care-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 16px;
-  background: #1e293b;
-  display: grid;
-  place-items: center;
-  color: #fbbf24;
+.ai-hero-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 50%, #312e81 100%);
+}
+
+.ai-hero-inner {
+  position: relative;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ai-hero-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.ai-hero-dot {
   font-size: 14px;
 }
 
-.care-title {
+.ai-hero-desc {
+  font-size: 14px;
+  color: #e2e8f0;
+  line-height: 1.5;
+}
+
+.ai-quick-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ai-quick-item {
+  flex: 1;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.ai-quick-icon {
+  font-size: 22px;
+}
+
+.ai-quick-text {
+  font-size: 12px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.ai-hero-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 16px;
+  background: #fff;
+  color: #1e3a5f;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.ai-hero-arrow {
+  font-size: 18px;
+  font-weight: 300;
+}
+
+/* 统一区块卡片：今日概览 / 今日提醒 / 今日目标 */
+.section-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 0;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.section-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.section-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.section-icon-overview {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.section-icon-reminder {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.section-icon-goal {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.section-link {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.section-card-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 统一列表项样式（提醒、目标共用） */
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+
+.list-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.list-item-title {
   font-size: 13px;
   font-weight: 600;
+  color: #0f172a;
   display: block;
 }
 
-.care-sub {
+.list-item-meta {
   font-size: 11px;
-  color: #cbd5f5;
+  color: #64748b;
   margin-top: 4px;
   display: block;
 }
 
-.overview-card {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 14px;
-  border: 1px solid #f1f5f9;
+.list-item-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-left: 10px;
+  flex-shrink: 0;
+}
+
+.list-item-tag-reminder {
+  color: #b45309;
+  background: #fef3c7;
+}
+
+.list-item-tag-goal {
+  color: #059669;
+  background: #d1fae5;
+}
+
+.reminder-list,
+.goal-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+}
+
+.section-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 16px;
+  background: #f8fafc;
+  border-radius: 14px;
+  border: 1px dashed #e2e8f0;
+}
+
+.section-empty-icon {
+  font-size: 36px;
+  margin-bottom: 10px;
+  opacity: 0.85;
+}
+
+.section-empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.section-empty-desc {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin-bottom: 12px;
+}
+
+.section-empty-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: #2563eb;
 }
 
 .overview-main {
@@ -605,52 +884,16 @@ export default {
   font-weight: 600;
 }
 
-.sync-btn {
-  margin-top: 6px;
-  align-self: flex-start;
-  background: #2563eb;
-  color: #ffffff;
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 11px;
-}
-
-.manual-btn {
-  margin-top: 8px;
-  align-self: flex-start;
-  background: #f1f5f9;
-  color: #475569;
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 11px;
-}
-
-.card {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 14px;
-  border: 1px solid #f1f5f9;
+.overview-empty-cell {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 4px;
 }
 
-.card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.card-title {
+.overview-empty-link {
   font-size: 12px;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.card-title.with-icon {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  color: #2563eb;
 }
 
 
@@ -663,81 +906,6 @@ export default {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-}
-
-.reminder-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.reminder-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #f8fafc;
-  padding: 10px 12px;
-  border-radius: 14px;
-}
-
-.reminder-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: #0f172a;
-  display: block;
-}
-
-.reminder-meta {
-  font-size: 10px;
-  color: #94a3b8;
-  margin-top: 4px;
-  display: block;
-}
-
-.reminder-tag {
-  font-size: 10px;
-  color: #2563eb;
-  background: #e0f2fe;
-  padding: 4px 8px;
-  border-radius: 999px;
-}
-
-.goal-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.goal-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #f8fafc;
-  padding: 10px 12px;
-  border-radius: 14px;
-}
-
-.goal-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.goal-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.goal-desc {
-  font-size: 10px;
-  color: #94a3b8;
-}
-
-.goal-progress {
-  font-size: 12px;
-  font-weight: 600;
-  color: #2563eb;
 }
 
 .quick-item {

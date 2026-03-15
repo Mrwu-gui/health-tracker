@@ -1,8 +1,8 @@
 <template>
   <view class="page">
     <view class="header">
-      <text class="title">家庭成员</text>
-      <button class="btn-dark" @tap="openAdd">邀请家人</button>
+      <view />
+      <button class="add-btn" @tap="openAdd">+</button>
     </view>
 
     <view class="intro">
@@ -11,6 +11,11 @@
     </view>
 
     <view class="list">
+      <view v-if="members.length === 0" class="empty-state">
+        <text class="empty-state-icon">👨‍👩‍👧</text>
+        <text class="empty-state-title">暂无家庭成员</text>
+        <text class="empty-state-desc">点击下方卡片或右上角 + 添加家人</text>
+      </view>
       <view v-for="item in members" :key="item.id" class="card" @tap="openEdit(item)">
         <view class="avatar">{{ item.name.slice(0, 1) }}</view>
         <view class="info">
@@ -25,8 +30,13 @@
     </view>
 
     <view v-if="showModal" class="modal-mask" @tap="closeModal">
-      <view class="modal" @tap.stop>
-        <text class="modal-title">{{ editingId ? "编辑家人" : "添加家人" }}</text>
+      <view class="modal-sheet" @tap.stop>
+        <view class="modal-sheet-bar" />
+        <view class="modal-sheet-head">
+          <text class="modal-sheet-title">{{ editingId ? "编辑家人" : "添加家人" }}</text>
+          <text class="modal-sheet-close" @tap="closeModal">×</text>
+        </view>
+        <view class="modal-sheet-body">
         <view class="field">
           <text class="field-label">姓名</text>
           <input class="input" v-model="form.name" placeholder="请输入姓名" />
@@ -43,9 +53,10 @@
           <text class="field-label">健康状况/备注</text>
           <input class="input" v-model="form.conditionText" placeholder="如 高血压" />
         </view>
-        <button class="primary" @tap="submitAdd" :disabled="saving">
+        <button class="modal-sheet-btn primary" @tap="submitAdd" :disabled="saving">
           {{ saving ? "保存中..." : editingId ? "保存修改" : "保存" }}
         </button>
+        </view>
       </view>
     </view>
 
@@ -70,9 +81,6 @@ export default {
       }
     };
   },
-  onLoad() {
-    this.useDefaultMembers();
-  },
   onShow() {
     this.fetchMembers();
   },
@@ -84,11 +92,11 @@ export default {
           if (Array.isArray(list) && list.length > 0) {
             this.setMembers(list);
           } else {
-            this.useDefaultMembers();
+            this.setMembers([]);
           }
         })
         .catch(() => {
-          this.useDefaultMembers();
+          this.setMembers([]);
         });
     },
     setMembers(list) {
@@ -97,12 +105,6 @@ export default {
       } else {
         this.members = list;
       }
-    },
-    useDefaultMembers() {
-      this.setMembers([
-        { id: 1, name: "李阿姨", age: 68, conditionText: "高血压", role: "已授权" },
-        { id: 2, name: "张先生", age: 35, conditionText: "可查看周报", role: "管理员" }
-      ]);
     },
     openAdd() {
       this.showModal = true;
@@ -187,12 +189,18 @@ export default {
   font-weight: 600;
 }
 
-.btn-dark {
-  background: #0f172a;
-  color: #ffffff;
-  border-radius: 12px;
-  font-size: 11px;
-  padding: 6px 12px;
+.add-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .intro {
@@ -218,6 +226,35 @@ export default {
 .list {
   display: grid;
   gap: 10px;
+}
+
+.empty-state {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 1px dashed #e2e8f0;
+}
+
+.empty-state-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  opacity: 0.8;
+}
+
+.empty-state-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.empty-state-desc {
+  font-size: 12px;
+  color: #94a3b8;
 }
 
 .card {
@@ -270,58 +307,90 @@ export default {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.5);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   z-index: 100;
-  padding: 20px;
 }
 
-.modal {
+.modal-sheet {
   width: 100%;
-  max-width: 320px;
+  max-width: 400px;
+  max-height: 85vh;
   background: #fff;
-  border-radius: 16px;
-  padding: 18px;
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  overflow: hidden;
 }
 
-.modal-title {
-  font-size: 15px;
+.modal-sheet-bar {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: #e2e8f0;
+  margin: 10px auto 0;
+}
+
+.modal-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.modal-sheet-title {
+  font-size: 17px;
   font-weight: 600;
   color: #0f172a;
+}
+
+.modal-sheet-close {
+  font-size: 24px;
+  color: #94a3b8;
+  padding: 4px;
+  line-height: 1;
+}
+
+.modal-sheet-body {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .field-label {
-  font-size: 12px;
+  font-size: 13px;
   color: #64748b;
 }
 
 .input {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   font-size: 14px;
   color: #0f172a;
   background: #fff;
 }
 
-.primary {
+.modal-sheet-btn.primary {
   width: 100%;
-  padding: 12px 0;
-  border-radius: 12px;
-  background: #0f172a;
+  padding: 14px;
+  border-radius: 14px;
+  background: #2563eb;
   color: #fff;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
 }
 </style>

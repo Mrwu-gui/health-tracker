@@ -1,6 +1,6 @@
 {
   "name": "健康管理小程序_API_模板",
-  "baseUrl": "http://139.196.155.234:8080",
+  "baseUrl": "https://www.datewell.xyz",
   "auth": {
     "type": "bearer",
     "header": "Authorization",
@@ -8,57 +8,6 @@
     "valueFormat": "Bearer {{token}}"
   },
   "endpoints": [
-    {
-      "name": "微信登录",
-      "method": "POST",
-      "path": "/api/auth/mini/login",
-      "headers": { "Content-Type": "application/json" },
-      "body": { "code": "{{code}}" },
-      "notes": "返回 token + userId"
-    },
-    {
-      "name": "微信步数同步",
-      "method": "POST",
-      "path": "/api/auth/mini/werun",
-      "headers": { "Content-Type": "application/json" },
-      "body": { "code": "{{code}}", "encryptedData": "{{encryptedData}}", "iv": "{{iv}}" }
-    },
-    {
-      "name": "获取用户资料",
-      "method": "GET",
-      "path": "/api/user/profile",
-      "query": { "userId": "{{userId}}" }
-    },
-    {
-      "name": "更新用户资料",
-      "method": "POST",
-      "path": "/api/user/profile/update",
-      "headers": { "Content-Type": "application/json" },
-      "body": {
-        "userId": "{{userId}}",
-        "wxNickname": "{{wxNickname}}",
-        "wxAvatar": "{{wxAvatar}}",
-        "sex": "{{sex}}",
-        "age": "{{age}}",
-        "height": "{{height}}",
-        "weight": "{{weight}}",
-        "systolic": "{{systolic}}",
-        "diastolic": "{{diastolic}}",
-        "heartRate": "{{heartRate}}"
-      }
-    },
-    {
-      "name": "统计总览",
-      "method": "GET",
-      "path": "/api/statistics/overview",
-      "query": { "userId": "{{userId}}", "period": "{{period}}" }
-    },
-    {
-      "name": "提醒列表",
-      "method": "GET",
-      "path": "/api/reminder/list",
-      "query": { "userId": "{{userId}}" }
-    },
     {
       "name": "新增提醒",
       "method": "POST",
@@ -73,26 +22,6 @@
       }
     },
     {
-      "name": "更新提醒",
-      "method": "POST",
-      "path": "/api/reminder/update",
-      "headers": { "Content-Type": "application/json" },
-      "body": {
-        "id": "{{id}}",
-        "userId": "{{userId}}",
-        "title": "{{title}}",
-        "type": "{{type}}",
-        "content": "{{content}}",
-        "remindTime": "{{remindTime}}"
-      }
-    },
-    {
-      "name": "目标列表",
-      "method": "GET",
-      "path": "/api/goal/list",
-      "query": { "userId": "{{userId}}", "period": "{{period}}" }
-    },
-    {
       "name": "新增目标",
       "method": "POST",
       "path": "/api/goal/add",
@@ -104,26 +33,6 @@
         "currentValue": "{{currentValue}}",
         "period": "{{period}}"
       }
-    },
-    {
-      "name": "更新目标",
-      "method": "POST",
-      "path": "/api/goal/update",
-      "headers": { "Content-Type": "application/json" },
-      "body": {
-        "id": "{{id}}",
-        "userId": "{{userId}}",
-        "goalType": "{{goalType}}",
-        "targetValue": "{{targetValue}}",
-        "currentValue": "{{currentValue}}",
-        "period": "{{period}}"
-      }
-    },
-    {
-      "name": "用药列表",
-      "method": "GET",
-      "path": "/api/medication/list",
-      "query": { "userId": "{{userId}}" }
     },
     {
       "name": "新增用药",
@@ -140,27 +49,6 @@
       }
     },
     {
-      "name": "更新用药",
-      "method": "POST",
-      "path": "/api/medication/update",
-      "headers": { "Content-Type": "application/json" },
-      "body": {
-        "id": "{{id}}",
-        "userId": "{{userId}}",
-        "drugName": "{{drugName}}",
-        "dosage": "{{dosage}}",
-        "frequency": "{{frequency}}",
-        "remindTime": "{{remindTime}}",
-        "startDate": "{{startDate}}"
-      }
-    },
-    {
-      "name": "家庭成员列表",
-      "method": "GET",
-      "path": "/api/family/list",
-      "query": { "userId": "{{userId}}" }
-    },
-    {
       "name": "新增家庭成员",
       "method": "POST",
       "path": "/api/family/add",
@@ -171,110 +59,6 @@
         "relation": "{{relation}}",
         "age": "{{age}}",
         "conditionText": "{{conditionText}}"
-      }
-    },
-    {
-      "name": "更新家庭成员",
-      "method": "POST",
-      "path": "/api/family/update",
-      "headers": { "Content-Type": "application/json" },
-      "body": {
-        "id": "{{id}}",
-        "userId": "{{userId}}",
-        "name": "{{name}}",
-        "relation": "{{relation}}",
-        "age": "{{age}}",
-        "conditionText": "{{conditionText}}"
-      }
-    },
-    {
-      "name": "AI 对话",
-      "method": "POST",
-      "path": "/api/ai/chat",
-      "headers": { "Content-Type": "application/json" },
-      "body": {
-        "message": "{{message}}",
-        "imageUrl": "{{imageUrl}}",
-        "audioUrl": "{{audioUrl}}",
-        "store": "{{store}}"
-      }
-    },
-    {
-      "name": "AI 历史记录",
-      "method": "GET",
-      "path": "/api/ai/history",
-      "query": { "userId": "{{userId}}" }
-    },
-    {
-      "name": "AI 文件上传",
-      "method": "POST",
-      "path": "/api/ai/upload",
-      "headers": { "Content-Type": "multipart/form-data" },
-      "form": { "file": "{{file}}" }
-    },
-    {
-      "name": "体重记录",
-      "method": "POST",
-      "path": "/api/weight/add",
-      "headers": { "Content-Type": "application/json" },
-      "body": { "userId": "{{userId}}", "weight": "{{weight}}", "bmi": "{{bmi}}", "date": "{{date}}" }
-    },
-    {
-      "name": "血压心率记录",
-      "method": "POST",
-      "path": "/api/health-record/add",
-      "headers": { "Content-Type": "application/json" },
-      "body": {
-        "userId": "{{userId}}",
-        "systolic": "{{systolic}}",
-        "diastolic": "{{diastolic}}",
-        "heartRate": "{{heartRate}}",
-        "date": "{{date}}"
-      }
-    },
-    {
-      "name": "饮食记录",
-      "method": "POST",
-      "path": "/api/diet/add",
-      "headers": { "Content-Type": "application/json" },
-      "body": {
-        "userId": "{{userId}}",
-        "mealType": "{{mealType}}",
-        "foodName": "{{foodName}}",
-        "calories": "{{calories}}",
-        "protein": "{{protein}}",
-        "carbs": "{{carbs}}",
-        "fat": "{{fat}}",
-        "note": "{{note}}",
-        "date": "{{date}}"
-      }
-    },
-    {
-      "name": "睡眠记录",
-      "method": "POST",
-      "path": "/api/sleep/add",
-      "headers": { "Content-Type": "application/json" },
-      "body": {
-        "userId": "{{userId}}",
-        "startTime": "{{startTime}}",
-        "endTime": "{{endTime}}",
-        "deepSleepMinutes": "{{deepSleepMinutes}}",
-        "lightSleepMinutes": "{{lightSleepMinutes}}",
-        "quality": "{{quality}}"
-      }
-    },
-    {
-      "name": "运动记录",
-      "method": "POST",
-      "path": "/api/exercise/add",
-      "headers": { "Content-Type": "application/json" },
-      "body": {
-        "userId": "{{userId}}",
-        "type": "{{type}}",
-        "steps": "{{steps}}",
-        "duration": "{{duration}}",
-        "calories": "{{calories}}",
-        "date": "{{date}}"
       }
     }
   ]

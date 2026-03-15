@@ -3,66 +3,41 @@
     <view class="topbar">
       <view class="brand">
         <view class="logo">HT</view>
-        <view>
-          <text class="brand-en">Health Tracker</text>
-          <text class="brand-cn">健康管理工具</text>
-        </view>
+        <text class="brand-cn">健康管家</text>
       </view>
       <text class="version">v1.0</text>
     </view>
 
     <view class="banner">
-      <image
-        class="banner-img"
-        src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80"
-        mode="aspectFill"
-      />
-      <view class="banner-mask"></view>
+      <view class="banner-bg" />
+      <view class="banner-glow" />
       <view class="banner-content">
-        <text class="banner-tag">今日关怀 · 健康每一步</text>
-        <text class="banner-title">坚持记录，让未来的自己感谢现在的你。</text>
-        <text class="banner-sub">小小的改变，会累积成看得见的进步。</text>
+        <view class="banner-icon-wrap">
+          <text class="banner-icon">✨</text>
+        </view>
+        <text class="banner-tag">AI 健康助手</text>
+        <text class="banner-title">懂你的健康，随时为你解答</text>
+        <text class="banner-sub">饮食、运动、睡眠，一问即得</text>
       </view>
     </view>
 
-    <view class="intro">
-      <text class="intro-title">一键开始你的健康旅程</text>
-      <text class="intro-sub">仅在你授权的范围内，安全同步健康数据。</text>
-    </view>
-
-    <view class="login-card">
-      <view class="login-row">
-        <view class="login-icon wx">
-          <text class="fa-brands fa-weixin">微</text>
+    <view class="bottom-wrap">
+      <view class="login-card">
+        <!-- #ifdef MP-WEIXIN -->
+        <button class="btn-wx" @tap="loginWeChat" :disabled="loading">
+          <text>{{ loading ? "登录中..." : "微信一键登录" }}</text>
+        </button>
+        <!-- #endif -->
+        <!-- #ifndef MP-WEIXIN -->
+        <view class="btn-wx disabled">
+          <text class="btn-wx-icon">微</text>
+          <text>请使用微信小程序打开</text>
         </view>
-        <view class="login-meta">
-          <text class="login-title">微信账号一键登录</text>
-          <text class="login-desc">使用当前微信安全登录，方便又安心。</text>
-        </view>
+        <!-- #endif -->
       </view>
-      <!-- #ifdef MP-WEIXIN -->
-      <button class="btn-primary" @tap="loginWeChat" :disabled="loading">
-        {{ loading ? "登录中..." : "使用微信一键登录" }}
-      </button>
-      <!-- #endif -->
-      <!-- #ifndef MP-WEIXIN -->
-      <button class="btn-primary" @tap="loginDemo" :disabled="loading">
-        {{ loading ? "登录中..." : "演示账号登录" }}
-      </button>
-      <!-- #endif -->
+      <text class="policy">登录即表示同意《用户协议》与《隐私政策》</text>
+      <text v-if="message" class="message">{{ message }}</text>
     </view>
-
-    <view class="login-card slim">
-      <text class="policy">
-        手机号登录暂不开放
-      </text>
-      <text class="policy">
-        登录即代表你已阅读并同意《用户协议》和《隐私政策》
-      </text>
-    </view>
-
-    <text v-if="message" class="message">{{ message }}</text>
-    <text class="footer-note">为中老年用户优化 · 大字号 · 高对比度</text>
   </view>
 </template>
 
@@ -89,45 +64,7 @@ export default {
       uni.login({
         provider: "weixin",
         success: (res) => {
-          request("/api/auth/mini/login", "POST", { code: res.code })
-            .then((data) => {
-              if (data?.token) {
-                uni.setStorageSync("token", data.token);
-                if (data.userId) {
-                  uni.setStorageSync("userId", data.userId);
-                }
-                uni.setStorageSync("loginSource", "wechat");
-                const userId = data.userId;
-                if (userId) {
-                  request("/api/user/profile", "GET", { userId })
-                    .then((profile) => {
-                      const hasProfile =
-                        profile &&
-                        (profile.wxNickname || profile.username) &&
-                        (profile.sex || profile.age || profile.height || profile.weight);
-                      uni.setStorageSync("needBodyProfile", !hasProfile);
-                    })
-                    .catch(() => {
-                      uni.setStorageSync("needBodyProfile", true);
-                    })
-                    .finally(() => {
-                      uni.switchTab({ url: "/pages/profile/index" });
-                      uni.showToast({ title: "登录成功", icon: "success" });
-                    });
-                } else {
-                  uni.setStorageSync("needBodyProfile", true);
-                  uni.switchTab({ url: "/pages/profile/index" });
-                  uni.showToast({ title: "登录成功", icon: "success" });
-                }
-              }
-            })
-            .catch((err) => {
-              this.message = err.message || "微信登录失败";
-              uni.showToast({ title: this.message, icon: "none" });
-            })
-            .finally(() => {
-              this.loading = false;
-            });
+          this.loginWithCode(res.code);
         },
         fail: () => {
           this.message = "微信登录失败";
@@ -136,30 +73,43 @@ export default {
         }
       });
     },
-    loginDemo() {
-      this.loading = true;
-      this.message = "";
-      request("/api/user/login", "POST", { username: "demo", password: "demo" })
+    loginWithCode(code) {
+      request("/api/auth/mini/login", "POST", { code })
         .then((data) => {
           if (data?.token) {
             uni.setStorageSync("token", data.token);
-            if (data.userId) {
-              uni.setStorageSync("userId", data.userId);
+            if (data.userId) uni.setStorageSync("userId", data.userId);
+            uni.setStorageSync("loginSource", "wechat");
+            const userId = data.userId;
+            if (userId) {
+              request("/api/user/profile", "GET", { userId })
+                .then((profile) => {
+                  const hasProfile =
+                    profile &&
+                    (profile.wxNickname || profile.username) &&
+                    (profile.sex || profile.age || profile.height || profile.weight);
+                  uni.setStorageSync("needBodyProfile", !hasProfile);
+                })
+                .catch(() => uni.setStorageSync("needBodyProfile", true))
+                .finally(() => {
+                  uni.switchTab({ url: "/pages/index/index" });
+                  uni.showToast({ title: "登录成功", icon: "success" });
+                });
+            } else {
+              uni.setStorageSync("needBodyProfile", true);
+              uni.switchTab({ url: "/pages/index/index" });
+              uni.showToast({ title: "登录成功", icon: "success" });
             }
-            uni.setStorageSync("loginSource", "demo");
-            uni.switchTab({ url: "/pages/index/index" });
-            uni.showToast({ title: "登录成功", icon: "success" });
           }
         })
         .catch((err) => {
-          this.message = err.message || "演示登录失败";
+          this.message = err.message || "登录失败";
           uni.showToast({ title: this.message, icon: "none" });
         })
         .finally(() => {
           this.loading = false;
         });
-    },
-    goPhoneLogin() {}
+    }
   }
 };
 </script>
@@ -167,199 +117,182 @@ export default {
 <style>
 .page {
   min-height: 100vh;
-  padding: 20px 18px 28px;
-  background: #f5f6f8;
+  padding: 24px 20px 28px;
+  padding-top: calc(24px + env(safe-area-inset-top));
+  padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 30%, #f5f3ff 100%);
   color: #0f172a;
+  display: flex;
+  flex-direction: column;
 }
 
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .logo {
-  width: 32px;
-  height: 32px;
-  border-radius: 12px;
-  background: #0f172a;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 600;
-  display: grid;
-  place-items: center;
-}
-
-.brand-en {
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: #94a3b8;
-  text-transform: uppercase;
-  display: block;
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #4338ca 0%, #6366f1 50%, #818cf8 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
 }
 
 .brand-cn {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
-  color: #0f172a;
-  display: block;
+  color: #1e1b4b;
 }
 
 .version {
   font-size: 11px;
-  color: #94a3b8;
+  color: #6366f1;
+  opacity: 0.8;
 }
 
 .banner {
   position: relative;
-  border-radius: 20px;
+  border-radius: 24px;
   overflow: hidden;
-  height: 160px;
-  margin-bottom: 16px;
+  height: 220px;
+  margin-bottom: 20px;
+  box-shadow: 0 12px 40px rgba(67, 56, 202, 0.25);
 }
 
-.banner-img {
-  width: 100%;
-  height: 100%;
-}
-
-.banner-mask {
+.banner-bg {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: linear-gradient(135deg, #312e81 0%, #4338ca 30%, #4f46e5 60%, #6366f1 100%);
+}
+
+.banner-glow {
+  position: absolute;
+  top: -50%;
+  right: -30%;
+  width: 90%;
+  height: 120%;
+  background: radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 60%);
+  border-radius: 50%;
 }
 
 .banner-content {
-  position: absolute;
-  inset: 0;
-  padding: 14px;
-  color: #ffffff;
+  position: relative;
+  height: 100%;
+  padding: 24px 24px 32px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
+  color: #fff;
+}
+
+.banner-icon-wrap {
+  width: 50px;
+  height: 50px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.banner-icon {
+  font-size: 28px;
 }
 
 .banner-tag {
-  font-size: 11px;
-  opacity: 0.9;
+  font-size: 12px;
+  opacity: 0.98;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
 }
 
 .banner-title {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-bottom: 6px;
 }
 
 .banner-sub {
-  font-size: 11px;
-  opacity: 0.8;
-}
-
-.intro {
-  margin-bottom: 12px;
-}
-
-.intro-title {
   font-size: 13px;
-  font-weight: 600;
-  display: block;
+  opacity: 0.92;
 }
 
-.intro-sub {
-  font-size: 11px;
-  color: #64748b;
-  display: block;
-  margin-top: 4px;
+.bottom-wrap {
+  margin-top: auto;
+  padding-top: 8px;
 }
 
 .login-card {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
-  margin-bottom: 12px;
+  background: #fff;
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: 0 10px 40px rgba(67, 56, 202, 0.12);
+  margin-bottom: 14px;
+  border: 1px solid rgba(99, 102, 241, 0.12);
 }
 
-.login-card.slim {
-  padding: 12px 16px;
-}
-
-.login-row {
+.btn-wx {
+  width: 100%;
+  height: 54px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #06c755 0%, #05b04d 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
   display: flex;
-  gap: 12px;
   align-items: center;
-  margin-bottom: 12px;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 6px 20px rgba(5, 176, 77, 0.35);
 }
 
-.login-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #dcfce7;
-  color: #16a34a;
-  display: grid;
-  place-items: center;
-  font-size: 12px;
-  font-weight: 600;
+.btn-wx::after {
+  border: none;
 }
 
-.login-meta {
-  flex: 1;
-}
-
-.login-title {
-  font-size: 12px;
-  font-weight: 600;
-  display: block;
-}
-
-.login-desc {
-  font-size: 11px;
+.btn-wx.disabled {
+  background: #cbd5e1;
   color: #64748b;
-  display: block;
-  margin-top: 2px;
+  box-shadow: none;
 }
 
-.btn-primary {
-  background: #22c55e;
-  color: #ffffff;
-  border-radius: 14px;
-  font-size: 12px;
-  padding: 10px 0;
-}
-
-.btn-dark {
-  background: #0f172a;
-  color: #ffffff;
-  border-radius: 14px;
-  font-size: 12px;
-  padding: 10px 0;
+.btn-wx-icon {
+  font-size: 20px;
+  font-weight: 600;
 }
 
 .policy {
-  font-size: 10px;
-  color: #94a3b8;
+  font-size: 11px;
+  color: #6366f1;
+  opacity: 0.85;
   text-align: center;
-  margin-top: 8px;
+  display: block;
+  line-height: 1.5;
 }
 
 .message {
-  font-size: 12px;
-  color: #ef4444;
+  font-size: 13px;
+  color: #dc2626;
   text-align: center;
-  margin-top: 6px;
-}
-
-.footer-note {
-  font-size: 10px;
-  color: #94a3b8;
-  text-align: center;
-  margin-top: 12px;
+  display: block;
+  margin-top: 10px;
 }
 </style>

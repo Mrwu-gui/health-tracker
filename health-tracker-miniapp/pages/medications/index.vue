@@ -1,12 +1,17 @@
 <template>
   <view class="page">
     <view class="header">
-      <text class="title">药物管理</text>
+      <view />
       <button class="add-btn" @tap="openAdd">+</button>
     </view>
 
     <view class="list">
-      <view v-for="item in meds" :key="item.id" class="card" @tap="openEdit(item)">
+      <view v-if="meds.length === 0" class="empty-state">
+        <text class="empty-state-icon">💊</text>
+        <text class="empty-state-title">暂无药物记录</text>
+        <text class="empty-state-desc">点击右上角 + 添加需要服用的药物</text>
+      </view>
+      <view v-for="item in meds" v-else :key="item.id" class="card" @tap="openEdit(item)">
         <view class="row">
           <view>
             <text class="name">{{ item.drugName }} {{ item.dosage }}</text>
@@ -31,8 +36,13 @@
     <navigator class="primary primary-btn" url="/pages/medications/checkin">今日用药打卡</navigator>
 
     <view v-if="showModal" class="modal-mask" @tap="closeModal">
-      <view class="modal" @tap.stop>
-        <text class="modal-title">{{ editingId ? "编辑药物" : "新增药物" }}</text>
+      <view class="modal-sheet" @tap.stop>
+        <view class="modal-sheet-bar" />
+        <view class="modal-sheet-head">
+          <text class="modal-sheet-title">{{ editingId ? "编辑药物" : "添加药物" }}</text>
+          <text class="modal-sheet-close" @tap="closeModal">×</text>
+        </view>
+        <view class="modal-sheet-body">
         <view class="field">
           <text class="field-label">药物名称</text>
           <input class="input" v-model="form.drugName" placeholder="如 氨氯地平" />
@@ -51,9 +61,10 @@
             <view class="input">{{ form.remindTime || "请选择时间" }}</view>
           </picker>
         </view>
-        <button class="primary" @tap="submitAdd" :disabled="saving">
+        <button class="modal-sheet-btn primary" @tap="submitAdd" :disabled="saving">
           {{ saving ? "保存中..." : editingId ? "保存修改" : "保存" }}
         </button>
+        </view>
       </view>
     </view>
 
@@ -81,9 +92,6 @@ export default {
       }
     };
   },
-  onLoad() {
-    this.useDefaultMeds();
-  },
   onShow() {
     this.fetchMeds();
   },
@@ -99,11 +107,11 @@ export default {
             }));
             this.setMeds(mapped);
           } else {
-            this.useDefaultMeds();
+            this.setMeds([]);
           }
         })
         .catch(() => {
-          this.useDefaultMeds();
+          this.setMeds([]);
         });
     },
     setMeds(list) {
@@ -112,13 +120,6 @@ export default {
       } else {
         this.meds = list;
       }
-    },
-    useDefaultMeds() {
-      this.setMeds([
-        { id: 1, drugName: "氨氯地平", dosage: "5mg", frequency: "每日 1 次", remindTime: "08:00", enabled: true },
-        { id: 2, drugName: "二甲双胍", dosage: "0.5g", frequency: "每日 2 次", remindTime: "20:00", enabled: true },
-        { id: 3, drugName: "维生素 D", dosage: "1 粒", frequency: "每周 1 次", remindTime: "周日 09:00", enabled: false }
-      ]);
     },
     openAdd() {
       this.showModal = true;
@@ -224,6 +225,35 @@ export default {
   gap: 10px;
 }
 
+.empty-state {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 1px dashed #e2e8f0;
+}
+
+.empty-state-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  opacity: 0.8;
+}
+
+.empty-state-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.empty-state-desc {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
 .card {
   background: #ffffff;
   border-radius: 16px;
@@ -288,62 +318,106 @@ export default {
   text-align: center;
   font-weight: 600;
 }
-/* unified modal styles */
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.5);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   z-index: 100;
-  padding: 20px;
 }
 
-.modal {
+.modal-sheet {
   width: 100%;
-  max-width: 320px;
+  max-width: 400px;
+  max-height: 85vh;
   background: #fff;
-  border-radius: 16px;
-  padding: 18px;
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  overflow: hidden;
 }
 
-.modal-title {
-  font-size: 15px;
+.modal-sheet-bar {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: #e2e8f0;
+  margin: 10px auto 0;
+}
+
+.modal-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.modal-sheet-title {
+  font-size: 17px;
   font-weight: 600;
   color: #0f172a;
+}
+
+.modal-sheet-close {
+  font-size: 24px;
+  color: #94a3b8;
+  padding: 4px;
+  line-height: 1;
+}
+
+.modal-sheet-body {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .field-label {
-  font-size: 12px;
+  font-size: 13px;
   color: #64748b;
 }
 
 .input {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   font-size: 14px;
   color: #0f172a;
   background: #fff;
 }
 
-.primary {
+.modal-sheet-btn.primary {
   width: 100%;
-  padding: 12px 0;
-  border-radius: 12px;
-  background: #0f172a;
+  padding: 14px;
+  border-radius: 14px;
+  background: #2563eb;
   color: #fff;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+}
+
+.primary {
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 16px;
+  font-size: 12px;
+  padding: 12px 0;
+}
+
+.primary-btn {
+  text-align: center;
+  font-weight: 600;
 }
 </style>

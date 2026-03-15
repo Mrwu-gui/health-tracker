@@ -1,8 +1,8 @@
 <template>
   <view class="page">
     <view class="header">
-      <text class="title">提醒管理</text>
-      <button class="btn-dark" @tap="openAdd">新增提醒</button>
+      <view />
+      <button class="add-btn" @tap="openAdd">+</button>
     </view>
 
     <view class="tabs">
@@ -14,7 +14,12 @@
     </view>
 
     <view class="list">
-      <view v-for="item in filteredReminders" :key="item.id" class="card" @tap="openEdit(item)">
+      <view v-if="filteredReminders.length === 0" class="empty-state">
+        <text class="empty-state-icon">🔔</text>
+        <text class="empty-state-title">暂无提醒</text>
+        <text class="empty-state-desc">点击右上角 + 添加运动、饮食或睡眠提醒</text>
+      </view>
+      <view v-for="item in filteredReminders" v-else :key="item.id" class="card" @tap="openEdit(item)">
         <view class="row">
           <view>
             <text class="name">{{ item.title }}</text>
@@ -29,8 +34,13 @@
     <text class="note">提醒依赖微信订阅消息，请在授权与隐私中开启权限。</text>
 
     <view v-if="showModal" class="modal-mask" @tap="closeModal">
-      <view class="modal" @tap.stop>
-        <text class="modal-title">{{ editingId ? "编辑提醒" : "新增提醒" }}</text>
+      <view class="modal-sheet" @tap.stop>
+        <view class="modal-sheet-bar" />
+        <view class="modal-sheet-head">
+          <text class="modal-sheet-title">{{ editingId ? "编辑提醒" : "添加提醒" }}</text>
+          <text class="modal-sheet-close" @tap="closeModal">×</text>
+        </view>
+        <view class="modal-sheet-body">
         <view class="field">
           <text class="field-label">提醒标题</text>
           <picker mode="selector" :range="titleLabels" :value="titleIndex" @change="onTitleChange">
@@ -52,9 +62,10 @@
             </picker>
           </view>
         </view>
-        <button class="primary" @tap="submitAdd" :disabled="saving">
-          {{ saving ? "保存中..." : editingId ? "保存修改" : "保存提醒" }}
+        <button class="modal-sheet-btn primary" @tap="submitAdd" :disabled="saving">
+          {{ saving ? "保存中..." : editingId ? "保存修改" : "保存" }}
         </button>
+        </view>
       </view>
     </view>
   </view>
@@ -102,9 +113,6 @@ export default {
       return this.reminders.filter((item) => Number(item.type) === this.tabFilter);
     }
   },
-  onLoad() {
-    this.useDefaultReminders();
-  },
   onShow() {
     this.fetchReminders();
   },
@@ -125,12 +133,12 @@ export default {
               }));
             this.setReminders(this.decorate(mapped));
             if (this.reminders.length === 0) {
-              this.useDefaultReminders();
+              this.setReminders([]);
             }
           }
         })
         .catch(() => {
-          this.useDefaultReminders();
+          this.setReminders([]);
         });
     },
     setReminders(list) {
@@ -139,15 +147,6 @@ export default {
       } else {
         this.reminders = list;
       }
-    },
-    useDefaultReminders() {
-      this.setReminders(
-        this.decorate([
-          { id: 1, title: "每日步数提醒", content: "提醒补足今日目标步数", time: "20:30:00", type: 1 },
-          { id: 2, title: "午餐前饮食提醒", content: "提醒记录午餐", time: "11:50:00", type: 2 },
-          { id: 3, title: "睡前提醒", content: "提醒按时休息", time: "21:30:00", type: 3 }
-        ])
-      );
     },
     openAdd() {
       this.showModal = true;
@@ -320,13 +319,18 @@ export default {
   font-weight: 600;
 }
 
-.btn-dark {
-  background: #0f172a;
-  color: #ffffff;
-  border-radius: 12px;
-  font-size: 11px;
-  padding: 6px 12px;
-  text-align: center;
+.add-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tabs {
@@ -368,46 +372,77 @@ export default {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.5);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   z-index: 100;
-  padding: 20px;
 }
 
-.modal {
+.modal-sheet {
   width: 100%;
-  max-width: 320px;
+  max-width: 400px;
+  max-height: 85vh;
   background: #fff;
-  border-radius: 16px;
-  padding: 18px;
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  overflow: hidden;
 }
 
-.modal-title {
-  font-size: 15px;
+.modal-sheet-bar {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: #e2e8f0;
+  margin: 10px auto 0;
+}
+
+.modal-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.modal-sheet-title {
+  font-size: 17px;
   font-weight: 600;
   color: #0f172a;
+}
+
+.modal-sheet-close {
+  font-size: 24px;
+  color: #94a3b8;
+  padding: 4px;
+  line-height: 1;
+}
+
+.modal-sheet-body {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .field-label {
-  font-size: 12px;
+  font-size: 13px;
   color: #64748b;
 }
 
 .picker {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   font-size: 14px;
   background: #fff;
   color: #0f172a;
@@ -416,31 +451,61 @@ export default {
 .picker-group {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 10px;
 }
 
 .input {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   font-size: 14px;
   color: #0f172a;
   background: #fff;
 }
 
-.primary {
+.modal-sheet-btn.primary {
   width: 100%;
-  padding: 12px 0;
-  border-radius: 12px;
-  background: #0f172a;
+  padding: 14px;
+  border-radius: 14px;
+  background: #2563eb;
   color: #fff;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
 }
 
 .list {
   display: grid;
   gap: 10px;
+}
+
+.empty-state {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 1px dashed #e2e8f0;
+}
+
+.empty-state-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  opacity: 0.8;
+}
+
+.empty-state-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.empty-state-desc {
+  font-size: 12px;
+  color: #94a3b8;
 }
 
 .card {

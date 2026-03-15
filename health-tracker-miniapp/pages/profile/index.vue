@@ -1,11 +1,6 @@
 <template>
   <view class="page">
-    <view class="header">
-      <text class="title">我的</text>
-      <button class="edit-btn" @tap="openBodyModal">编辑</button>
-    </view>
-
-    <view class="profile-card">
+    <view class="profile-card" @tap="openProfileModal">
       <view class="avatar-wrap">
         <image v-if="profile.avatar" class="avatar-img" :src="profile.avatar" mode="aspectFill" />
         <text v-else class="avatar-letter">{{ profile.name ? profile.name.slice(0, 1) : "?" }}</text>
@@ -79,83 +74,74 @@
       </navigator>
     </view>
 
-    <view class="ai-card">
-      <view class="ai-head">
-        <text class="ai-icon">✨</text>
-        <text class="ai-title">AI 智能健康分析</text>
-      </view>
-      <text class="ai-desc">基于运动、睡眠与用药数据，为你生成个性化建议。</text>
-      <button class="ai-btn" @tap="goAi">进入对话</button>
-    </view>
-
-    <view class="action-row">
-      <button class="link" plain>切换账号</button>
-      <button class="link danger" plain>退出登录</button>
+    <view class="logout-wrap">
+      <button class="logout-btn" plain @tap="logout">退出登录</button>
     </view>
 
     <view v-if="showBodyModal" class="modal-mask" @tap="closeBodyModal">
-      <view class="modal" @tap.stop>
-        <text class="modal-title">完善个人信息</text>
-        <!-- #ifdef MP-WEIXIN -->
-        <button class="ghost" open-type="chooseAvatar" @chooseavatar="onChooseAvatar" :disabled="bodySaving">
-          选择头像
-        </button>
-        <!-- #endif -->
-        <input class="input" type="nickname" v-model="bodyForm.nickname" placeholder="请输入昵称" />
-        <view class="radio-group">
-          <view class="radio-label">性别</view>
-          <view class="radio-options">
-            <view
-              class="radio-item"
-              :class="{ active: bodyForm.sex === '男' }"
-              @tap="bodyForm.sex = '男'"
-            >男</view>
-            <view
-              class="radio-item"
-              :class="{ active: bodyForm.sex === '女' }"
-              @tap="bodyForm.sex = '女'"
-            >女</view>
-          </view>
+      <view class="modal-sheet" @tap.stop>
+        <view class="modal-sheet-bar" />
+        <view class="modal-sheet-head">
+          <text class="modal-sheet-title">{{ bodyModalMode === 'edit' ? '完善个人信息' : '个人信息' }}</text>
+          <text class="modal-sheet-close" @tap="closeBodyModal">×</text>
         </view>
-        <input class="input" v-model="bodyForm.age" placeholder="年龄" type="number" />
-        <input
-          v-if="!profile.height"
-          class="input"
-          v-model="bodyForm.height"
-          placeholder="身高（厘米）"
-          type="number"
-        />
-        <input
-          v-if="!profile.weight"
-          class="input"
-          v-model="bodyForm.weight"
-          placeholder="体重（千克）"
-          type="number"
-        />
-        <input
-          v-if="!profile.systolic"
-          class="input"
-          v-model="bodyForm.systolic"
-          placeholder="收缩压（高压）"
-          type="number"
-        />
-        <input
-          v-if="!profile.diastolic"
-          class="input"
-          v-model="bodyForm.diastolic"
-          placeholder="舒张压（低压）"
-          type="number"
-        />
-        <input
-          v-if="!profile.heartRate"
-          class="input"
-          v-model="bodyForm.heartRate"
-          placeholder="心率"
-          type="number"
-        />
-        <button class="primary" @tap="saveBodyProfile" :disabled="bodySaving">
-          {{ bodySaving ? "保存中..." : "保存" }}
-        </button>
+        <view class="modal-sheet-body">
+          <template v-if="bodyModalMode === 'view'">
+            <view class="info-block">
+              <view class="info-avatar-wrap">
+                <image v-if="profile.avatar" class="info-avatar" :src="profile.avatar" mode="aspectFill" />
+                <text v-else class="info-avatar-letter">{{ (profile.name || '?').slice(0, 1) }}</text>
+              </view>
+              <text class="info-name">{{ profile.name || '未设置' }}</text>
+            </view>
+            <view class="info-rows">
+              <view class="info-row"><text class="info-label">性别</text><text class="info-value">{{ profile.sex || '--' }}</text></view>
+              <view class="info-row"><text class="info-label">年龄</text><text class="info-value">{{ profile.age ? profile.age + ' 岁' : '--' }}</text></view>
+              <view class="info-row"><text class="info-label">身高</text><text class="info-value">{{ profile.height ? profile.height + ' cm' : '--' }}</text></view>
+              <view class="info-row"><text class="info-label">体重</text><text class="info-value">{{ profile.weight ? profile.weight + ' kg' : '--' }}</text></view>
+              <view class="info-row"><text class="info-label">血压</text><text class="info-value">{{ profile.systolic && profile.diastolic ? profile.systolic + '/' + profile.diastolic : '--' }}</text></view>
+              <view class="info-row"><text class="info-label">心率</text><text class="info-value">{{ profile.heartRate ? profile.heartRate + ' 次/分' : '--' }}</text></view>
+            </view>
+            <button class="modal-sheet-btn secondary" @tap="bodyModalMode = 'edit'">编辑</button>
+          </template>
+          <template v-else>
+            <!-- #ifdef MP-WEIXIN -->
+            <view class="field"><text class="field-label">头像</text>
+              <button class="ghost" open-type="chooseAvatar" @chooseavatar="onChooseAvatar" :disabled="bodySaving">选择头像</button>
+            </view>
+            <!-- #endif -->
+            <view class="field"><text class="field-label">昵称</text>
+              <input class="input" type="nickname" v-model="bodyForm.nickname" placeholder="请输入昵称" />
+            </view>
+            <view class="field"><text class="field-label">性别</text>
+              <view class="radio-options">
+                <view class="radio-item" :class="{ active: bodyForm.sex === '男' }" @tap="bodyForm.sex = '男'">男</view>
+                <view class="radio-item" :class="{ active: bodyForm.sex === '女' }" @tap="bodyForm.sex = '女'">女</view>
+              </view>
+            </view>
+            <view class="field"><text class="field-label">年龄</text>
+              <input class="input" v-model="bodyForm.age" placeholder="年龄" type="number" />
+            </view>
+            <view class="field"><text class="field-label">身高（cm）</text>
+              <input class="input" v-model="bodyForm.height" placeholder="身高" type="number" />
+            </view>
+            <view class="field"><text class="field-label">体重（kg）</text>
+              <input class="input" v-model="bodyForm.weight" placeholder="体重" type="number" />
+            </view>
+            <view class="field"><text class="field-label">收缩压 / 舒张压</text>
+              <view class="input-row">
+                <input class="input" v-model="bodyForm.systolic" placeholder="高压" type="number" />
+                <input class="input" v-model="bodyForm.diastolic" placeholder="低压" type="number" />
+              </view>
+            </view>
+            <view class="field"><text class="field-label">心率</text>
+              <input class="input" v-model="bodyForm.heartRate" placeholder="心率" type="number" />
+            </view>
+            <button class="modal-sheet-btn primary" @tap="saveBodyProfile" :disabled="bodySaving">
+              {{ bodySaving ? "保存中..." : "保存" }}
+            </button>
+          </template>
+        </view>
       </view>
     </view>
 
@@ -187,6 +173,7 @@ export default {
       error: "",
       message: "",
       showBodyModal: false,
+      bodyModalMode: "view",
       bodySaving: false,
       bodyForm: {
         nickname: "",
@@ -203,16 +190,18 @@ export default {
   onLoad() {
   },
   onShow() {
+    const pages = getCurrentPages();
+    const page = pages[pages.length - 1];
+    if (page && typeof page.getTabBar === "function") {
+      const tabBar = page.getTabBar();
+      if (tabBar && typeof tabBar.setData === "function") tabBar.setData({ selected: 3 });
+    }
+    if (uni.getStorageSync("openProfileModal")) {
+      uni.removeStorageSync("openProfileModal");
+      this.$nextTick(() => this.openProfileModal());
+    }
     this.fetchProfile();
     this.loadLocalProfile();
-    const needBodyProfile = uni.getStorageSync("needBodyProfile");
-    const hasProfile =
-      this.profile.name &&
-      this.profile.name !== "未登录" &&
-      (this.profile.age || this.profile.sex || this.profile.height || this.profile.weight);
-    if (needBodyProfile && !hasProfile) {
-      this.openBodyModal();
-    }
   },
   methods: {
     fetchProfile() {
@@ -268,11 +257,23 @@ export default {
     goReports() {
       uni.showToast({ title: "报告中心开发中", icon: "none" });
     },
-    goAi() {
-      uni.switchTab({ url: "/pages/ai/index" });
+    logout() {
+      uni.showModal({
+        title: "提示",
+        content: "确定退出登录？",
+        success: (res) => {
+          if (res.confirm) {
+            uni.removeStorageSync("token");
+            uni.removeStorageSync("userId");
+            uni.removeStorageSync("userName");
+            uni.reLaunch({ url: "/pages/login/index" });
+          }
+        }
+      });
     },
-    openBodyModal() {
+    openProfileModal() {
       this.showBodyModal = true;
+      this.bodyModalMode = "view";
       const body = uni.getStorageSync("bodyProfile") || {};
       this.bodyForm.nickname = body.nickname || this.profile.name || "";
       this.bodyForm.sex = body.sex || this.profile.sex || "";
@@ -285,6 +286,7 @@ export default {
     },
     closeBodyModal() {
       this.showBodyModal = false;
+      this.bodyModalMode = "view";
     },
     saveBodyProfile() {
       const toInt = (val) => {
@@ -413,29 +415,6 @@ export default {
   background: #f1f5f9;
   padding: 16px 16px 24px;
   padding-bottom: calc(24px + env(safe-area-inset-bottom));
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.edit-btn {
-  padding: 6px 14px;
-  font-size: 12px;
-  color: #475569;
-  background: #f1f5f9;
-  border-radius: 999px;
-  border: none;
-  line-height: 1.4;
 }
 
 .profile-card {
@@ -599,113 +578,190 @@ export default {
   font-weight: 300;
 }
 
-.ai-card {
-  background: #0f172a;
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 16px;
-  border: 1px solid #1e293b;
-}
-
-.ai-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.ai-icon {
-  font-size: 14px;
-}
-
-.ai-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #f8fafc;
-}
-
-.ai-desc {
-  font-size: 12px;
-  color: #cbd5e1;
-  line-height: 1.45;
-  margin-bottom: 12px;
-}
-
-.ai-btn {
-  align-self: flex-start;
-  padding: 8px 16px;
-  font-size: 12px;
-  color: #0f172a;
-  background: #f8fafc;
-  border-radius: 999px;
-  border: none;
-}
-
-
-.action-row {
-  display: flex;
-  justify-content: space-between;
+.logout-wrap {
+  margin-top: 24px;
   padding: 0 4px;
 }
 
-.link {
-  font-size: 12px;
+.logout-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 15px;
   color: #64748b;
-  background: none;
-  border: none;
-  padding: 8px 0;
-}
-
-.link.danger {
-  color: #dc2626;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
 }
 
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.5);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   z-index: 100;
 }
 
-.modal {
-  width: 86%;
-  max-width: 320px;
+.modal-sheet {
+  width: 100%;
+  max-width: 400px;
+  max-height: 85vh;
   background: #fff;
-  border-radius: 16px;
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-sheet-bar {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: #e2e8f0;
+  margin: 10px auto 0;
+}
+
+.modal-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.modal-sheet-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.modal-sheet-close {
+  font-size: 24px;
+  color: #94a3b8;
+  padding: 4px;
+  line-height: 1;
+}
+
+.modal-sheet-body {
   padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.info-avatar-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 32px;
+  background: #e2e8f0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-avatar {
+  width: 100%;
+  height: 100%;
+}
+
+.info-avatar-letter {
+  font-size: 24px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.info-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.info-rows {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.modal-title {
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.info-label {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.info-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.modal-sheet-btn {
+  margin-top: 8px;
+  padding: 14px;
   font-size: 15px;
   font-weight: 600;
-  color: #0f172a;
-  margin-bottom: 4px;
+  border-radius: 14px;
+  border: none;
+  width: 100%;
 }
 
-.input {
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-size: 14px;
-  color: #0f172a;
-  background: #fff;
+.modal-sheet-btn.primary {
+  background: #2563eb;
+  color: #fff;
 }
 
-.radio-group {
+.modal-sheet-btn.secondary {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.field {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.radio-label {
-  font-size: 12px;
+.field-label {
+  font-size: 13px;
   color: #64748b;
+}
+
+.input {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #0f172a;
+  background: #fff;
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.input-row .input {
+  flex: 1;
 }
 
 .radio-options {
@@ -716,11 +772,11 @@ export default {
 .radio-item {
   flex: 1;
   text-align: center;
-  padding: 10px 0;
+  padding: 12px 0;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
   color: #64748b;
-  font-size: 13px;
+  font-size: 14px;
   background: #fff;
 }
 
@@ -730,25 +786,13 @@ export default {
   background: #eff6ff;
 }
 
-
 .ghost {
-  padding: 10px 14px;
-  font-size: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
   color: #475569;
-  background: #fff;
+  background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  width: 100%;
-}
-
-.primary {
-  padding: 12px 0;
-  font-size: 14px;
-  font-weight: 500;
-  color: #fff;
-  background: #0f172a;
-  border-radius: 12px;
-  border: none;
   width: 100%;
 }
 

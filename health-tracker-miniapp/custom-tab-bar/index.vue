@@ -4,6 +4,7 @@
       v-for="(item, index) in list"
       :key="index"
       class="tab-item"
+      :class="{ 'tab-item-ai': item.isAi }"
       @tap="onTap(index)"
     >
       <view class="tab-icon-wrap" :class="{ active: selected === index }">
@@ -20,10 +21,10 @@ export default {
     return {
       selected: 0,
       list: [
-        { pagePath: "/pages/index/index", text: "首页", icon: "🏠" },
-        { pagePath: "/pages/data/index", text: "数据", icon: "📊" },
-        { pagePath: "/pages/goal/index", text: "目标", icon: "🎯" },
-        { pagePath: "/pages/profile/index", text: "我的", icon: "👤" }
+        { pagePath: "/pages/index/index", text: "首页", icon: "🏠", isAi: false },
+        { pagePath: "/pages/data/index", text: "数据", icon: "📈", isAi: false },
+        { pagePath: "/pages/ai/index", text: "AI", icon: "✨", isAi: true },
+        { pagePath: "/pages/profile/index", text: "我的", icon: "👤", isAi: false }
       ]
     };
   },
@@ -62,14 +63,15 @@ export default {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 50px;
+  height: 56px;
   padding-bottom: env(safe-area-inset-bottom);
-  background: #fff;
-  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
   display: flex;
   align-items: center;
   justify-content: space-around;
   z-index: 999;
+  box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.04);
 }
 
 .tab-item {
@@ -78,21 +80,22 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4px 0;
+  padding: 6px 0;
+  gap: 4px;
 }
 
 .tab-icon-wrap {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 2px;
+  transition: background 0.2s;
 }
 
 .tab-icon {
-  font-size: 20px;
-  color: #94a3b8;
+  font-size: 22px;
   line-height: 1;
 }
 
@@ -100,13 +103,29 @@ export default {
   color: #2563eb;
 }
 
+.tab-item .tab-icon-wrap.active {
+  background: #eff6ff;
+}
+
+.tab-item.tab-item-ai .tab-icon-wrap.active {
+  background: linear-gradient(135deg, #e0e7ff 0%, #f5f3ff 100%);
+}
+
+.tab-item.tab-item-ai .tab-icon-wrap.active .tab-icon {
+  color: #4f46e5;
+}
+
 .tab-text {
-  font-size: 10px;
+  font-size: 11px;
   color: #94a3b8;
 }
 
 .tab-text.active {
-  color: #2563eb;
-  font-weight: 500;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.tab-item.tab-item-ai .tab-text.active {
+  color: #4f46e5;
 }
 </style>

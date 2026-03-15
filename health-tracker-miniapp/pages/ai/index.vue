@@ -26,8 +26,7 @@
           </view>
           <view class="bubble-wrap">
             <view class="bubble">
-              <image v-if="item.imageUrl" class="bubble-image" :src="item.imageUrl" mode="aspectFill" />
-              <text v-if="item.audioUrl" class="bubble-audio">🎤 语音消息</text>
+              <!-- 图片/语音消息暂时隐藏 -->
               <rich-text v-else-if="item.role === 'assistant' && item.content" class="bubble-rich" :nodes="formatContent(item.content)" />
               <text v-else-if="item.content" class="bubble-text">{{ item.content }}</text>
             </view>
@@ -54,66 +53,33 @@
       </template>
     </scroll-view>
 
-    <!-- 加号展开：图片 / 语音 -->
-    <view v-if="showPlusMenu" class="plus-menu">
-      <view class="plus-menu-inner">
-        <view class="plus-option" @tap="onPickImage">
-          <view class="plus-option-icon">📷</view>
-          <text class="plus-option-label">图片</text>
-        </view>
-        <view class="plus-option" @tap="onStartVoice">
-          <view class="plus-option-icon">🎤</view>
-          <text class="plus-option-label">语音</text>
-        </view>
-      </view>
-    </view>
-
     <view class="composer">
-      <view v-if="recording" class="composer-recording" @tap="stopRecord">
-        <text class="recording-dot"></text>
-        <text class="recording-text">正在录音，点击结束</text>
+      <view class="composer-inner">
+        <input
+          class="composer-input"
+          v-model="input"
+          placeholder="输入你的问题..."
+          placeholder-class="input-placeholder"
+          confirm-type="send"
+          :adjust-position="true"
+          @confirm="sendMessage"
+        />
+        <view class="composer-btn-wrap" @tap="sendMessage">
+          <text class="composer-send">发送</text>
+        </view>
       </view>
-      <template v-else>
-        <view class="composer-inner">
-          <input
-            class="composer-input"
-            v-model="input"
-            placeholder="输入你的问题..."
-            placeholder-class="input-placeholder"
-            confirm-type="send"
-            :adjust-position="true"
-            @confirm="sendMessage"
-          />
-          <view class="composer-btn-wrap" @tap="onRightBtnTap">
-            <text v-if="hasContent" class="composer-send">发送</text>
-            <text v-else class="composer-plus">+</text>
-          </view>
-        </view>
-        <view v-if="pendingImage" class="pending-preview">
-          <image class="pending-image" :src="pendingImage" mode="aspectFill" />
-          <text class="pending-remove" @tap="pendingImage = ''">×</text>
-        </view>
-        <view v-if="pendingAudio" class="pending-preview">
-          <text class="pending-audio">🎤 语音已就绪</text>
-          <text class="pending-remove" @tap="pendingAudio = ''">×</text>
-        </view>
-      </template>
     </view>
   </view>
 </template>
 
 <script>
-import { API_BASE_URL, request } from "../../utils/api";
+import { request } from "../../utils/api";
 
 export default {
   data() {
     return {
       input: "",
       loading: false,
-      recording: false,
-      pendingImage: "",
-      pendingAudio: "",
-      showPlusMenu: false,
       aiLogoOk: true,
       messages: [
         { role: "assistant", content: "你好，我是智康AI，可以帮你解读数据或给出建议。" }
@@ -124,7 +90,7 @@ export default {
   },
   computed: {
     hasContent() {
-      return (this.input && this.input.trim()) || this.pendingImage || this.pendingAudio;
+      return this.input && this.input.trim();
     }
   },
   onLoad() {
@@ -156,19 +122,7 @@ export default {
       }
     },
     onRightBtnTap() {
-      if (this.hasContent) {
-        this.sendMessage();
-        return;
-      }
-      this.showPlusMenu = !this.showPlusMenu;
-    },
-    onPickImage() {
-      this.showPlusMenu = false;
-      this.pickImage();
-    },
-    onStartVoice() {
-      this.showPlusMenu = false;
-      this.startRecord();
+      this.sendMessage();
     },
     scrollToBottom() {
       const id = this.loading ? "msg-loading" : "msg-" + (this.messages.length - 1);
@@ -176,15 +130,11 @@ export default {
     },
     async sendMessage() {
       const content = (this.input || "").trim();
-      if ((!content && !this.pendingImage && !this.pendingAudio) || this.loading) {
+      if (!content || this.loading) {
         return;
       }
       this.input = "";
-      const imageUrl = this.pendingImage;
-      const audioUrl = this.pendingAudio;
-      this.pendingImage = "";
-      this.pendingAudio = "";
-      await this.sendMessageWithText(content, imageUrl, audioUrl);
+      await this.sendMessageWithText(content, "", "");
     },
     async sendMessageWithText(content, imageUrl, audioUrl) {
       if ((!content && !imageUrl && !audioUrl) || this.loading) return;
@@ -195,7 +145,6 @@ export default {
         audioUrl: audioUrl || ""
       });
       this.loading = true;
-      this.showPlusMenu = false;
       this.$nextTick(() => this.scrollToBottom());
       try {
         const data = await request("/api/ai/chat", "POST", {
@@ -224,69 +173,6 @@ export default {
           }
         })
         .catch(() => {});
-    },
-    pickImage() {
-      uni.chooseImage({
-        count: 1,
-        success: (res) => {
-          const filePath = res.tempFilePaths[0];
-          if (!filePath) return;
-          this.uploadFile(filePath, "image");
-        }
-      });
-    },
-    startRecord() {
-      if (this.recording) return;
-      this.recording = true;
-      const manager = uni.getRecorderManager();
-      manager.start({ format: "mp3", duration: 60000 });
-      manager.onStop((res) => {
-        this.recording = false;
-        if (res && res.tempFilePath) {
-          this.uploadFile(res.tempFilePath, "audio");
-        }
-      });
-    },
-    stopRecord() {
-      if (!this.recording) return;
-      const manager = uni.getRecorderManager();
-      manager.stop();
-    },
-    uploadFile(filePath, type) {
-      this.loading = true;
-      const token = uni.getStorageSync("token");
-      uni.uploadFile({
-        url: `${API_BASE_URL}/api/ai/upload`,
-        filePath,
-        name: "file",
-        header: {
-          Authorization: token ? `Bearer ${token}` : ""
-        },
-        success: (res) => {
-          try {
-            const data = JSON.parse(res.data || "{}");
-            let url = data.url;
-            if (!url && data.data) {
-              url = typeof data.data === "string" ? data.data : data.data.url;
-            }
-            if (url) {
-              if (type === "image") {
-                this.pendingImage = url;
-              } else {
-                this.pendingAudio = url;
-              }
-            }
-          } catch (err) {
-            uni.showToast({ title: "上传失败", icon: "none" });
-          }
-        },
-        fail: () => {
-          uni.showToast({ title: "上传失败", icon: "none" });
-        },
-        complete: () => {
-          this.loading = false;
-        }
-      });
     },
     formatContent(str) {
       if (!str || typeof str !== "string") return "";
@@ -434,18 +320,6 @@ export default {
   font-weight: 600;
 }
 
-.bubble-image {
-  width: 180px;
-  height: 180px;
-  border-radius: 12px;
-  display: block;
-  margin-bottom: 6px;
-}
-
-.bubble-audio {
-  display: block;
-  font-size: 13px;
-}
 
 .bubble.typing {
   padding: 14px 18px;
@@ -473,42 +347,6 @@ export default {
   30% { transform: translateY(-4px); opacity: 1; }
 }
 
-/* 加号展开菜单 */
-.plus-menu {
-  background: #ffffff;
-  border-top: 1px solid #e8e2db;
-  padding: 12px 16px;
-  flex-shrink: 0;
-}
-
-.plus-menu-inner {
-  display: flex;
-  gap: 24px;
-  justify-content: flex-start;
-}
-
-.plus-option {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
-.plus-option-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: #f5f1eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-}
-
-.plus-option-label {
-  font-size: 12px;
-  color: #64748b;
-}
 
 /* 底部输入栏 */
 .composer {
@@ -552,70 +390,8 @@ export default {
   flex-shrink: 0;
 }
 
-.composer-plus {
-  font-size: 24px;
-  font-weight: 300;
-  line-height: 1;
-}
-
 .composer-send {
   font-size: 14px;
   font-weight: 600;
-}
-
-.pending-preview {
-  margin-top: 10px;
-  padding: 8px 12px;
-  background: #f5f1eb;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.pending-image {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-}
-
-.pending-audio {
-  font-size: 13px;
-  color: #64748b;
-}
-
-.pending-remove {
-  margin-left: auto;
-  font-size: 18px;
-  color: #94a3b8;
-  padding: 0 4px;
-}
-
-.composer-recording {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  height: 48px;
-  background: #fef2f2;
-  border-radius: 22px;
-}
-
-.recording-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 4px;
-  background: #ef4444;
-  animation: pulse 0.8s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.1); }
-}
-
-.recording-text {
-  font-size: 14px;
-  color: #b91c1c;
 }
 </style>

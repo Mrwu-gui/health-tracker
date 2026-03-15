@@ -32,8 +32,9 @@ export function request(path, method = "GET", data = {}) {
         }
         reject(new Error(res.data?.message || "请求失败"));
       },
-      fail: () => {
-        reject(new Error("网络异常"));
+      fail: (err) => {
+        const msg = err?.errMsg || "网络异常";
+        reject(new Error(msg));
       }
     });
   });

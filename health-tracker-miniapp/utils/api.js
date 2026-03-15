@@ -1,8 +1,4 @@
-const DEFAULT_BASE_URL =
-  process.env.NODE_ENV === "development"
-    ? "http://127.0.0.1:8080"
-    : "https://www.datewell.xyz";
-const BASE_URL = process.env.UNI_APP_BASE_URL || DEFAULT_BASE_URL;
+const BASE_URL = process.env.UNI_APP_BASE_URL || "https://www.datewell.xyz";
 export const API_BASE_URL = BASE_URL;
 export function request(path, method = "GET", data = {}) {
   return new Promise((resolve, reject) => {

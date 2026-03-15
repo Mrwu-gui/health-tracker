@@ -79,12 +79,12 @@ export default {
         method: "GET",
         success: (res) => {
           this.message = `测试成功：${res.statusCode}`;
-          uni.showToast({ title: this.message, icon: "none" });
+          uni.showModal({ title: "网络测试", content: this.message, showCancel: false });
         },
         fail: (err) => {
           const msg = err?.errMsg || "测试失败";
           this.message = msg;
-          uni.showToast({ title: msg, icon: "none" });
+          uni.showModal({ title: "网络测试", content: msg, showCancel: false });
         }
       });
     },

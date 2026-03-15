@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Base64;
@@ -37,6 +38,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -81,7 +83,10 @@ public class AiController {
                         RestTemplateBuilder builder,
                         AiChatMessageService aiChatMessageService) {
         this.objectMapper = objectMapper;
-        this.restTemplate = builder.build();
+        this.restTemplate = builder
+            .setConnectTimeout(Duration.ofSeconds(10))
+            .setReadTimeout(Duration.ofSeconds(20))
+            .build();
         this.aiChatMessageService = aiChatMessageService;
     }
 
@@ -147,6 +152,8 @@ public class AiController {
         ResponseEntity<String> response;
         try {
             response = restTemplate.postForEntity(url, entity, String.class);
+        } catch (ResourceAccessException ex) {
+            throw new IllegalArgumentException("AI 服务请求超时，请稍后再试", ex);
         } catch (Exception ex) {
             if (request.getImageUrl() != null && !request.getImageUrl().isBlank()) {
                 throw new IllegalArgumentException("当前模型暂不支持图片识别");

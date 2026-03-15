@@ -222,6 +222,7 @@ export default {
     },
     async sendMessageWithText(content, imageUrl, audioUrl) {
       if ((!content && !imageUrl && !audioUrl) || this.loading) return;
+      const userId = uni.getStorageSync("userId") || 1;
       this.messages.push({
         role: "user",
         content: content || "",
@@ -238,15 +239,93 @@ export default {
         const data = await request("/api/ai/chat", "POST", {
           message: messageToSend,
           imageUrl: imageUrl || "",
-          audioUrl: audioUrl || ""
+          audioUrl: audioUrl || "",
+          userId
         });
         const reply = data && data.content ? data.content : "暂时没有回答，请稍后再试。";
-        this.messages.push({ role: "assistant", content: reply });
+        const parsed = this.tryParseAiJson(reply, userId);
+        if (parsed && parsed.intent) {
+          const saved = await this.sendAiCallback(parsed);
+          const tip = saved ? this.buildAiSavedText(parsed) : "记录失败，请稍后再试。";
+          this.messages.push({ role: "assistant", content: tip });
+        } else {
+          this.messages.push({ role: "assistant", content: reply });
+        }
       } catch (err) {
         this.messages.push({ role: "assistant", content: err.message || "请求失败" });
       } finally {
         this.loading = false;
         this.$nextTick(() => this.scrollToBottom());
+      }
+    },
+    tryParseAiJson(text, fallbackUserId) {
+      if (!text || typeof text !== "string") return null;
+      const trimmed = text.trim();
+      let jsonText = trimmed;
+      const firstBrace = trimmed.indexOf("{");
+      const lastBrace = trimmed.lastIndexOf("}");
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        jsonText = trimmed.slice(firstBrace, lastBrace + 1);
+      }
+      try {
+        const obj = JSON.parse(jsonText);
+        const intentRaw = obj.intent && typeof obj.intent === "string" ? obj.intent.trim() : "";
+        if (!intentRaw || intentRaw.toLowerCase() === "null") return null;
+        const intent = intentRaw;
+        const payload = obj.payload || obj.data || (() => {
+          const copy = { ...obj };
+          delete copy.userId;
+          delete copy.intent;
+          return copy;
+        })();
+        return {
+          userId: obj.userId || fallbackUserId,
+          intent,
+          payload
+        };
+      } catch (_) {
+        return null;
+      }
+    },
+    async sendAiCallback(parsed) {
+      try {
+        await request("/api/ai/callback", "POST", {
+          userId: parsed.userId,
+          intent: parsed.intent,
+          payload: parsed.payload
+        });
+        return true;
+      } catch (_) {
+        return false;
+      }
+    },
+    buildAiSavedText(parsed) {
+      const intent = parsed.intent;
+      switch (intent) {
+        case "reminder":
+          return "已为你添加提醒。";
+        case "medication":
+          return "已为你添加用药记录。";
+        case "medication_record":
+          return "已为你完成用药打卡。";
+        case "exercise_record":
+          return "已为你记录运动。";
+        case "diet_record":
+          return "已为你记录饮食。";
+        case "sleep_record":
+          return "已为你记录睡眠。";
+        case "weight_record":
+          return "已为你记录体重。";
+        case "health_record":
+          return "已为你记录血压/心率。";
+        case "goal":
+          return "已为你设置目标。";
+        case "period_record":
+          return "已为你记录经期。";
+        case "family_member":
+          return "已为你添加家人。";
+        default:
+          return "已为你记录。";
       }
     },
     loadHistory() {

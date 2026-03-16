@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS sleep_record (
   user_id BIGINT NOT NULL COMMENT 'User id',
   start_time DATETIME NOT NULL COMMENT 'Sleep start time',
   end_time DATETIME NOT NULL COMMENT 'Sleep end time',
+  record_date DATE NOT NULL COMMENT 'Record date',
   deep_sleep_minutes INT COMMENT 'Deep sleep minutes',
   light_sleep_minutes INT COMMENT 'Light sleep minutes',
   quality VARCHAR(16) COMMENT 'Sleep quality',

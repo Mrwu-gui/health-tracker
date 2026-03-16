@@ -1,5 +1,19 @@
 <template>
   <view class="page">
+    <view class="quick-entry-bar">
+      <view class="quick-entry-item" @tap="goRecord('diet')">
+        <view class="quick-entry-icon">
+          <image class="quick-entry-icon-img" src="/static/tabbar/food2.png" mode="aspectFit" />
+        </view>
+        <text class="quick-entry-text">饮食记录</text>
+      </view>
+      <view class="quick-entry-item" @tap="goRecord('sleep')">
+        <view class="quick-entry-icon">
+          <image class="quick-entry-icon-img" src="/static/tabbar/sleep2.png" mode="aspectFit" />
+        </view>
+        <text class="quick-entry-text">昨晚睡眠</text>
+      </view>
+    </view>
     <view class="card">
       <text class="title">{{ pageTitle }}</text>
       <view v-if="type === 'exercise'" class="form">
@@ -43,25 +57,51 @@
         </view>
         <view class="field">
           <text class="label">食物</text>
-          <input class="input" type="text" placeholder="如：米饭、青菜" v-model="form.foodName" />
+          <input
+            class="input"
+            type="text"
+            placeholder="如：米饭、青菜、番茄炒蛋"
+            v-model="form.foodName"
+            @blur="onFoodBlur"
+          />
+          <text class="field-hint">输入后点击其他处可自动估算热量</text>
         </view>
         <view class="field">
           <text class="label">热量(kcal)</text>
-          <input class="input" type="number" placeholder="650" v-model="form.dietCalories" />
+          <input
+            class="input"
+            type="number"
+            placeholder="自动估算或手动填写"
+            v-model="form.dietCalories"
+            :disabled="dietCaloriesEstimating"
+          />
+          <text v-if="dietCaloriesEstimating" class="field-hint">估算中…</text>
         </view>
       </view>
       <view v-else-if="type === 'sleep'" class="form">
         <view class="field">
           <text class="label">入睡时间</text>
-          <input class="input" type="text" placeholder="22:30" v-model="form.sleepStart" />
+          <picker mode="time" :value="form.sleepStart" @change="onSleepStartChange">
+            <view class="picker">{{ form.sleepStart || "选择时间" }}</view>
+          </picker>
         </view>
         <view class="field">
           <text class="label">起床时间</text>
-          <input class="input" type="text" placeholder="06:00" v-model="form.sleepEnd" />
+          <picker mode="time" :value="form.sleepEnd" @change="onSleepEndChange">
+            <view class="picker">{{ form.sleepEnd || "选择时间" }}</view>
+          </picker>
         </view>
         <view class="field">
-          <text class="label">睡眠时长(小时)</text>
-          <input class="input" type="text" placeholder="7.5" v-model="form.sleepDuration" />
+          <text class="label">睡眠质量</text>
+          <view class="pill-wrap">
+            <view
+              v-for="opt in sleepQualityOptions"
+              :key="opt.value"
+              class="pill"
+              :class="{ active: form.sleepQuality === opt.value }"
+              @tap="form.sleepQuality = opt.value"
+            >{{ opt.label }}</view>
+          </view>
         </view>
       </view>
       <view v-else-if="type === 'weight'" class="form">
@@ -124,7 +164,7 @@ export default {
         dietNote: "",
         sleepStart: "",
         sleepEnd: "",
-        sleepDuration: "",
+        sleepQuality: "normal",
         weight: "",
         height: "",
         periodStart: "",
@@ -133,6 +173,12 @@ export default {
       },
       exerciseTypes: ["步行", "跑步", "骑行"],
       dietTypes: ["早餐", "午餐", "晚餐", "加餐"],
+      sleepQualityOptions: [
+        { value: "light", label: "轻度" },
+        { value: "normal", label: "正常" },
+        { value: "good", label: "好" }
+      ],
+      dietCaloriesEstimating: false,
       periodFlowOptions: [
         { value: "light", label: "少" },
         { value: "medium", label: "中" },
@@ -147,31 +193,98 @@ export default {
     }
   },
   onLoad(query) {
-    this.applyType(query && query.type ? query.type : "exercise");
+    const type = (query && query.type) ? query.type : "exercise";
+    this.applyType(type, query);
   },
   methods: {
-    applyType(nextType) {
+    goRecord(type) {
+      if (this.type === type) return;
+      uni.redirectTo({ url: `/pages/record/index?type=${type}&t=${Date.now()}` });
+    },
+    applyType(nextType, query) {
       const type = nextType || "exercise";
       this.type = type;
       const today = this.todayDate();
+      const yesterday = this.yesterdayDate();
       this.form = {
         exerciseType: "步行",
         steps: "",
         duration: "",
         calories: "",
-        mealType: "午餐",
+        mealType: (query && query.meal && type === "diet") ? decodeURIComponent(query.meal) : "午餐",
         foodName: "",
         dietCalories: "",
         dietNote: "",
-        sleepStart: "",
-        sleepEnd: "",
-        sleepDuration: "",
+        sleepStart: type === "sleep" ? "23:00" : "",
+        sleepEnd: type === "sleep" ? "07:00" : "",
+        sleepQuality: "normal",
         weight: "",
         height: "",
         periodStart: today,
         periodEnd: today,
         periodFlow: "medium"
       };
+    },
+    yesterdayDate() {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    },
+    onSleepStartChange(e) {
+      this.form.sleepStart = e.detail.value || "";
+    },
+    onSleepEndChange(e) {
+      this.form.sleepEnd = e.detail.value || "";
+    },
+    onFoodBlur() {
+      const name = (this.form.foodName || "").trim();
+      if (!name || this.dietCaloriesEstimating) return;
+      this.estimateDietCalories(name);
+    },
+    async estimateDietCalories(foodName) {
+      if (!foodName || this.dietCaloriesEstimating) return;
+      this.dietCaloriesEstimating = true;
+      try {
+        const userId = uni.getStorageSync("userId") || 1;
+        const res = await request("/api/ai/chat", "POST", {
+          userId,
+          message: `根据以下食物估算热量(kcal)。只回复一个数字，不要单位、不要解释、不要其他文字。食物：${foodName}`,
+          store: false
+        });
+        const content = (res && (res.content != null ? res.content : (res.data && res.data.content != null ? res.data.content : null)));
+        const raw = content != null ? String(content).trim() : "";
+        const num = this.parseCaloriesFromText(raw);
+        if (num >= 0 && num <= 5000) {
+          this.form.dietCalories = String(num);
+        }
+      } catch (e) {
+        // 估算失败时保留用户已填或留空
+      } finally {
+        this.dietCaloriesEstimating = false;
+      }
+    },
+    parseCaloriesFromText(text) {
+      if (!text) return NaN;
+      const s = text.trim();
+      const rangeMatch = s.match(/(\d+)\s*[-~至]\s*(\d+)/);
+      if (rangeMatch) {
+        const a = parseInt(rangeMatch[1], 10);
+        const b = parseInt(rangeMatch[2], 10);
+        if (!Number.isNaN(a) && !Number.isNaN(b) && a <= 5000 && b <= 5000) {
+          return Math.round((a + b) / 2);
+        }
+        if (!Number.isNaN(a)) return a;
+        if (!Number.isNaN(b)) return b;
+      }
+      const numMatch = s.match(/\d+/);
+      if (numMatch) {
+        const n = parseInt(numMatch[0], 10);
+        return (!Number.isNaN(n) && n >= 0 && n <= 5000) ? n : NaN;
+      }
+      return NaN;
     },
     onPeriodStartChange(e) {
       this.form.periodStart = e.detail.value || "";
@@ -225,13 +338,14 @@ export default {
             date: today
           });
         } else if (this.type === "sleep") {
-          const startTime = this.normalizeDateTime(today, this.form.sleepStart);
+          const yesterday = this.yesterdayDate();
+          const startTime = this.normalizeDateTime(yesterday, this.form.sleepStart);
           const endTime = this.normalizeDateTime(today, this.form.sleepEnd);
           await request("/api/sleep/add", "POST", {
             userId,
             startTime,
             endTime,
-            quality: this.form.sleepDuration ? `${this.form.sleepDuration}小时` : ""
+            quality: this.form.sleepQuality || "normal"
           });
         } else if (this.type === "weight") {
           const weight = this.toFloat(this.form.weight);
@@ -279,12 +393,18 @@ export default {
 </script>
 
 <style scoped>
-.page { padding: 20px; min-height: 100vh; background: #faf8f5; }
+.page { padding: 20px; min-height: 100vh; background: #faf8f5; padding-top: 12px; }
+.quick-entry-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+.quick-entry-item { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; background: #fff; border-radius: 12px; border: 1px solid #e8e2db; }
+.quick-entry-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+.quick-entry-icon-img { width: 20px; height: 20px; }
+.quick-entry-text { font-size: 13px; color: #475569; font-weight: 500; }
 .card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 20px; }
 .title { font-size: 16px; font-weight: 600; display: block; margin-bottom: 16px; }
 .form { display: flex; flex-direction: column; gap: 14px; }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .label { font-size: 12px; color: #64748b; }
+.field-hint { font-size: 11px; color: #94a3b8; margin-top: 4px; display: block; }
 .input { border: 1px solid #e8e2db; border-radius: 10px; padding: 10px 12px; font-size: 14px; }
 .picker { border: 1px solid #e8e2db; border-radius: 10px; padding: 10px 12px; font-size: 14px; color: #0f172a; background: #fff; }
 .pill-wrap { display: flex; flex-wrap: wrap; gap: 8px; }

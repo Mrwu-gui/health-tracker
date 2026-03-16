@@ -28,6 +28,11 @@ public class SleepController {
         record.setUserId(request.getUserId());
         record.setStartTime(request.getStartTime());
         record.setEndTime(request.getEndTime());
+        if (request.getRecordDate() != null) {
+            record.setRecordDate(request.getRecordDate());
+        } else if (request.getStartTime() != null) {
+            record.setRecordDate(request.getStartTime().toLocalDate());
+        }
         record.setDeepSleepMinutes(request.getDeepSleepMinutes());
         record.setLightSleepMinutes(request.getLightSleepMinutes());
         record.setQuality(request.getQuality());

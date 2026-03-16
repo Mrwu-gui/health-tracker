@@ -19,15 +19,25 @@
         <text class="empty-state-title">暂无提醒</text>
         <text class="empty-state-desc">点击右上角 + 添加运动、饮食或睡眠提醒</text>
       </view>
-      <view v-for="item in filteredReminders" v-else :key="item.id" class="card" @tap="openEdit(item)">
-        <view class="row">
-          <view>
-            <text class="name">{{ item.title }}</text>
-            <text class="desc">{{ item.timeLabel }} · {{ item.content }}</text>
+      <view v-for="item in filteredReminders" v-else :key="item.id" class="card">
+        <view class="card-main" @tap="openEdit(item)">
+          <view class="row">
+            <view class="row-left">
+              <text class="name">{{ item.title }}</text>
+              <text class="desc">{{ item.timeLabel }} · {{ item.content }}</text>
+            </view>
+            <view class="row-right">
+              <text class="tag">{{ item.tagLabel }}</text>
+              <template v-if="item.statusTag">
+                <text class="tag tag-status">{{ item.statusTag }}</text>
+              </template>
+              <view v-else class="card-more" hover-class="card-more-hover" @tap.stop="openActionMenu(item)">
+                <text class="card-more-icon">⋯</text>
+              </view>
+            </view>
           </view>
-          <text class="tag">{{ item.tagLabel }}</text>
+          <text v-if="item.countdown" class="countdown">{{ item.countdown }}</text>
         </view>
-        <text v-if="item.countdown" class="countdown">{{ item.countdown }}</text>
       </view>
     </view>
 
@@ -68,6 +78,32 @@
         </view>
       </view>
     </view>
+
+    <view v-if="showPostponeModal" class="modal-mask" @tap="closePostpone">
+      <view class="modal-sheet postpone-sheet" @tap.stop>
+        <view class="modal-sheet-bar" />
+        <view class="modal-sheet-head">
+          <text class="modal-sheet-title">延期提醒</text>
+          <text class="modal-sheet-close" @tap="closePostpone">×</text>
+        </view>
+        <view class="modal-sheet-body">
+          <view class="field">
+            <text class="field-label">新的提醒时间</text>
+            <view class="picker-group">
+              <picker mode="date" :value="postponeDate" :start="minDate" :end="maxDate" @change="onPostponeDateChange">
+                <view class="picker">{{ postponeDate || "选择日期" }}</view>
+              </picker>
+              <picker mode="time" :value="postponeTime" @change="onPostponeTimeChange">
+                <view class="picker">{{ postponeTime || "选择时间" }}</view>
+              </picker>
+            </view>
+          </view>
+          <button class="modal-sheet-btn primary" @tap="confirmPostpone" :disabled="postponeSaving">
+            {{ postponeSaving ? "保存中..." : "确定延期" }}
+          </button>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -93,7 +129,13 @@ export default {
         content: "",
         remindDate: "",
         remindTime: ""
-      }
+      },
+      showPostponeModal: false,
+      postponeItem: null,
+      postponeDate: "",
+      postponeTime: "",
+      postponeSaving: false,
+      actionItem: null
     };
   },
   computed: {
@@ -138,7 +180,8 @@ export default {
               title: item.title,
               content: item.content || "提醒事项",
               time: item.remindTime || "",
-              type: Number(item.type || 0)
+              type: Number(item.type || 0),
+              status: Number(item.status ?? 0)
             }));
           this.setReminders(this.decorate(mapped));
         })
@@ -240,8 +283,15 @@ export default {
         const timeLabel = this.formatTime(item.time);
         const tagLabel = this.tagLabel(item.type);
         const countdown = item.type === 4 ? this.timeLeft(item.time) : "";
-        return { ...item, timeLabel, tagLabel, countdown };
+        const statusTag = this.statusTagLabel(item.status);
+        return { ...item, timeLabel, tagLabel, countdown, statusTag };
       });
+    },
+    statusTagLabel(status) {
+      const s = Number(status);
+      if (s === 1) return "已完成";
+      if (s === 2) return "已忽略";
+      return "";
     },
     tagLabel(type) {
       switch (Number(type)) {
@@ -304,6 +354,76 @@ export default {
         return { date: `${y}-${m}-${d}`, time: timeStr.slice(0, 5) };
       }
       return { date: "", time: "" };
+    },
+    openActionMenu(item) {
+      if (!item) return;
+      this.actionItem = item;
+      uni.showActionSheet({
+        itemList: ["已完成", "忽略", "延期"],
+        success: (res) => {
+          const it = this.actionItem;
+          this.actionItem = null;
+          if (res.tapIndex === 0) this.setStatus(it, 1);
+          else if (res.tapIndex === 1) this.setStatus(it, 2);
+          else if (res.tapIndex === 2) this.openPostpone(it);
+        },
+        fail: () => {
+          this.actionItem = null;
+        }
+      });
+    },
+    setStatus(item, status) {
+      if (!item || !item.id) return;
+      request("/api/reminder/status", "POST", { id: item.id, status })
+        .then(() => {
+          uni.showToast({ title: status === 1 ? "已标记完成" : "已忽略", icon: "success" });
+          this.fetchReminders();
+        })
+        .catch((err) => {
+          uni.showToast({ title: err.message || "操作失败", icon: "none" });
+        });
+    },
+    openPostpone(item) {
+      if (!item || !item.id) return;
+      const parts = this.splitDateTime(item.time);
+      this.postponeItem = item;
+      this.postponeDate = parts.date || this.minDate;
+      this.postponeTime = parts.time || "09:00";
+      this.showPostponeModal = true;
+    },
+    closePostpone() {
+      this.showPostponeModal = false;
+      this.postponeItem = null;
+    },
+    onPostponeDateChange(e) {
+      this.postponeDate = e.detail.value || "";
+    },
+    onPostponeTimeChange(e) {
+      this.postponeTime = e.detail.value || "";
+    },
+    confirmPostpone() {
+      if (!this.postponeItem || !this.postponeItem.id) {
+        this.closePostpone();
+        return;
+      }
+      if (!this.postponeDate || !this.postponeTime) {
+        uni.showToast({ title: "请选择日期和时间", icon: "none" });
+        return;
+      }
+      const remindTime = `${this.postponeDate} ${this.postponeTime}:00`;
+      this.postponeSaving = true;
+      request("/api/reminder/status", "POST", { id: this.postponeItem.id, remind_time: remindTime })
+        .then(() => {
+          uni.showToast({ title: "已延期", icon: "success" });
+          this.closePostpone();
+          this.fetchReminders();
+        })
+        .catch((err) => {
+          uni.showToast({ title: err.message || "延期失败", icon: "none" });
+        })
+        .finally(() => {
+          this.postponeSaving = false;
+        });
     }
   }
 };
@@ -526,12 +646,60 @@ export default {
   border-radius: 16px;
   padding: 12px;
   border: 1px solid #e8e2db;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-main {
+  flex: 1;
+  min-width: 0;
 }
 
 .row {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.row-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-right {
+  display: flex;
   align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.tag.tag-status {
+  color: #64748b;
+  background: #f1f5f9;
+}
+
+.card-more {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.card-more-hover {
+  background: #e2e8f0;
+}
+
+.card-more-icon {
+  font-size: 20px;
+  font-weight: 300;
+  color: #64748b;
+  line-height: 1;
 }
 
 .name {

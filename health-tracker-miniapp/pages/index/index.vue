@@ -91,12 +91,18 @@
         </view>
       </view>
       <view class="section-card-body">
-        <view class="sleep-quick">
+        <view class="sleep-quick" v-if="!sleepRecord">
           <view class="sleep-quick-btn" @tap="openRecord('sleep')">
             <image class="icon-img" src="/static/tabbar/sleep2.png" mode="widthFix"></image>
             <text class="sleep-quick-text">昨晚睡眠</text>
             <text class="sleep-quick-hint">默认 23:00–07:00，可改</text>
           </view>
+        </view>
+        <view v-if="sleepRecord" class="list-item">
+          <view class="list-item-main">
+            <text class="list-item-title">入睡 {{ formatClock(sleepRecord.startTime) }} - 起床 {{ formatClock(sleepRecord.endTime) }}</text>
+          </view>
+          <text class="list-item-tag list-item-tag-reminder">{{ sleepQualityLabel(sleepRecord.quality) }}</text>
         </view>
       </view>
     </view>
@@ -112,9 +118,20 @@
         <view class="section-link-inline" @tap="openRecord('diet')">记录一餐</view>
       </view>
       <view class="section-card-body">
-        <view class="diet-quick">
+        <view class="diet-quick" v-if="!dietRecords.length">
           <view class="diet-quick-item" v-for="meal in dietMeals" :key="meal.type" @tap="openRecordWithMeal(meal.type)">
             <text class="diet-quick-label">{{ meal.label }}</text>
+          </view>
+        </view>
+        <view v-if="dietRecords.length" class="reminder-list">
+          <view v-for="item in dietRecords" :key="item.id" class="list-item">
+            <view class="list-item-main">
+              <text class="list-item-title">{{ item.foodName || "未命名" }}</text>
+              <text class="list-item-meta">
+                {{ item.mealType || "其他" }} · {{ item.calories || 0 }} 卡
+              </text>
+            </view>
+            <text class="list-item-tag list-item-tag-goal">{{ item.mealType || "饮食" }}</text>
           </view>
         </view>
       </view>
@@ -203,6 +220,8 @@ export default {
         { type: "晚餐", label: "晚餐" },
         { type: "加餐", label: "加餐" }
       ],
+      dietRecords: [],
+      sleepRecord: null,
       loading: false,
       error: "",
       syncLoading: false,
@@ -306,8 +325,10 @@ export default {
               ? dietList.list
               : [];
         this.overview.dietCount = `已记录 ${raw.length} 餐`;
+        this.dietRecords = raw.slice(0, 3);
       } catch (err) {
         this.overview.dietCount = "已记录 0 餐";
+        this.dietRecords = [];
       }
 
       try {
@@ -337,6 +358,7 @@ export default {
             return acc;
           }, null);
           if (latest) {
+            this.sleepRecord = latest.item;
             const start = this.parseDateTime(latest.item.startTime);
             const end = this.parseDateTime(latest.item.endTime);
             if (start && end) {
@@ -347,6 +369,7 @@ export default {
         }
       } catch (err) {
         this.overview.sleep = this.overview.sleep || "0小时0分";
+        this.sleepRecord = null;
       }
 
       try {
@@ -427,6 +450,8 @@ export default {
       this.overview.dietCount = "已记录 0 餐";
       this.overview.reminderSummary = "0 条";
       this.overview.goalSummary = "--";
+      this.dietRecords = [];
+      this.sleepRecord = null;
     },
     formatDate(date) {
       const y = date.getFullYear();
@@ -448,6 +473,22 @@ export default {
       const hours = Math.floor(total / 60);
       const minutes = total % 60;
       return `${hours}小时${minutes}分`;
+    },
+    formatClock(value) {
+      const date = this.parseDateTime(value);
+      if (!date) return "--:--";
+      const h = String(date.getHours()).padStart(2, "0");
+      const m = String(date.getMinutes()).padStart(2, "0");
+      return `${h}:${m}`;
+    },
+    sleepQualityLabel(value) {
+      if (!value) return "睡眠";
+      const text = String(value).toLowerCase();
+      if (text === "good") return "良好";
+      if (text === "normal") return "正常";
+      if (text === "light") return "轻度";
+      if (text === "poor") return "较差";
+      return value;
     },
     maybeAutoSyncSteps() {
       if (this.syncLoading || !this.needsSteps) return;

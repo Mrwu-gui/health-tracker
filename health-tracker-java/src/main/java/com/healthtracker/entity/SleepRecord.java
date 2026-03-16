@@ -3,6 +3,7 @@ package com.healthtracker.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @TableName("sleep_record")
@@ -12,6 +13,7 @@ public class SleepRecord {
     private Long userId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private LocalDate recordDate;
     private Integer deepSleepMinutes;
     private Integer lightSleepMinutes;
     private String quality;
@@ -47,6 +49,14 @@ public class SleepRecord {
 
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
+    }
+
+    public LocalDate getRecordDate() {
+        return recordDate;
+    }
+
+    public void setRecordDate(LocalDate recordDate) {
+        this.recordDate = recordDate;
     }
 
     public Integer getDeepSleepMinutes() {

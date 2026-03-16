@@ -71,6 +71,7 @@ ALTER TABLE sleep_record
   MODIFY user_id BIGINT NOT NULL COMMENT 'User id',
   MODIFY start_time DATETIME NOT NULL COMMENT 'Sleep start time',
   MODIFY end_time DATETIME NOT NULL COMMENT 'Sleep end time',
+  MODIFY record_date DATE NOT NULL COMMENT 'Record date',
   MODIFY deep_sleep_minutes INT COMMENT 'Deep sleep minutes',
   MODIFY light_sleep_minutes INT COMMENT 'Light sleep minutes',
   MODIFY quality VARCHAR(16) COMMENT 'Sleep quality',

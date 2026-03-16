@@ -12,12 +12,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class SleepRecordService extends ServiceImpl<SleepRecordMapper, SleepRecord> {
     public List<SleepRecord> listByUserAndDate(Long userId, LocalDate date) {
-        LocalDateTime start = date.atStartOfDay();
-        LocalDateTime end = date.plusDays(1).atStartOfDay();
         LambdaQueryWrapper<SleepRecord> query = new LambdaQueryWrapper<>();
         query.eq(SleepRecord::getUserId, userId)
-            .ge(SleepRecord::getStartTime, start)
-            .lt(SleepRecord::getStartTime, end);
+            .eq(SleepRecord::getRecordDate, date)
+            .orderByDesc(SleepRecord::getStartTime);
         return list(query);
     }
 }

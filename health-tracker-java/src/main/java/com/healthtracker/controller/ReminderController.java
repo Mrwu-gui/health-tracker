@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthtracker.config.WeChatProperties;
 import com.healthtracker.dto.ReminderRequest;
+import com.healthtracker.dto.ReminderStatusRequest;
 import com.healthtracker.dto.ReminderUpdateRequest;
 import com.healthtracker.entity.PrivacySetting;
 import com.healthtracker.entity.Reminder;
@@ -80,11 +81,42 @@ public class ReminderController {
         if (reminder == null) {
             throw new IllegalArgumentException("提醒不存在");
         }
+        Long userId = currentUserId();
+        if (!userId.equals(reminder.getUserId())) {
+            throw new IllegalArgumentException("无权限操作该提醒");
+        }
         reminder.setTitle(resolveTitle(request.getTitle(), request.getType()));
         reminder.setType(request.getType());
         reminder.setContent(request.getContent());
         reminder.setRemindTime(parseTime(request.getRemindTime()));
         reminderService.updateById(reminder);
+        return reminder;
+    }
+
+    @PostMapping("/status")
+    public Reminder updateStatus(@Valid @RequestBody ReminderStatusRequest request) {
+        Reminder reminder = reminderService.getById(request.getId());
+        if (reminder == null) {
+            throw new IllegalArgumentException("提醒不存在");
+        }
+        Long userId = currentUserId();
+        if (!userId.equals(reminder.getUserId())) {
+            throw new IllegalArgumentException("无权限操作该提醒");
+        }
+        reminder.setStatus(request.getStatus());
+        if (request.getRemindTime() != null && !request.getRemindTime().isBlank()) {
+            reminder.setRemindTime(parseTime(request.getRemindTime()));
+        }
+        reminderService.updateById(reminder);
+
+        if (reminder.getStatus() != null && reminder.getStatus() == 0
+            && reminder.getRemindTime() != null) {
+            User user = userService.getById(reminder.getUserId());
+            if (user != null && user.getWxOpenid() != null && !user.getWxOpenid().isBlank()) {
+                scheduleSubscribeReminder(reminder, user);
+            }
+        }
+
         return reminder;
     }
 

@@ -79,3 +79,6 @@ tencent:
     engine-model-type: ${TENCENT_ASR_ENGINE_MODEL_TYPE:16k_zh}
     voice-format: ${TENCENT_ASR_VOICE_FORMAT:mp3}
     sub-service-type: ${TENCENT_ASR_SUB_SERVICE_TYPE:2}
+
+admin:
+  api-key: ${ADMIN_API_KEY:}

@@ -35,6 +35,7 @@ import java.util.Map;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -60,6 +61,9 @@ public class AiCallbackController {
     private final PeriodRecordService periodRecordService;
     private final FamilyMemberService familyMemberService;
     private final UserService userService;
+
+    @Value("${ai.callback.enabled:false}")
+    private boolean callbackEnabled;
 
     public AiCallbackController(ReminderService reminderService,
                                 MedicationService medicationService,
@@ -89,6 +93,9 @@ public class AiCallbackController {
 
     @PostMapping("/callback")
     public Map<String, Object> callback(@RequestBody AiCallbackRequest request) {
+        if (!callbackEnabled) {
+            throw new IllegalArgumentException("AI 回调已关闭");
+        }
         Map<String, Object> result = new HashMap<>();
         String intent = request.getIntent() == null ? "" : request.getIntent().trim();
         Long userId = request.getUserId();

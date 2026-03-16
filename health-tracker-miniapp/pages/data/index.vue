@@ -20,7 +20,7 @@
     <view class="section-card">
       <view class="section-head">
         <view class="section-title-wrap">
-          <view class="section-icon section-icon-data"><text>📋</text></view>
+          <view class="section-icon section-icon-data"><text class="section-icon-txt">数</text></view>
           <text class="section-title">本{{ periodLabel }}数据</text>
         </view>
       </view>
@@ -55,7 +55,7 @@
     <view class="section-card ai-card">
       <view class="section-head">
         <view class="section-title-wrap">
-          <view class="section-icon section-icon-ai"><text>✨</text></view>
+          <view class="section-icon section-icon-ai"><text class="section-icon-txt">智</text></view>
           <text class="section-title">智康 为你解读</text>
         </view>
         <text v-if="!aiLoading && aiContent" class="btn-text" @tap="refreshAnalysis">重新分析</text>
@@ -81,7 +81,7 @@
 
     <view class="tips-section">
       <view class="tips-head">
-        <view class="section-icon section-icon-tips"><text>💡</text></view>
+        <view class="section-icon section-icon-tips"><text class="section-icon-txt">贴</text></view>
         <text class="tips-title">健康小贴士</text>
       </view>
       <scroll-view class="tips-scroll" scroll-y :show-scrollbar="true">
@@ -417,7 +417,12 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 17px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.section-icon-txt {
+  color: inherit;
 }
 
 .section-icon-data {

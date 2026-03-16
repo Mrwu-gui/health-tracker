@@ -1,6 +1,7 @@
 package com.healthtracker.dto;
 
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class SleepRecordRequest {
@@ -13,6 +14,7 @@ public class SleepRecordRequest {
     @NotNull
     private LocalDateTime endTime;
 
+    private LocalDate recordDate;
     private Integer deepSleepMinutes;
     private Integer lightSleepMinutes;
     private String quality;
@@ -40,6 +42,14 @@ public class SleepRecordRequest {
 
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
+    }
+
+    public LocalDate getRecordDate() {
+        return recordDate;
+    }
+
+    public void setRecordDate(LocalDate recordDate) {
+        this.recordDate = recordDate;
     }
 
     public Integer getDeepSleepMinutes() {

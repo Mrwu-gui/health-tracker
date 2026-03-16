@@ -89,11 +89,15 @@
       </view>
       <view v-if="expandComposer" class="composer-expand">
         <view class="composer-expand-item" @tap="onChooseImage">
-          <text class="composer-expand-icon">📷</text>
+          <view class="composer-expand-icon">
+            <image class="composer-expand-icon-img" src="/static/tabbar/xiangce.png" mode="aspectFit" />
+          </view>
           <text class="composer-expand-label">相册</text>
         </view>
         <view class="composer-expand-item" @tap="toggleRecord">
-          <text class="composer-expand-icon">🎤</text>
+          <view class="composer-expand-icon">
+            <image class="composer-expand-icon-img" src="/static/tabbar/yuyin.png" mode="aspectFit" />
+          </view>
           <text class="composer-expand-label">语音</text>
         </view>
       </view>
@@ -590,7 +594,16 @@ export default {
 }
 
 .composer-expand-icon {
-  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.composer-expand-icon-img {
+  width: 20px;
+  height: 20px;
 }
 
 .composer-expand-label {

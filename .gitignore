@@ -13,3 +13,10 @@ health-tracker-miniapp/unpackage/
 health-tracker-miniapp/.hbuilderx/
 .ssh/
 health-tracker-java/uploads/
+DEPLOY_CONFIG.md
+DEPLOY_STEPS.md
+ci/DEPLOY_YUNXIAO.md
+health-tracker-docs/ROADMAP.md
+health-tracker-docs/AI/AI意图识别规则_元器模板.md
+health-tracker-docs/AI/AI意图识别规则_含示例.md
+health-tracker-miniapp/微信小程序调试说明.md

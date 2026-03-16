@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthtracker.dto.AiChatRequest;
 import com.healthtracker.entity.AiChatMessage;
+import com.healthtracker.entity.AiLog;
 import com.healthtracker.entity.User;
 import com.healthtracker.service.AiChatMessageService;
+import com.healthtracker.service.AiLogService;
 import com.healthtracker.service.UserService;
 import jakarta.validation.Valid;
 import java.io.File;
@@ -51,6 +53,7 @@ public class AiController {
     private final RestTemplate restTemplate;
     private final AiChatMessageService aiChatMessageService;
     private final UserService userService;
+    private final AiLogService aiLogService;
 
     @Value("${yuanqi.base-url:https://yuanqi.tencent.com}")
     private String baseUrl;
@@ -85,7 +88,8 @@ public class AiController {
     public AiController(ObjectMapper objectMapper,
                         RestTemplateBuilder builder,
                         AiChatMessageService aiChatMessageService,
-                        UserService userService) {
+                        UserService userService,
+                        AiLogService aiLogService) {
         this.objectMapper = objectMapper;
         this.restTemplate = builder
             .setConnectTimeout(Duration.ofSeconds(10))
@@ -93,6 +97,7 @@ public class AiController {
             .build();
         this.aiChatMessageService = aiChatMessageService;
         this.userService = userService;
+        this.aiLogService = aiLogService;
     }
 
     @PostMapping("/chat")
@@ -159,8 +164,10 @@ public class AiController {
         try {
             response = restTemplate.postForEntity(url, entity, String.class);
         } catch (ResourceAccessException ex) {
+            saveAiLog(userIdLong, wxOpenid, text, null, 1, "AI 请求超时");
             throw new IllegalArgumentException("AI 服务请求超时，请稍后再试", ex);
         } catch (Exception ex) {
+            saveAiLog(userIdLong, wxOpenid, text, null, 1, ex.getMessage());
             if (request.getImageUrl() != null && !request.getImageUrl().isBlank()) {
                 throw new IllegalArgumentException("当前模型暂不支持图片识别");
             }
@@ -195,6 +202,7 @@ public class AiController {
 
         Map<String, Object> result = new HashMap<>();
         result.put("content", content == null ? "" : content);
+        saveAiLog(userIdLong, wxOpenid, text, content, 0, null);
         return result;
     }
 
@@ -254,6 +262,23 @@ public class AiController {
             return null;
         }
         return user.getWxOpenid();
+    }
+
+    private void saveAiLog(Long userId, String wxOpenid, String requestText,
+                           String responseText, Integer status, String error) {
+        try {
+            AiLog log = new AiLog();
+            log.setUserId(userId);
+            log.setWxOpenid(wxOpenid);
+            log.setRequestText(requestText);
+            log.setResponseText(responseText);
+            log.setStatus(status);
+            log.setError(error);
+            log.setCreatedAt(LocalDateTime.now());
+            aiLogService.save(log);
+        } catch (Exception ignore) {
+            // avoid breaking ai flow
+        }
     }
 
     private String recognizeAudio(String audioUrl) throws Exception {

@@ -186,3 +186,25 @@ ALTER TABLE ai_chat_message
   MODIFY content_json TEXT COMMENT 'Raw content json',
   MODIFY created_at DATETIME NOT NULL COMMENT 'Created time',
   COMMENT='AI chat messages';
+
+ALTER TABLE system_log
+  MODIFY id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
+  MODIFY level VARCHAR(16) NOT NULL COMMENT 'Level',
+  MODIFY module VARCHAR(64) COMMENT 'Module',
+  MODIFY path VARCHAR(128) COMMENT 'Request path',
+  MODIFY method VARCHAR(16) COMMENT 'HTTP method',
+  MODIFY message VARCHAR(255) COMMENT 'Message',
+  MODIFY detail TEXT COMMENT 'Detail',
+  MODIFY created_at DATETIME NOT NULL COMMENT 'Created time',
+  COMMENT='System logs';
+
+ALTER TABLE ai_log
+  MODIFY id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
+  MODIFY user_id BIGINT COMMENT 'User id',
+  MODIFY wx_openid VARCHAR(64) COMMENT 'WeChat openid',
+  MODIFY request_text TEXT COMMENT 'Request text',
+  MODIFY response_text TEXT COMMENT 'Response text',
+  MODIFY status TINYINT NOT NULL DEFAULT 0 COMMENT 'Status (0=success,1=fail)',
+  MODIFY error TEXT COMMENT 'Error message',
+  MODIFY created_at DATETIME NOT NULL COMMENT 'Created time',
+  COMMENT='AI logs';

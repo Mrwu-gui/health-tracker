@@ -50,6 +50,7 @@ public class SecurityConfig {
                         "/api/docs-ui/**",
                         "/api/swagger-ui/**",
                         "/swagger-ui/**",
+                        "/api/admin/**",
                         "/api/admin/logs/**",
                         "/logs.html",
                         "/uploads/**"

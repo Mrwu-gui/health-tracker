@@ -185,3 +185,25 @@ CREATE TABLE IF NOT EXISTS ai_chat_message (
   content_json TEXT COMMENT 'Raw content json',
   created_at DATETIME NOT NULL COMMENT 'Created time'
 ) COMMENT='AI chat messages';
+
+CREATE TABLE IF NOT EXISTS system_log (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
+  level VARCHAR(16) NOT NULL COMMENT 'Level',
+  module VARCHAR(64) COMMENT 'Module',
+  path VARCHAR(128) COMMENT 'Request path',
+  method VARCHAR(16) COMMENT 'HTTP method',
+  message VARCHAR(255) COMMENT 'Message',
+  detail TEXT COMMENT 'Detail',
+  created_at DATETIME NOT NULL COMMENT 'Created time'
+) COMMENT='System logs';
+
+CREATE TABLE IF NOT EXISTS ai_log (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
+  user_id BIGINT COMMENT 'User id',
+  wx_openid VARCHAR(64) COMMENT 'WeChat openid',
+  request_text TEXT COMMENT 'Request text',
+  response_text TEXT COMMENT 'Response text',
+  status TINYINT NOT NULL DEFAULT 0 COMMENT 'Status (0=success,1=fail)',
+  error TEXT COMMENT 'Error message',
+  created_at DATETIME NOT NULL COMMENT 'Created time'
+) COMMENT='AI logs';

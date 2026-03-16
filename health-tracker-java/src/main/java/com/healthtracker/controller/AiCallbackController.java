@@ -101,6 +101,9 @@ public class AiCallbackController {
             return result;
         }
 
+        LoggerFactory.getLogger(AiCallbackController.class)
+            .info("AI callback userId={} intent={}", userId, intent);
+
         result.put("ok", true);
         result.put("intent", intent);
 

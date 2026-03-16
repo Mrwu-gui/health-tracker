@@ -24,7 +24,6 @@ import com.healthtracker.service.PeriodRecordService;
 import com.healthtracker.service.ReminderService;
 import com.healthtracker.service.SleepRecordService;
 import com.healthtracker.service.WeightRecordService;
-import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -80,66 +79,85 @@ public class AiCallbackController {
     }
 
     @PostMapping("/callback")
-    public Map<String, Object> callback(@Valid @RequestBody AiCallbackRequest request) {
+    public Map<String, Object> callback(@RequestBody AiCallbackRequest request) {
+        Map<String, Object> result = new HashMap<>();
         Long userId = request.getUserId();
         if (userId == null) {
-            throw new IllegalArgumentException("缺少 userId");
+            result.put("ok", false);
+            result.put("error", "缺少 userId");
+            return result;
         }
         String intent = request.getIntent() == null ? "" : request.getIntent().trim();
+        if (intent.isBlank()) {
+            result.put("ok", false);
+            result.put("error", "缺少 intent");
+            return result;
+        }
         JsonNode payload = request.getPayload();
         if (payload == null || payload.isNull()) {
-            throw new IllegalArgumentException("缺少 payload");
+            result.put("ok", false);
+            result.put("error", "缺少 payload");
+            result.put("intent", intent);
+            return result;
         }
 
-        Map<String, Object> result = new HashMap<>();
+        result.put("ok", true);
         result.put("intent", intent);
 
+        HandleResult handle;
         switch (intent) {
             case "reminder":
-                result.put("id", handleReminder(userId, payload));
+                handle = handleReminder(userId, payload);
                 break;
             case "medication":
-                result.put("id", handleMedication(userId, payload));
+                handle = handleMedication(userId, payload);
                 break;
             case "medication_record":
-                result.put("id", handleMedicationRecord(userId, payload));
+                handle = handleMedicationRecord(userId, payload);
                 break;
             case "exercise_record":
-                result.put("id", handleExercise(userId, payload));
+                handle = handleExercise(userId, payload);
                 break;
             case "diet_record":
-                result.put("id", handleDiet(userId, payload));
+                handle = handleDiet(userId, payload);
                 break;
             case "sleep_record":
-                result.put("id", handleSleep(userId, payload));
+                handle = handleSleep(userId, payload);
                 break;
             case "weight_record":
-                result.put("id", handleWeight(userId, payload));
+                handle = handleWeight(userId, payload);
                 break;
             case "health_record":
-                result.put("id", handleHealth(userId, payload));
+                handle = handleHealth(userId, payload);
                 break;
             case "goal":
-                result.put("id", handleGoal(userId, payload));
+                handle = handleGoal(userId, payload);
                 break;
             case "period_record":
-                result.put("id", handlePeriod(userId, payload));
+                handle = handlePeriod(userId, payload);
                 break;
             case "family_member":
-                result.put("id", handleFamily(userId, payload));
+                handle = handleFamily(userId, payload);
                 break;
             default:
-                throw new IllegalArgumentException("未知意图: " + intent);
+                result.put("ok", false);
+                result.put("error", "未知意图: " + intent);
+                return result;
         }
 
+        if (handle != null) {
+            result.put("id", handle.id);
+            if (handle.reason != null) {
+                result.put("skipped", true);
+                result.put("reason", handle.reason);
+            }
+        }
         return result;
     }
 
-    private Long handleReminder(Long userId, JsonNode payload) {
+    private HandleResult handleReminder(Long userId, JsonNode payload) {
         Integer type = intVal(payload, "type");
-        if (type == null) {
-            throw new IllegalArgumentException("缺少 type");
-        }
+        if (type == null) type = 1;
         String title = text(payload, "title");
         if (title == null || title.isBlank()) {
             title = defaultReminderTitle(type);
@@ -154,14 +172,17 @@ public class AiCallbackController {
         reminder.setStatus(status == null ? 0 : status);
         reminder.setCreatedAt(LocalDateTime.now());
         reminderService.save(reminder);
-        return reminder.getId();
+        return HandleResult.success(reminder.getId());
     }
 
-    private Long handleMedication(Long userId, JsonNode payload) {
-        String drugName = requireText(payload, "drug_name");
-        String dosage = requireText(payload, "dosage");
-        String frequency = requireText(payload, "frequency");
-        LocalDate startDate = requireDate(payload, "start_date");
+    private HandleResult handleMedication(Long userId, JsonNode payload) {
+        String drugName = text(payload, "drug_name");
+        String dosage = text(payload, "dosage");
+        String frequency = text(payload, "frequency");
+        LocalDate startDate = date(payload, "start_date");
+        if (isBlank(drugName) || isBlank(dosage) || isBlank(frequency) || startDate == null) {
+            return HandleResult.skip("用药信息不完整");
+        }
 
         Medication medication = new Medication();
         medication.setUserId(userId);
@@ -173,29 +194,37 @@ public class AiCallbackController {
         medication.setEndDate(date(payload, "end_date"));
         medication.setNotes(text(payload, "notes"));
         medicationService.save(medication);
-        return medication.getId();
+        return HandleResult.success(medication.getId());
     }
 
-    private Long handleMedicationRecord(Long userId, JsonNode payload) {
-        LocalDate date = requireDate(payload, "date");
-        LocalTime time = requireTime(payload, "time");
-        Integer status = requireInt(payload, "status");
+    private HandleResult handleMedicationRecord(Long userId, JsonNode payload) {
+        Long medicationId = longVal(payload, "medication_id");
+        LocalDate date = date(payload, "date");
+        LocalTime time = time(payload, "time");
+        Integer status = intVal(payload, "status");
+        if (medicationId == null || date == null || time == null || status == null) {
+            return HandleResult.skip("用药打卡信息不完整");
+        }
 
         MedicationRecord record = new MedicationRecord();
         record.setUserId(userId);
-        record.setMedicationId(longVal(payload, "medication_id"));
+        record.setMedicationId(medicationId);
         record.setDate(date);
         record.setTime(time);
         record.setStatus(status);
         medicationRecordService.save(record);
-        return record.getId();
+        return HandleResult.success(record.getId());
     }
 
-    private Long handleExercise(Long userId, JsonNode payload) {
-        String type = requireText(payload, "type");
-        Integer duration = requireInt(payload, "duration");
-        Integer calories = requireInt(payload, "calories");
-        LocalDate date = requireDate(payload, "date");
+    private HandleResult handleExercise(Long userId, JsonNode payload) {
+        String type = text(payload, "type");
+        Integer duration = intVal(payload, "duration");
+        Integer calories = intVal(payload, "calories");
+        LocalDate date = date(payload, "date");
+        if (isBlank(type)) type = "运动";
+        if (duration == null) duration = 0;
+        if (calories == null) calories = 0;
+        if (date == null) date = LocalDate.now();
 
         ExerciseRecord record = new ExerciseRecord();
         record.setUserId(userId);
@@ -205,14 +234,18 @@ public class AiCallbackController {
         record.setCalories(calories);
         record.setDate(date);
         exerciseRecordService.save(record);
-        return record.getId();
+        return HandleResult.success(record.getId());
     }
 
-    private Long handleDiet(Long userId, JsonNode payload) {
-        String mealType = requireText(payload, "meal_type");
-        String foodName = requireText(payload, "food_name");
-        Integer calories = requireInt(payload, "calories");
-        LocalDate date = requireDate(payload, "date");
+    private HandleResult handleDiet(Long userId, JsonNode payload) {
+        String mealType = text(payload, "meal_type");
+        String foodName = text(payload, "food_name");
+        Integer calories = intVal(payload, "calories");
+        LocalDate date = date(payload, "date");
+        if (isBlank(mealType)) mealType = "其他";
+        if (isBlank(foodName)) foodName = "未指定";
+        if (calories == null) calories = 0;
+        if (date == null) date = LocalDate.now();
 
         DietRecord record = new DietRecord();
         record.setUserId(userId);
@@ -222,12 +255,15 @@ public class AiCallbackController {
         record.setNote(text(payload, "note"));
         record.setDate(date);
         dietRecordService.save(record);
-        return record.getId();
+        return HandleResult.success(record.getId());
     }
 
-    private Long handleSleep(Long userId, JsonNode payload) {
-        LocalDateTime startTime = requireDateTime(payload, "start_time");
-        LocalDateTime endTime = requireDateTime(payload, "end_time");
+    private HandleResult handleSleep(Long userId, JsonNode payload) {
+        LocalDateTime startTime = dateTime(payload, "start_time");
+        LocalDateTime endTime = dateTime(payload, "end_time");
+        if (startTime == null || endTime == null) {
+            return HandleResult.skip("睡眠时间不完整");
+        }
 
         SleepRecord record = new SleepRecord();
         record.setUserId(userId);
@@ -237,12 +273,16 @@ public class AiCallbackController {
         record.setLightSleepMinutes(intVal(payload, "light_sleep_minutes"));
         record.setQuality(text(payload, "quality"));
         sleepRecordService.save(record);
-        return record.getId();
+        return HandleResult.success(record.getId());
     }
 
-    private Long handleWeight(Long userId, JsonNode payload) {
-        Double weight = requireDouble(payload, "weight");
-        LocalDate date = requireDate(payload, "date");
+    private HandleResult handleWeight(Long userId, JsonNode payload) {
+        Double weight = doubleVal(payload, "weight");
+        LocalDate date = date(payload, "date");
+        if (weight == null) {
+            return HandleResult.skip("缺少体重");
+        }
+        if (date == null) date = LocalDate.now();
 
         WeightRecord record = new WeightRecord();
         record.setUserId(userId);
@@ -250,11 +290,12 @@ public class AiCallbackController {
         record.setBmi(doubleVal(payload, "bmi"));
         record.setDate(date);
         weightRecordService.save(record);
-        return record.getId();
+        return HandleResult.success(record.getId());
     }
 
-    private Long handleHealth(Long userId, JsonNode payload) {
-        LocalDate date = requireDate(payload, "date");
+    private HandleResult handleHealth(Long userId, JsonNode payload) {
+        LocalDate date = date(payload, "date");
+        if (date == null) date = LocalDate.now();
         HealthRecord record = new HealthRecord();
         record.setUserId(userId);
         record.setSystolic(intVal(payload, "systolic"));
@@ -262,13 +303,16 @@ public class AiCallbackController {
         record.setHeartRate(intVal(payload, "heart_rate"));
         record.setDate(date);
         healthRecordService.save(record);
-        return record.getId();
+        return HandleResult.success(record.getId());
     }
 
-    private Long handleGoal(Long userId, JsonNode payload) {
-        Integer goalType = requireInt(payload, "goal_type");
-        Integer targetValue = requireInt(payload, "target_value");
-        String period = requireText(payload, "period");
+    private HandleResult handleGoal(Long userId, JsonNode payload) {
+        Integer goalType = intVal(payload, "goal_type");
+        Integer targetValue = intVal(payload, "target_value");
+        String period = text(payload, "period");
+        if (goalType == null || targetValue == null || isBlank(period)) {
+            return HandleResult.skip("目标信息不完整");
+        }
 
         Goal goal = new Goal();
         goal.setUserId(userId);
@@ -277,12 +321,15 @@ public class AiCallbackController {
         goal.setCurrentValue(0);
         goal.setPeriod(period);
         goalService.save(goal);
-        return goal.getId();
+        return HandleResult.success(goal.getId());
     }
 
-    private Long handlePeriod(Long userId, JsonNode payload) {
-        LocalDate startDate = requireDate(payload, "start_date");
+    private HandleResult handlePeriod(Long userId, JsonNode payload) {
+        LocalDate startDate = date(payload, "start_date");
         LocalDate endDate = date(payload, "end_date");
+        if (startDate == null) {
+            return HandleResult.skip("经期开始日期缺失");
+        }
         PeriodRecord record = new PeriodRecord();
         record.setUserId(userId);
         record.setStartDate(startDate);
@@ -291,11 +338,14 @@ public class AiCallbackController {
         record.setNote(text(payload, "note"));
         record.setCreatedAt(LocalDateTime.now());
         periodRecordService.save(record);
-        return record.getId();
+        return HandleResult.success(record.getId());
     }
 
-    private Long handleFamily(Long userId, JsonNode payload) {
-        String name = requireText(payload, "name");
+    private HandleResult handleFamily(Long userId, JsonNode payload) {
+        String name = text(payload, "name");
+        if (isBlank(name)) {
+            return HandleResult.skip("家人姓名缺失");
+        }
         FamilyMember member = new FamilyMember();
         member.setUserId(userId);
         member.setName(name);
@@ -308,7 +358,7 @@ public class AiCallbackController {
         member.setAvatar(text(payload, "avatar"));
         member.setCreatedAt(LocalDateTime.now());
         familyMemberService.save(member);
-        return member.getId();
+        return HandleResult.success(member.getId());
     }
 
     private String normalizeRemindTime(String value) {
@@ -345,14 +395,6 @@ public class AiCallbackController {
         return node == null || node.isNull() ? null : node.asText();
     }
 
-    private String requireText(JsonNode payload, String field) {
-        String value = text(payload, field);
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("缺少 " + field);
-        }
-        return value.trim();
-    }
-
     private Integer intVal(JsonNode payload, String field) {
         JsonNode node = payload.get(field);
         if (node == null || node.isNull()) {
@@ -370,14 +412,6 @@ public class AiCallbackController {
         } catch (NumberFormatException ex) {
             return null;
         }
-    }
-
-    private Integer requireInt(JsonNode payload, String field) {
-        Integer value = intVal(payload, field);
-        if (value == null) {
-            throw new IllegalArgumentException("缺少 " + field);
-        }
-        return value;
     }
 
     private Long longVal(JsonNode payload, String field) {
@@ -418,28 +452,12 @@ public class AiCallbackController {
         }
     }
 
-    private Double requireDouble(JsonNode payload, String field) {
-        Double value = doubleVal(payload, field);
-        if (value == null) {
-            throw new IllegalArgumentException("缺少 " + field);
-        }
-        return value;
-    }
-
     private LocalDate date(JsonNode payload, String field) {
         String value = text(payload, field);
         if (value == null || value.isBlank()) {
             return null;
         }
         return LocalDate.parse(value.trim(), DATE);
-    }
-
-    private LocalDate requireDate(JsonNode payload, String field) {
-        LocalDate value = date(payload, field);
-        if (value == null) {
-            throw new IllegalArgumentException("缺少 " + field);
-        }
-        return value;
     }
 
     private LocalDateTime dateTime(JsonNode payload, String field) {
@@ -450,19 +468,33 @@ public class AiCallbackController {
         return LocalDateTime.parse(value.trim(), DATE_TIME);
     }
 
-    private LocalDateTime requireDateTime(JsonNode payload, String field) {
-        LocalDateTime value = dateTime(payload, field);
-        if (value == null) {
-            throw new IllegalArgumentException("缺少 " + field);
-        }
-        return value;
-    }
-
-    private LocalTime requireTime(JsonNode payload, String field) {
+    private LocalTime time(JsonNode payload, String field) {
         String value = text(payload, field);
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("缺少 " + field);
+            return null;
         }
         return LocalTime.parse(value.trim(), TIME);
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private static final class HandleResult {
+        private final Long id;
+        private final String reason;
+
+        private HandleResult(Long id, String reason) {
+            this.id = id;
+            this.reason = reason;
+        }
+
+        private static HandleResult success(Long id) {
+            return new HandleResult(id, null);
+        }
+
+        private static HandleResult skip(String reason) {
+            return new HandleResult(null, reason);
+        }
     }
 }

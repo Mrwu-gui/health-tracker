@@ -1,12 +1,9 @@
 package com.healthtracker.dto;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import jakarta.validation.constraints.NotBlank;
-
 public class AiCallbackRequest {
     private Long userId;
 
-    @NotBlank
     private String intent;
 
     private JsonNode payload;

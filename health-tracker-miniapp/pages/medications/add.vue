@@ -24,6 +24,7 @@
 
 <script>
 import { request } from "../../utils/api";
+import { requestSubscribeByKey } from "../../utils/subscribe";
 
 export default {
   data() {
@@ -37,7 +38,7 @@ export default {
       const d = String(now.getDate()).padStart(2, "0");
       return `${y}-${m}-${d}`;
     },
-    save() {
+    async save() {
       if (!this.form.drugName) {
         uni.showToast({ title: "请填写药物名称", icon: "none" });
         return;
@@ -47,6 +48,7 @@ export default {
         return;
       }
       const userId = uni.getStorageSync("userId") || 1;
+      await requestSubscribeByKey("medication");
       request("/api/medication/add", "POST", {
         userId,
         drugName: this.form.drugName,

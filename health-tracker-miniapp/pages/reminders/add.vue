@@ -24,6 +24,7 @@
 
 <script>
 import { request } from "../../utils/api";
+import { requestSubscribeByKey } from "../../utils/subscribe";
 
 export default {
   data() {
@@ -62,7 +63,7 @@ export default {
     onTimeChange(e) {
       this.form.remindTime = e.detail.value;
     },
-    save() {
+    async save() {
       if (!this.form.remindTime) {
         uni.showToast({ title: "请填写标题和时间", icon: "none" });
         return;
@@ -81,6 +82,11 @@ export default {
       }
       const userId = uni.getStorageSync("userId") || 1;
       const remindTime = `${this.todayDate()} ${this.form.remindTime}`;
+      if (this.form.type === 3) {
+        await requestSubscribeByKey("sleep");
+      } else if (this.form.type === 1) {
+        await requestSubscribeByKey("exercise");
+      }
       request("/api/reminder/add", "POST", {
         userId,
         title: this.form.title || this.titleLabel,

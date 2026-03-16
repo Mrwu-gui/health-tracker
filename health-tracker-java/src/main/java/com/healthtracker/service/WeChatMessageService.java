@@ -37,39 +37,48 @@ public class WeChatMessageService {
             log.info("WeChat reminder skipped: templateId not configured");
             return;
         }
+        sendTemplate(openid, templateId, "pages/reminders/index", buildData(title, content, remindTime));
+    }
+
+    public String sendTemplate(String openid, String templateId, String page, Map<String, Object> data) {
+        if (templateId == null || templateId.isBlank()) {
+            log.info("WeChat subscribe skipped: templateId not configured");
+            return null;
+        }
         String token = getAccessToken();
         if (token == null || token.isBlank()) {
-            log.warn("WeChat reminder failed: access token is empty");
+            log.warn("WeChat subscribe failed: access token is empty");
             throw new IllegalArgumentException("微信服务不可用");
         }
         String url = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=" + token;
         Map<String, Object> payload = new HashMap<>();
         payload.put("touser", openid);
         payload.put("template_id", templateId);
-        payload.put("page", "pages/reminders/index");
-        payload.put("data", buildData(title, content, remindTime));
+        payload.put("page", page);
+        payload.put("data", data);
         String body;
         try {
             body = objectMapper.writeValueAsString(payload);
         } catch (Exception ex) {
-            log.error("WeChat reminder payload build failed openid={}", mask(openid), ex);
+            log.error("WeChat subscribe payload build failed openid={}", mask(openid), ex);
             throw new IllegalArgumentException("微信推送失败");
         }
         String resp = restTemplate.postForObject(url, body, String.class);
-        log.info("WeChat reminder response openid={} {}", mask(openid), truncate(resp, 300));
+        log.info("WeChat subscribe response openid={} {}", mask(openid), truncate(resp, 300));
         try {
             Map<String, Object> map = objectMapper.readValue(resp, Map.class);
             Object errcode = map.get("errcode");
             if (errcode != null && !"0".equals(String.valueOf(errcode))) {
-                log.warn("WeChat reminder errcode={} errmsg={}", errcode, map.get("errmsg"));
+                log.warn("WeChat subscribe errcode={} errmsg={}", errcode, map.get("errmsg"));
                 throw new IllegalArgumentException("微信推送失败");
             }
         } catch (IllegalArgumentException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("WeChat reminder parse failed openid={}", mask(openid), ex);
+            log.error("WeChat subscribe parse failed openid={}", mask(openid), ex);
             throw new IllegalArgumentException("微信推送失败");
         }
+        return resp;
     }
 
     private Map<String, Object> buildData(String title, String content, LocalDateTime remindTime) {

@@ -107,6 +107,7 @@
 
 <script>
 import { request } from "../../utils/api";
+import { requestSubscribeByKey } from "../../utils/subscribe";
 
 export default {
   data() {
@@ -251,6 +252,7 @@ export default {
             note: ""
           };
           try {
+            await requestSubscribeByKey("period");
             await request("/api/period/add", "POST", payload);
           } catch (e) {
             const key = "periodRecords";

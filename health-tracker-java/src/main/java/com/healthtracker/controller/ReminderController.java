@@ -1,19 +1,24 @@
 package com.healthtracker.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthtracker.config.WeChatProperties;
 import com.healthtracker.dto.ReminderRequest;
 import com.healthtracker.dto.ReminderUpdateRequest;
+import com.healthtracker.entity.PrivacySetting;
 import com.healthtracker.entity.Reminder;
 import com.healthtracker.entity.User;
+import com.healthtracker.entity.SubscribeTask;
+import com.healthtracker.service.PrivacySettingService;
 import com.healthtracker.service.ReminderService;
+import com.healthtracker.service.SubscribeTaskService;
 import com.healthtracker.service.UserService;
-import com.healthtracker.service.WeChatMessageService;
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.List;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,16 +31,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/reminder")
 public class ReminderController {
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private final ReminderService reminderService;
     private final UserService userService;
-    private final WeChatMessageService weChatMessageService;
+    private final SubscribeTaskService subscribeTaskService;
+    private final PrivacySettingService privacySettingService;
+    private final WeChatProperties weChatProperties;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ReminderController(ReminderService reminderService,
                               UserService userService,
-                              WeChatMessageService weChatMessageService) {
+                              SubscribeTaskService subscribeTaskService,
+                              PrivacySettingService privacySettingService,
+                              WeChatProperties weChatProperties) {
         this.reminderService = reminderService;
         this.userService = userService;
-        this.weChatMessageService = weChatMessageService;
+        this.subscribeTaskService = subscribeTaskService;
+        this.privacySettingService = privacySettingService;
+        this.weChatProperties = weChatProperties;
     }
 
     @PostMapping("/add")
@@ -53,10 +66,7 @@ public class ReminderController {
 
         User user = userService.getById(userId);
         if (user != null && user.getWxOpenid() != null && !user.getWxOpenid().isBlank()) {
-            weChatMessageService.sendReminder(user.getWxOpenid(),
-                reminder.getTitle(),
-                reminder.getContent() == null ? reminder.getTitle() : reminder.getContent(),
-                reminder.getRemindTime());
+            scheduleSubscribeReminder(reminder, user);
         }
 
         Map<String, Object> body = new HashMap<>();
@@ -115,6 +125,74 @@ public class ReminderController {
             normalized = normalized + ":00";
         }
         return LocalDateTime.parse(normalized, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    }
+
+    private void scheduleSubscribeReminder(Reminder reminder, User user) {
+        PrivacySetting setting = privacySettingService.getOrCreate(user.getId());
+        if (setting != null && setting.getAllowSubscribe() != null && setting.getAllowSubscribe() == 0) {
+            return;
+        }
+        if (reminder.getRemindTime() == null) {
+            return;
+        }
+        String templateId;
+        Map<String, Object> data;
+        if (reminder.getType() != null && reminder.getType() == 3) {
+            templateId = weChatProperties.getMini().getSleepTemplateId();
+            data = Map.of(
+                "thing1", Map.of("value", limit(reminder.getContent(), 20)),
+                "time2", Map.of("value", formatTime(reminder.getRemindTime()))
+            );
+        } else if (reminder.getType() != null && reminder.getType() == 1) {
+            templateId = weChatProperties.getMini().getExerciseTemplateId();
+            String name = pickName(user);
+            data = Map.of(
+                "thing1", Map.of("value", limit(name, 20)),
+                "thing2", Map.of("value", limit(reminder.getContent(), 20)),
+                "time3", Map.of("value", formatTime(reminder.getRemindTime())),
+                "thing4", Map.of("value", limit(reminder.getTitle(), 20))
+            );
+        } else {
+            return;
+        }
+        if (templateId == null || templateId.isBlank()) {
+            return;
+        }
+        LocalDateTime sendTime = reminder.getRemindTime().minusMinutes(30);
+        if (sendTime.isBefore(LocalDateTime.now())) {
+            sendTime = reminder.getRemindTime();
+        }
+        SubscribeTask task = new SubscribeTask();
+        task.setUserId(user.getId());
+        task.setOpenid(user.getWxOpenid());
+        task.setTemplateId(templateId);
+        task.setPage("pages/reminders/index");
+        try {
+            task.setDataJson(objectMapper.writeValueAsString(data));
+        } catch (Exception ex) {
+            return;
+        }
+        task.setSendTime(sendTime);
+        task.setStatus(0);
+        task.setCreatedAt(LocalDateTime.now());
+        subscribeTaskService.save(task);
+    }
+
+    private String pickName(User user) {
+        if (user == null) return "用户";
+        if (user.getUsername() != null && !user.getUsername().isBlank()) return user.getUsername();
+        if (user.getWxNickname() != null && !user.getWxNickname().isBlank()) return user.getWxNickname();
+        return "用户";
+    }
+
+    private String limit(String value, int max) {
+        if (value == null || value.isBlank()) return "未填写";
+        return value.length() > max ? value.substring(0, max) : value;
+    }
+
+    private String formatTime(LocalDateTime time) {
+        if (time == null) return "待设置";
+        return time.format(TIME_FORMAT);
     }
 
     private Long currentUserId() {

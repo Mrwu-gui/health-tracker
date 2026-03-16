@@ -294,7 +294,8 @@ export default {
       }
       try {
         const prompt = `页面顶部已经显示了「${period}好，${this.userName || "朋友"}」，你不要再重复「${period}好」。请直接生成一句简短的承接语或引导语（例如愿您今日舒心、有什么想问的都可以问我等），不要包含「${period}好」或「早上好/下午好/晚上好」等时段问候，不超过20字。`;
-        const data = await request("/api/ai/chat", "POST", { message: prompt, store: false });
+        const userId = uni.getStorageSync("userId") || 1;
+        const data = await request("/api/ai/chat", "POST", { userId, message: prompt, store: false });
         if (data && data.content) {
           this.aiGreeting = data.content;
           uni.setStorageSync(key, data.content);
@@ -504,7 +505,7 @@ export default {
   color: #0f172a;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .page-root {
@@ -516,7 +517,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 6px;
 }
 
 .greeting-text {
@@ -545,7 +546,7 @@ export default {
   position: relative;
   border-radius: 20px;
   overflow: hidden;
-  margin-bottom: 4px;
+  margin-top: 2px;
 }
 
 .ai-hero-bg {

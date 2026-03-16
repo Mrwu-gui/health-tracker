@@ -26,6 +26,10 @@ public class WeChatProperties {
         private String appid;
         private String secret;
         private String templateId;
+        private String sleepTemplateId;
+        private String exerciseTemplateId;
+        private String periodTemplateId;
+        private String medicationTemplateId;
 
         public String getAppid() {
             return appid;
@@ -49,6 +53,38 @@ public class WeChatProperties {
 
         public void setTemplateId(String templateId) {
             this.templateId = templateId;
+        }
+
+        public String getSleepTemplateId() {
+            return sleepTemplateId;
+        }
+
+        public void setSleepTemplateId(String sleepTemplateId) {
+            this.sleepTemplateId = sleepTemplateId;
+        }
+
+        public String getExerciseTemplateId() {
+            return exerciseTemplateId;
+        }
+
+        public void setExerciseTemplateId(String exerciseTemplateId) {
+            this.exerciseTemplateId = exerciseTemplateId;
+        }
+
+        public String getPeriodTemplateId() {
+            return periodTemplateId;
+        }
+
+        public void setPeriodTemplateId(String periodTemplateId) {
+            this.periodTemplateId = periodTemplateId;
+        }
+
+        public String getMedicationTemplateId() {
+            return medicationTemplateId;
+        }
+
+        public void setMedicationTemplateId(String medicationTemplateId) {
+            this.medicationTemplateId = medicationTemplateId;
         }
     }
 

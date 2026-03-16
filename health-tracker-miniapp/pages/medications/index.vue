@@ -215,7 +215,8 @@ export default {
       this.aiLoadingSuggestion = true;
       this.aiSuggestionExpanded = false;
       const prompt = `用户刚添加了药物：${payload.drugName} ${payload.dosage}，用法 ${payload.frequency || "未填"}，提醒时间 ${payload.remindTime || "未设置"}。请用 1～3 句话给出简要的用药提醒或健康建议，语气亲切。`;
-      request("/api/ai/chat", "POST", { message: prompt, store: false })
+      const userId = uni.getStorageSync("userId") || 1;
+      request("/api/ai/chat", "POST", { userId, message: prompt, store: false })
         .then((res) => {
           if (res && res.content) this.aiSuggestion = String(res.content).trim();
         })

@@ -1,7 +1,7 @@
 <template>
   <view class="page">
     <view class="profile-card" @tap="openProfileModal">
-      <view class="avatar-wrap">
+      <view class="avatar-wrap" :class="{ 'avatar-default': !profile.avatar }">
         <image v-if="profile.avatar" class="avatar-img" :src="String(profile.avatar)" mode="aspectFill" />
         <text v-else class="avatar-letter">{{ profile.name ? profile.name.slice(0, 1) : "?" }}</text>
       </view>
@@ -98,7 +98,7 @@
         <view class="modal-sheet-body">
           <template v-if="bodyModalMode === 'view'">
             <view class="info-block">
-              <view class="info-avatar-wrap">
+              <view class="info-avatar-wrap" :class="{ 'avatar-default': !profile.avatar }">
                 <image v-if="profile.avatar" class="info-avatar" :src="String(profile.avatar)" mode="aspectFill" />
                 <text v-else class="info-avatar-letter">{{ (profile.name || '?').slice(0, 1) }}</text>
               </view>
@@ -238,6 +238,7 @@ export default {
             this.profile.systolic = data.systolic || "";
             this.profile.diastolic = data.diastolic || "";
             this.profile.heartRate = data.heartRate || "";
+            uni.setStorageSync("userAvatar", this.profile.avatar || "");
             if (this.profile.name && this.profile.name !== "未登录") {
               uni.setStorageSync("userName", this.profile.name);
               if (this.profile.sex || this.profile.age || this.profile.height || this.profile.weight) {
@@ -260,6 +261,7 @@ export default {
       }
       if (wxProfile.avatarUrl) {
         this.profile.avatar = String(wxProfile.avatarUrl);
+        uni.setStorageSync("userAvatar", this.profile.avatar);
       }
     },
     goReports() {
@@ -274,6 +276,7 @@ export default {
             uni.removeStorageSync("token");
             uni.removeStorageSync("userId");
             uni.removeStorageSync("userName");
+            uni.removeStorageSync("userAvatar");
             uni.reLaunch({ url: "/pages/login/index" });
           }
         }
@@ -407,6 +410,7 @@ export default {
         return;
       }
       this.profile.avatar = String(avatarUrl);
+      uni.setStorageSync("userAvatar", avatarUrl);
       request("/api/user/profile/update", "POST", {
         userId: uni.getStorageSync("userId") || 1,
         wxNickname: this.bodyForm.nickname || this.profile.name || "",
@@ -452,6 +456,10 @@ export default {
 .avatar-img {
   width: 100%;
   height: 100%;
+}
+
+.avatar-wrap.avatar-default {
+  background: #e2e8f0;
 }
 
 .avatar-letter {
@@ -690,6 +698,10 @@ export default {
 .info-avatar {
   width: 100%;
   height: 100%;
+}
+
+.info-avatar-wrap.avatar-default {
+  background: #e2e8f0;
 }
 
 .info-avatar-letter {

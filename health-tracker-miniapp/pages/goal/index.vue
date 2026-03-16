@@ -192,11 +192,7 @@ export default {
         });
     },
     setGoals(list) {
-      if (typeof this.$set === "function") {
-        this.$set(this, "goals", list);
-      } else {
-        this.goals = list;
-      }
+      this.goals = list;
     },
     openAdd() {
       this.showModal = true;

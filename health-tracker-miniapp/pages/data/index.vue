@@ -307,7 +307,8 @@ export default {
 
 数据：${dataLine}。`;
       try {
-        const data = await request("/api/ai/chat", "POST", { message: prompt, store: false });
+        const userId = uni.getStorageSync("userId") || 1;
+        const data = await request("/api/ai/chat", "POST", { userId, message: prompt, store: false });
         const content = (data && data.content) ? String(data.content).trim() : "";
         if (content) {
           this.aiContent = content;

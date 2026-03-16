@@ -164,6 +164,20 @@ ALTER TABLE we_run_record
   MODIFY created_at DATETIME NOT NULL COMMENT 'Created time',
   COMMENT='WeRun steps';
 
+ALTER TABLE subscribe_task
+  MODIFY id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
+  MODIFY user_id BIGINT NOT NULL COMMENT 'User id',
+  MODIFY openid VARCHAR(64) NOT NULL COMMENT 'WeChat openid',
+  MODIFY template_id VARCHAR(128) NOT NULL COMMENT 'Template id',
+  MODIFY page VARCHAR(128) COMMENT 'Target page',
+  MODIFY data_json TEXT COMMENT 'Template data json',
+  MODIFY send_time DATETIME NOT NULL COMMENT 'Send time',
+  MODIFY status TINYINT NOT NULL DEFAULT 0 COMMENT 'Status (0=待发送,1=已发送,2=失败)',
+  MODIFY response TEXT COMMENT 'Send response',
+  MODIFY created_at DATETIME NOT NULL COMMENT 'Created time',
+  MODIFY sent_at DATETIME COMMENT 'Sent time',
+  COMMENT='Subscribe message tasks';
+
 ALTER TABLE ai_chat_message
   MODIFY id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
   MODIFY user_id BIGINT NOT NULL COMMENT 'User id',

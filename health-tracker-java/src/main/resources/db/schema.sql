@@ -163,6 +163,20 @@ CREATE TABLE IF NOT EXISTS we_run_record (
   UNIQUE KEY uk_user_date (user_id, record_date)
 ) COMMENT='WeRun steps';
 
+CREATE TABLE IF NOT EXISTS subscribe_task (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
+  user_id BIGINT NOT NULL COMMENT 'User id',
+  openid VARCHAR(64) NOT NULL COMMENT 'WeChat openid',
+  template_id VARCHAR(128) NOT NULL COMMENT 'Template id',
+  page VARCHAR(128) COMMENT 'Target page',
+  data_json TEXT COMMENT 'Template data json',
+  send_time DATETIME NOT NULL COMMENT 'Send time',
+  status TINYINT NOT NULL DEFAULT 0 COMMENT 'Status (0=待发送,1=已发送,2=失败)',
+  response TEXT COMMENT 'Send response',
+  created_at DATETIME NOT NULL COMMENT 'Created time',
+  sent_at DATETIME COMMENT 'Sent time'
+) COMMENT='Subscribe message tasks';
+
 CREATE TABLE IF NOT EXISTS ai_chat_message (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
   user_id BIGINT NOT NULL COMMENT 'User id',

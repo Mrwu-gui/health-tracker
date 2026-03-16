@@ -33,13 +33,20 @@
         <text class="empty-state-title">暂无经期记录</text>
         <text class="empty-state-desc">点击右上角 + 记录经期开始与结束</text>
       </view>
-      <view v-for="(item, i) in list" :key="item.id || i" class="card">
-        <view class="card-row">
-          <text class="card-date">{{ item.startDate }}</text>
-          <text v-if="item.flowLabel" class="card-tag">{{ item.flowLabel }}</text>
+      <view
+        v-for="(item, i) in list"
+        :key="item.id"
+        class="card"
+        hover-class="card-hover"
+        hover-stay-time="60"
+        @tap="onCardTap(item)"
+      >
+        <view class="card-row" @tap.stop="onCardTap(item)">
+          <text class="card-date" @tap.stop="onCardTap(item)">{{ item.startDate }}</text>
+          <text v-if="item.flowLabel" class="card-tag" @tap.stop="onCardTap(item)">{{ item.flowLabel }}</text>
         </view>
-        <text class="card-desc">{{ item.daysText }}</text>
-        <text v-if="item.note" class="card-note">{{ item.note }}</text>
+        <text class="card-desc" @tap.stop="onCardTap(item)">{{ item.daysText }}</text>
+        <text v-if="item.note" class="card-note" @tap.stop="onCardTap(item)">{{ item.note }}</text>
       </view>
     </view>
 
@@ -47,7 +54,7 @@
       <view class="modal-sheet" @tap.stop>
         <view class="modal-sheet-bar" />
         <view class="modal-sheet-head">
-          <text class="modal-sheet-title">记录经期</text>
+          <text class="modal-sheet-title">{{ editingId ? "编辑经期" : "记录经期" }}</text>
           <text class="modal-sheet-close" @tap="closeModal">×</text>
         </view>
         <view class="modal-sheet-body">
@@ -85,7 +92,7 @@
             />
           </view>
           <button class="modal-sheet-btn primary" @tap="submitAdd" :disabled="saving">
-            {{ saving ? "保存中..." : "保存" }}
+            {{ saving ? "保存中..." : editingId ? "保存修改" : "保存" }}
           </button>
         </view>
       </view>
@@ -95,6 +102,7 @@
 
 <script>
 import { request } from "../../utils/api";
+import { requestSubscribeByKey } from "../../utils/subscribe";
 
 const FLOW_MAP = { light: "少", medium: "中", heavy: "多" };
 const STORAGE_KEY = "periodRecords";
@@ -105,6 +113,7 @@ export default {
       list: [],
       showModal: false,
       saving: false,
+      editingId: null,
       form: {
         startDate: "",
         endDate: "",
@@ -161,7 +170,7 @@ export default {
     },
     normalizeList(arr) {
       return (arr || [])
-        .map((item) => {
+        .map((item, index) => {
           const start = item.startDate || item.start_date || "";
           const end = item.endDate || item.end_date || "";
           const flow = item.flow || "medium";
@@ -171,8 +180,9 @@ export default {
             const b = new Date(end.replace(/-/g, "/"));
             days = Math.round((b - a) / 86400000) + 1;
           }
+          const id = item.id != null && item.id !== "" ? item.id : "idx-" + index;
           return {
-            id: item.id,
+            id,
             startDate: start,
             endDate: end,
             flow,
@@ -185,11 +195,28 @@ export default {
     },
     openAdd() {
       const today = this.todayStr();
+      this.editingId = null;
       this.form = { startDate: today, endDate: today, flow: "medium", note: "" };
       this.showModal = true;
     },
+    onCardTap(item) {
+      if (!item) return;
+      this.openEdit(item);
+    },
+    openEdit(item) {
+      if (!item) return;
+      this.editingId = item.id;
+      this.showModal = true;
+      this.form = {
+        startDate: item.startDate || "",
+        endDate: item.endDate || item.startDate || "",
+        flow: item.flow || "medium",
+        note: item.note || ""
+      };
+    },
     closeModal() {
       this.showModal = false;
+      this.editingId = null;
     },
     onStartDateChange(e) {
       this.form.startDate = e.detail.value || "";
@@ -200,7 +227,7 @@ export default {
     onEndDateChange(e) {
       this.form.endDate = e.detail.value || "";
     },
-    submitAdd() {
+    async submitAdd() {
       if (!this.form.startDate) {
         uni.showToast({ title: "请选择开始日期", icon: "none" });
         return;
@@ -214,6 +241,24 @@ export default {
         flow: this.form.flow,
         note: (this.form.note || "").trim()
       };
+      const isEdit = !!this.editingId;
+      if (isEdit) {
+        payload.id = this.editingId;
+        request("/api/period/update", "PUT", payload)
+          .then(() => {
+            uni.showToast({ title: "已更新", icon: "success" });
+            this.closeModal();
+            this.fetchList();
+          })
+          .catch(() => {
+            this.updatePeriodLocal();
+          })
+          .finally(() => {
+            this.saving = false;
+          });
+        return;
+      }
+      await requestSubscribeByKey("period");
       request("/api/period/add", "POST", payload)
         .then(() => {
           uni.showToast({ title: "已保存", icon: "success" });
@@ -246,12 +291,38 @@ export default {
           this.saving = false;
         });
     },
+    updatePeriodLocal() {
+      const payload = {
+        startDate: this.form.startDate,
+        endDate: this.form.endDate || this.form.startDate,
+        flow: this.form.flow,
+        note: (this.form.note || "").trim()
+      };
+      try {
+        const raw = uni.getStorageSync(STORAGE_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        const idx = arr.findIndex((item) => String(item.id) === String(this.editingId));
+        if (idx >= 0) {
+          arr[idx] = { ...arr[idx], ...payload, id: arr[idx].id };
+          uni.setStorageSync(STORAGE_KEY, JSON.stringify(arr));
+          this.list = this.normalizeList(arr);
+          uni.showToast({ title: "已更新（本地）", icon: "success" });
+        } else {
+          uni.showToast({ title: "更新失败", icon: "none" });
+        }
+      } catch (e) {
+        uni.showToast({ title: "更新失败", icon: "none" });
+      }
+      this.closeModal();
+      this.saving = false;
+    },
     fetchAiSuggestionForPeriod(payload) {
       this.aiLoadingSuggestion = true;
       this.aiSuggestionExpanded = false;
       const flowLabel = this.flowOptions.find((o) => o.value === payload.flow)?.label || payload.flow;
       const prompt = `用户刚记录了经期：开始日期 ${payload.startDate}，结束日期 ${payload.endDate || payload.startDate}，经量 ${flowLabel}。请用 1～3 句话给出简要的健康建议或注意事项，语气亲切。`;
-      request("/api/ai/chat", "POST", { message: prompt, store: false })
+      const userId = uni.getStorageSync("userId") || 1;
+      request("/api/ai/chat", "POST", { userId, message: prompt, store: false })
         .then((res) => {
           if (res && res.content) this.aiSuggestion = String(res.content).trim();
         })
@@ -420,6 +491,11 @@ export default {
   padding: 14px 16px;
   margin-bottom: 12px;
   border: 1px solid #e8e2db;
+}
+
+.card-hover {
+  opacity: 0.85;
+  background: #f8fafc;
 }
 
 .card-row {

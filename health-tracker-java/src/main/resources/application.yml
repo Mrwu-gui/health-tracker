@@ -45,6 +45,10 @@ wechat:
     appid: ${WECHAT_MINI_APPID:wx4d5635b224dd6e22}
     secret: ${WECHAT_MINI_SECRET:13fec31d4dad98659de962e8060de5e7}
     template-id: ${WECHAT_MINI_TEMPLATE_ID:}
+    sleep-template-id: ${WECHAT_MINI_TEMPLATE_SLEEP_ID:99UN5VNoIf_2eEH1r1AuxY2fTeXQurSDucD-dZgy-ZE}
+    exercise-template-id: ${WECHAT_MINI_TEMPLATE_EXERCISE_ID:BW1-MP6TisjBwbMOEvA1j99pJ8XLPrMKKFyYPh_cchw}
+    period-template-id: ${WECHAT_MINI_TEMPLATE_PERIOD_ID:tgrB0RlYGtbsyFnRv2yskI-daCieU9ATfmunmYM6JFw}
+    medication-template-id: ${WECHAT_MINI_TEMPLATE_MEDICATION_ID:0bxQEB2rY1VMzlLk7C1L-gIXexSufnXICswP3Oi0S8w}
   web:
     appid: ${WECHAT_WEB_APPID:}
     secret: ${WECHAT_WEB_SECRET:}

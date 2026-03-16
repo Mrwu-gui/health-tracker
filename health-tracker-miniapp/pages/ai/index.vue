@@ -3,16 +3,12 @@
     <scroll-view
       class="chat-list"
       scroll-y
+      :show-scrollbar="false"
       :scroll-into-view="scrollIntoView"
       scroll-with-animation
       :style="{ height: listHeight + 'px' }"
     >
-      <view v-if="!loading && messages.length === 0" class="empty-state">
-        <text class="empty-state-icon">💬</text>
-        <text class="empty-state-title">暂无对话记录</text>
-        <text class="empty-state-desc">在下方输入问题，开始和智康对话吧</text>
-      </view>
-      <template v-else>
+      <view class="chat-list-inner">
         <view
           v-for="(item, idx) in messages"
           :key="idx"
@@ -20,9 +16,8 @@
           class="chat-item"
           :class="{ mine: item.role === 'user' }"
         >
-          <view v-if="item.role === 'assistant'" class="avatar assistant" :class="{ 'avatar-logo-wrap': aiLogoOk }">
-            <image v-if="aiLogoOk" class="avatar-logo" src="/static/logo.png" mode="aspectFill" @error="aiLogoOk = false" />
-            <text v-else>智康</text>
+          <view v-if="item.role === 'assistant'" class="avatar assistant">
+            <text>智康</text>
           </view>
           <view class="bubble-wrap">
             <view class="bubble">
@@ -33,25 +28,44 @@
             </view>
           </view>
           <view v-if="item.role === 'user'" class="avatar user">
-            <text>我</text>
+            <image v-if="userAvatar" class="avatar-img" :src="userAvatar" mode="aspectFill" />
+            <text v-else class="avatar-user-txt">{{ userAvatarLetter }}</text>
           </view>
         </view>
-        <view v-if="loading" class="chat-item" id="msg-loading">
-          <view class="avatar assistant" :class="{ 'avatar-logo-wrap': aiLogoOk }">
-            <image v-if="aiLogoOk" class="avatar-logo" src="/static/logo.png" mode="aspectFill" @error="aiLogoOk = false" />
-            <text v-else>智康</text>
+
+        <view v-if="loading" class="chat-item chat-item-thinking" id="msg-loading">
+          <view class="avatar assistant">
+            <text>智康</text>
           </view>
           <view class="bubble-wrap">
-            <view class="bubble typing">
-              <view class="typing-dots">
-                <view class="dot"></view>
-                <view class="dot"></view>
-                <view class="dot"></view>
+            <view class="bubble bubble-thinking">
+              <view class="thinking-wrap">
+                <view class="thinking-dots">
+                  <view class="thinking-dot"></view>
+                  <view class="thinking-dot"></view>
+                  <view class="thinking-dot"></view>
+                </view>
+                <text class="thinking-text">思考中</text>
               </view>
             </view>
           </view>
         </view>
-      </template>
+
+        <view v-if="showRecommendations" class="recommend-section">
+          <text class="recommend-title">试试问我</text>
+          <view class="recommend-list">
+            <view
+              v-for="(q, i) in suggestedQuestions"
+              :key="i"
+              class="recommend-chip"
+              hover-class="recommend-chip-hover"
+              @tap="onRecommendTap(q)"
+            >
+              <text class="recommend-chip-text">{{ q }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
     </scroll-view>
 
     <view class="composer">
@@ -91,12 +105,35 @@
 <script>
 import { request } from "../../utils/api";
 
+const RECOMMEND_QUESTIONS = [
+  "经期可以运动吗？",
+  "睡眠不好怎么调理？",
+  "每天走多少步比较合适？",
+  "经期饮食要注意什么？",
+  "怎样养成早睡习惯？",
+  "久坐如何缓解肩颈不适？",
+  "经期周期多少天算正常？",
+  "午睡睡多久合适？",
+  "减肥期间怎么吃更健康？",
+  "血压偏高日常要注意什么？",
+  "感冒了可以运动吗？",
+  "睡前喝牛奶助眠吗？"
+];
+
+function pickRandom(arr, n) {
+  const copy = arr.slice();
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, n);
+}
+
 export default {
   data() {
     return {
       input: "",
       loading: false,
-      aiLogoOk: true,
       messages: [
         { role: "assistant", content: "你好，我是智康，有健康问题可以问我。" }
       ],
@@ -104,12 +141,21 @@ export default {
       scrollIntoView: "",
       recording: false,
       recorderManager: null,
-      expandComposer: false
+      expandComposer: false,
+      suggestedQuestions: [],
+      userAvatar: "",
+      userName: ""
     };
   },
   computed: {
     hasContent() {
       return this.input && this.input.trim();
+    },
+    userAvatarLetter() {
+      return this.userName ? this.userName.slice(0, 1) : "我";
+    },
+    showRecommendations() {
+      return !this.loading && this.messages.length <= 1 && this.suggestedQuestions.length > 0;
     }
   },
   watch: {
@@ -119,6 +165,7 @@ export default {
   },
   onLoad() {
     this.setListHeight();
+    this.suggestedQuestions = pickRandom(RECOMMEND_QUESTIONS, 3);
     this.loadHistory();
     this.recorderManager = uni.getRecorderManager?.() || null;
   },
@@ -129,6 +176,8 @@ export default {
       const tabBar = page.getTabBar();
       if (tabBar && typeof tabBar.setData === "function") tabBar.setData({ selected: 2 });
     }
+    this.userAvatar = uni.getStorageSync("userAvatar") || "";
+    this.userName = uni.getStorageSync("userName") || "";
     this.setListHeight();
     const initial = uni.getStorageSync("aiInitialMessage");
     if (initial && typeof initial === "string" && initial.trim()) {
@@ -235,7 +284,9 @@ export default {
         const messageToSend = periodCtx
           ? `【参考：${periodCtx}】\n\n${content || "请识别图片内容"}`
           : (content || "请识别图片内容");
+        const userId = uni.getStorageSync("userId") || 1;
         const data = await request("/api/ai/chat", "POST", {
+          userId,
           message: messageToSend,
           imageUrl: imageUrl || "",
           audioUrl: audioUrl || ""
@@ -258,9 +309,17 @@ export default {
               role: item.role,
               content: item.contentText || ""
             }));
+          } else {
+            this.suggestedQuestions = pickRandom(RECOMMEND_QUESTIONS, 3);
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          this.suggestedQuestions = pickRandom(RECOMMEND_QUESTIONS, 3);
+        });
+    },
+    onRecommendTap(q) {
+      if (this.loading || !q) return;
+      this.sendMessageWithText(String(q).trim(), "", "");
     },
     formatContent(str) {
       if (!str || typeof str !== "string") return "";
@@ -278,45 +337,28 @@ export default {
 <style>
 .page {
   min-height: 100vh;
-  background: #f5f1eb;
+  width: 100%;
+  box-sizing: border-box;
+  background: #faf8f5;
   display: flex;
   flex-direction: column;
   padding-bottom: 0;
+  overflow: hidden;
 }
 
 .chat-list {
   flex: 1;
-  padding: 16px 16px 20px;
+  width: 100%;
   box-sizing: border-box;
-  background: #f5f1eb;
+  padding: 16px 16px 20px;
+  background: #faf8f5;
+  overflow: hidden;
 }
 
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 24px;
-  text-align: center;
-}
-
-.empty-state-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.7;
-}
-
-.empty-state-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #475569;
-  margin-bottom: 8px;
-}
-
-.empty-state-desc {
-  font-size: 13px;
-  color: #94a3b8;
-  line-height: 1.5;
+.chat-list-inner {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .chat-item {
@@ -344,24 +386,29 @@ export default {
 }
 
 .avatar.assistant {
-  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+  background: linear-gradient(145deg, #f59e0b 0%, #ea580c 100%);
+  color: #fff;
   font-size: 12px;
-}
-
-.avatar.assistant.avatar-logo-wrap {
-  background: transparent;
-  overflow: hidden;
-}
-
-.avatar-logo {
-  width: 100%;
-  height: 100%;
-  display: block;
-  border-radius: 50%;
+  font-weight: 700;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
 }
 
 .avatar.user {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.avatar.user .avatar-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.avatar-user-txt {
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .bubble-wrap {
@@ -409,30 +456,82 @@ export default {
 }
 
 
-.bubble.typing {
+.chat-item-thinking .bubble-wrap {
+  min-height: 48px;
+}
+
+.bubble-thinking {
   padding: 14px 18px;
 }
 
-.typing-dots {
+.thinking-wrap {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 10px;
 }
 
-.typing-dots .dot {
+.thinking-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.thinking-dot {
   width: 6px;
   height: 6px;
   border-radius: 3px;
-  background: #94a3b8;
-  animation: typing 0.6s ease-in-out infinite;
+  background: #f59e0b;
+  animation: thinking-bounce 0.6s ease-in-out infinite;
 }
 
-.typing-dots .dot:nth-child(2) { animation-delay: 0.1s; }
-.typing-dots .dot:nth-child(3) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(2) { animation-delay: 0.12s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.24s; }
 
-@keyframes typing {
-  0%, 60% { transform: translateY(0); opacity: 0.5; }
-  30% { transform: translateY(-4px); opacity: 1; }
+@keyframes thinking-bounce {
+  0%, 60% { transform: translateY(0) scale(1); opacity: 0.6; }
+  30% { transform: translateY(-5px) scale(1.1); opacity: 1; }
+}
+
+.thinking-text {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.recommend-section {
+  margin-top: 24px;
+  padding: 16px 0;
+}
+
+.recommend-title {
+  font-size: 12px;
+  color: #94a3b8;
+  display: block;
+  margin-bottom: 12px;
+  padding-left: 2px;
+}
+
+.recommend-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.recommend-chip {
+  padding: 10px 14px;
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.recommend-chip-hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.recommend-chip-text {
+  font-size: 13px;
+  color: #475569;
 }
 
 

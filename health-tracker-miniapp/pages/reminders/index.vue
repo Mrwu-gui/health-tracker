@@ -147,11 +147,7 @@ export default {
         });
     },
     setReminders(list) {
-      if (typeof this.$set === "function") {
-        this.$set(this, "reminders", list);
-      } else {
-        this.reminders = list;
-      }
+      this.reminders = list;
     },
     openAdd() {
       this.showModal = true;

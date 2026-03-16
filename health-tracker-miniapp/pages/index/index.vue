@@ -16,15 +16,21 @@
         <text class="ai-hero-desc">{{ aiGreeting || "有什么想问的？问饮食、运动、睡眠都可以。" }}</text>
         <view class="ai-quick-actions">
           <view class="ai-quick-item" @tap="goAiWithQuery('今天吃什么比较健康？')">
-            <text class="ai-quick-icon">🍽</text>
+            <view class="ai-quick-icon">
+              <image class="ai-quick-icon-img" src="/static/tabbar/food2.png" mode="aspectFit" />
+            </view>
             <text class="ai-quick-text">今天吃什么</text>
           </view>
           <view class="ai-quick-item" @tap="goAiWithQuery('给我一些适合今天的运动建议')">
-            <text class="ai-quick-icon">🏃</text>
+            <view class="ai-quick-icon">
+              <image class="ai-quick-icon-img" src="/static/tabbar/sport.png" mode="aspectFit" />
+            </view>
             <text class="ai-quick-text">运动建议</text>
           </view>
           <view class="ai-quick-item" @tap="goAiWithQuery('如何改善睡眠质量？')">
-            <text class="ai-quick-icon">😴</text>
+            <view class="ai-quick-icon">
+              <image class="ai-quick-icon-img" src="/static/tabbar/sleep2.png" mode="aspectFit" />
+            </view>
             <text class="ai-quick-text">睡眠建议</text>
           </view>
         </view>
@@ -38,7 +44,9 @@
     <view class="section-card">
       <view class="section-card-head">
         <view class="section-title-wrap">
-          <view class="section-icon section-icon-overview"><text>📊</text></view>
+          <view class="section-icon section-icon-overview">
+			  <image class="icon-img" src="/static/tabbar/gailan.png" mode="widthFix"></image>
+		  </view>
           <text class="section-title">今日概览</text>
         </view>
       </view>
@@ -52,32 +60,22 @@
             <text class="meta">约 <text class="strong">{{ overview.calories }}</text> kcal</text>
           </view>
         </view>
-        <view class="overview-grid">
+        <view class="overview-grid overview-grid-slim">
           <view class="overview-item">
             <text class="label">睡眠</text>
             <text class="value">{{ overview.sleep }}</text>
           </view>
           <view class="overview-item">
-            <text class="label">体重 / BMI</text>
-            <template v-if="overview.weightBmi && overview.weightBmi !== '暂无'">
-              <text class="value">{{ overview.weightBmi }}</text>
-            </template>
-            <view v-else class="overview-empty-cell" @tap="goProfileAndOpenModal">
-              <text class="overview-empty-link">去记录</text>
-            </view>
-          </view>
-          <view class="overview-item">
-            <text class="label">饮食记录</text>
+            <text class="label">饮食</text>
             <text class="value">{{ overview.dietCount }}</text>
           </view>
           <view class="overview-item">
-            <text class="label">血压 / 心率</text>
-            <template v-if="overview.bpStatus && overview.bpStatus !== '暂无'">
-              <text class="value">{{ overview.bpStatus }}</text>
-            </template>
-            <view v-else class="overview-empty-cell" @tap="goProfileAndOpenModal">
-              <text class="overview-empty-link">去记录</text>
-            </view>
+            <text class="label">今日提醒</text>
+            <text class="value">{{ overview.reminderSummary }}</text>
+          </view>
+          <view class="overview-item">
+            <text class="label">今日目标</text>
+            <text class="value">{{ overview.goalSummary }}</text>
           </view>
         </view>
       </view>
@@ -86,7 +84,48 @@
     <view class="section-card">
       <view class="section-card-head">
         <view class="section-title-wrap">
-          <view class="section-icon section-icon-reminder"><text>🔔</text></view>
+          <view class="section-icon section-icon-sleep">
+			  <image class="icon-img" src="/static/tabbar/sleep2.png" mode="widthFix"></image>
+		  </view>
+          <text class="section-title">睡眠打卡</text>
+        </view>
+      </view>
+      <view class="section-card-body">
+        <view class="sleep-quick">
+          <view class="sleep-quick-btn" @tap="openRecord('sleep')">
+            <image class="icon-img" src="/static/tabbar/sleep2.png" mode="widthFix"></image>
+            <text class="sleep-quick-text">昨晚睡眠</text>
+            <text class="sleep-quick-hint">默认 23:00–07:00，可改</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-card-head">
+        <view class="section-title-wrap">
+          <view class="section-icon section-icon-diet">
+			  <image class="icon-img" src="/static/tabbar/food2.png" mode="widthFix"></image>
+		  </view>
+          <text class="section-title">今日饮食</text>
+        </view>
+        <view class="section-link-inline" @tap="openRecord('diet')">记录一餐</view>
+      </view>
+      <view class="section-card-body">
+        <view class="diet-quick">
+          <view class="diet-quick-item" v-for="meal in dietMeals" :key="meal.type" @tap="openRecordWithMeal(meal.type)">
+            <text class="diet-quick-label">{{ meal.label }}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-card-head">
+        <view class="section-title-wrap">
+          <view class="section-icon section-icon-reminder">
+			   <image class="icon-img" src="/static/tabbar/remind.png" mode="widthFix"></image>
+		  </view>
           <text class="section-title">今日提醒</text>
         </view>
         <navigator class="section-link" url="/pages/reminders/index">查看全部</navigator>
@@ -113,7 +152,9 @@
     <view class="section-card">
       <view class="section-card-head">
         <view class="section-title-wrap">
-          <view class="section-icon section-icon-goal"><text>🎯</text></view>
+          <view class="section-icon section-icon-goal">
+			   <image class="icon-img" src="/static/tabbar/mubiao.png" mode="widthFix"></image>
+		  </view>
           <text class="section-title">今日目标</text>
         </view>
         <navigator class="section-link" url="/pages/goal/index">查看目标</navigator>
@@ -152,10 +193,16 @@ export default {
         steps: "0",
         calories: "0",
         sleep: "0小时0分",
-        weightBmi: "暂无",
         dietCount: "已记录 0 餐",
-        bpStatus: "暂无"
+        reminderSummary: "0 条",
+        goalSummary: "--"
       },
+      dietMeals: [
+        { type: "早餐", label: "早餐" },
+        { type: "午餐", label: "午餐" },
+        { type: "晚餐", label: "晚餐" },
+        { type: "加餐", label: "加餐" }
+      ],
       loading: false,
       error: "",
       syncLoading: false,
@@ -201,16 +248,13 @@ export default {
       this.loading = true;
       this.error = "";
       const userId = uni.getStorageSync("userId") || 1;
+      const todayStr = this.formatDate(new Date());
       try {
         const data = await request("/api/statistics/overview", "GET", { userId, period: "day" });
         if (data) {
           this.overview.steps = data.steps != null ? String(data.steps) : this.overview.steps;
           this.overview.sleep = data.sleep || this.overview.sleep;
-          const weight = data.weight ? `${data.weight} kg` : "";
-          const bmi = data.bmi ? ` · ${data.bmi}` : "";
-          this.overview.weightBmi = weight ? `${weight}${bmi}` : "";
           this.overview.dietCount = `已记录 ${data.dietCount || 0} 餐`;
-          this.overview.bpStatus = data.bpStatus || "";
           const stepsNum = parseInt(this.overview.steps, 10) || 0;
           this.overview.calories = String(Math.round(stepsNum * 0.04));
         }
@@ -238,12 +282,51 @@ export default {
             time: this.formatReminderTime(item.remindTime),
             typeLabel: this.reminderTagLabel(item.type)
           }));
-		this.reminders = mapped
+          this.reminders = mapped;
+          this.overview.reminderSummary = `${raw.filter((item) => Number(item.type) !== 4).length} 条`;
         } else {
-          this.reminders = []
+          this.reminders = [];
+          this.overview.reminderSummary = "0 条";
         }
       } catch (err) {
-        this.reminders = []
+        this.reminders = [];
+        this.overview.reminderSummary = "0 条";
+      }
+
+      try {
+        const dietList = await request("/api/diet/list", "GET", { userId, date: todayStr });
+        const raw = Array.isArray(dietList)
+          ? dietList
+          : Array.isArray(dietList?.records)
+            ? dietList.records
+            : Array.isArray(dietList?.list)
+              ? dietList.list
+              : [];
+        this.overview.dietCount = `已记录 ${raw.length} 餐`;
+      } catch (err) {
+        this.overview.dietCount = "已记录 0 餐";
+      }
+
+      try {
+        const sleepList = await request("/api/sleep/list", "GET", { userId, date: todayStr });
+        const raw = Array.isArray(sleepList)
+          ? sleepList
+          : Array.isArray(sleepList?.records)
+            ? sleepList.records
+            : Array.isArray(sleepList?.list)
+              ? sleepList.list
+              : [];
+        if (raw.length > 0) {
+          const latest = raw[0];
+          const start = this.parseDateTime(latest.startTime);
+          const end = this.parseDateTime(latest.endTime);
+          if (start && end) {
+            const minutes = Math.max(0, Math.round((end - start) / 60000));
+            this.overview.sleep = this.formatMinutes(minutes);
+          }
+        }
+      } catch (err) {
+        this.overview.sleep = this.overview.sleep || "0小时0分";
       }
 
       try {
@@ -270,12 +353,16 @@ export default {
               unit: this.goalUnitSuffix(item.goalType)
             };
           });
-		  this.todayGoals = mapped
+          this.todayGoals = mapped;
+          const done = mapped.filter((item) => item.progress >= 100).length;
+          this.overview.goalSummary = `${done}/${mapped.length} 达成`;
         } else {
-          this.todayGoals = []
+          this.todayGoals = [];
+          this.overview.goalSummary = "--";
         }
       } catch (err) {
-        this.todayGoals = []
+        this.todayGoals = [];
+        this.overview.goalSummary = "--";
       } finally {
         this.loading = false;
       }
@@ -317,9 +404,30 @@ export default {
       this.overview.steps = "0";
       this.overview.calories = "0";
       this.overview.sleep = "0小时0分";
-      this.overview.weightBmi = "暂无";
       this.overview.dietCount = "已记录 0 餐";
-      this.overview.bpStatus = "暂无";
+      this.overview.reminderSummary = "0 条";
+      this.overview.goalSummary = "--";
+    },
+    formatDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    },
+    parseDateTime(value) {
+      if (!value) return null;
+      if (typeof value === "string") {
+        const normalized = value.replace("T", " ").replace(/-/g, "/");
+        const parsed = new Date(normalized);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      }
+      const parsed = new Date(value);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    },
+    formatMinutes(total) {
+      const hours = Math.floor(total / 60);
+      const minutes = total % 60;
+      return `${hours}小时${minutes}分`;
     },
     maybeAutoSyncSteps() {
       if (this.syncLoading || !this.needsSteps) return;
@@ -489,6 +597,10 @@ export default {
     openRecord(type) {
       uni.navigateTo({ url: `/pages/record/index?type=${type}&t=${Date.now()}` });
     },
+    openRecordWithMeal(mealType) {
+      const enc = encodeURIComponent(mealType);
+      uni.navigateTo({ url: `/pages/record/index?type=diet&meal=${enc}&t=${Date.now()}` });
+    },
     manualSteps() {
       this.openRecord("exercise");
     }
@@ -601,7 +713,16 @@ export default {
 }
 
 .ai-quick-icon {
-  font-size: 22px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-quick-icon-img {
+  width: 24px;
+  height: 24px;
 }
 
 .ai-quick-text {
@@ -661,13 +782,28 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 700;
   line-height: 1;
+}
+
+.section-icon-txt {
+  color: inherit;
 }
 
 .section-icon-overview {
   background: #dbeafe;
   color: #1d4ed8;
+}
+
+.section-icon-sleep {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+.section-icon-diet {
+  background: #fef3c7;
+  color: #b45309;
 }
 
 .section-icon-reminder {
@@ -678,6 +814,12 @@ export default {
 .section-icon-goal {
   background: #d1fae5;
   color: #059669;
+}
+
+.section-link-inline {
+  font-size: 12px;
+  color: #2563eb;
+  font-weight: 500;
 }
 
 .section-title {
@@ -696,6 +838,59 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.overview-grid-slim {
+  grid-template-columns: 1fr 1fr;
+}
+
+.sleep-quick {
+  display: flex;
+  justify-content: center;
+}
+
+.sleep-quick-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 28px;
+  background: #f8fafc;
+  border-radius: 14px;
+  border: 1px dashed #cbd5e1;
+}
+
+.sleep-quick-icon {
+  font-size: 24px;
+}
+
+.sleep-quick-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.sleep-quick-hint {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.diet-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.diet-quick-item {
+  padding: 10px 16px;
+  background: #fefcf9;
+  border-radius: 12px;
+  border: 1px solid #e8e2db;
+}
+
+.diet-quick-label {
+  font-size: 13px;
+  color: #475569;
 }
 
 /* 统一列表项样式（提醒、目标共用） */

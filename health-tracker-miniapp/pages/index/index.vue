@@ -248,7 +248,10 @@ export default {
       this.loading = true;
       this.error = "";
       const userId = uni.getStorageSync("userId") || 1;
-      const todayStr = this.formatDate(new Date());
+      const today = new Date();
+      const todayStr = this.formatDate(today);
+      const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+      const yesterdayStr = this.formatDate(yesterday);
       try {
         const data = await request("/api/statistics/overview", "GET", { userId, period: "day" });
         if (data) {
@@ -308,21 +311,38 @@ export default {
       }
 
       try {
-        const sleepList = await request("/api/sleep/list", "GET", { userId, date: todayStr });
-        const raw = Array.isArray(sleepList)
-          ? sleepList
-          : Array.isArray(sleepList?.records)
-            ? sleepList.records
-            : Array.isArray(sleepList?.list)
-              ? sleepList.list
+        const sleepListToday = await request("/api/sleep/list", "GET", { userId, date: todayStr });
+        let raw = Array.isArray(sleepListToday)
+          ? sleepListToday
+          : Array.isArray(sleepListToday?.records)
+            ? sleepListToday.records
+            : Array.isArray(sleepListToday?.list)
+              ? sleepListToday.list
               : [];
+        if (raw.length === 0) {
+          const sleepListYesterday = await request("/api/sleep/list", "GET", { userId, date: yesterdayStr });
+          raw = Array.isArray(sleepListYesterday)
+            ? sleepListYesterday
+            : Array.isArray(sleepListYesterday?.records)
+              ? sleepListYesterday.records
+              : Array.isArray(sleepListYesterday?.list)
+                ? sleepListYesterday.list
+                : [];
+        }
         if (raw.length > 0) {
-          const latest = raw[0];
-          const start = this.parseDateTime(latest.startTime);
-          const end = this.parseDateTime(latest.endTime);
-          if (start && end) {
-            const minutes = Math.max(0, Math.round((end - start) / 60000));
-            this.overview.sleep = this.formatMinutes(minutes);
+          const latest = raw.reduce((acc, item) => {
+            const end = this.parseDateTime(item.endTime) || this.parseDateTime(item.startTime);
+            if (!end) return acc;
+            if (!acc || end > acc.end) return { item, end };
+            return acc;
+          }, null);
+          if (latest) {
+            const start = this.parseDateTime(latest.item.startTime);
+            const end = this.parseDateTime(latest.item.endTime);
+            if (start && end) {
+              const minutes = Math.max(0, Math.round((end - start) / 60000));
+              this.overview.sleep = this.formatMinutes(minutes);
+            }
           }
         }
       } catch (err) {

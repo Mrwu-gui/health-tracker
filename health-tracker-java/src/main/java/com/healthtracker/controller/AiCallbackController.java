@@ -13,6 +13,7 @@ import com.healthtracker.entity.PeriodRecord;
 import com.healthtracker.entity.Reminder;
 import com.healthtracker.entity.SleepRecord;
 import com.healthtracker.entity.WeightRecord;
+import com.healthtracker.entity.User;
 import com.healthtracker.service.DietRecordService;
 import com.healthtracker.service.ExerciseRecordService;
 import com.healthtracker.service.FamilyMemberService;
@@ -24,6 +25,7 @@ import com.healthtracker.service.PeriodRecordService;
 import com.healthtracker.service.ReminderService;
 import com.healthtracker.service.SleepRecordService;
 import com.healthtracker.service.WeightRecordService;
+import com.healthtracker.service.UserService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -32,6 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,6 +59,7 @@ public class AiCallbackController {
     private final GoalService goalService;
     private final PeriodRecordService periodRecordService;
     private final FamilyMemberService familyMemberService;
+    private final UserService userService;
 
     public AiCallbackController(ReminderService reminderService,
                                 MedicationService medicationService,
@@ -67,7 +71,8 @@ public class AiCallbackController {
                                 HealthRecordService healthRecordService,
                                 GoalService goalService,
                                 PeriodRecordService periodRecordService,
-                                FamilyMemberService familyMemberService) {
+                                FamilyMemberService familyMemberService,
+                                UserService userService) {
         this.reminderService = reminderService;
         this.medicationService = medicationService;
         this.medicationRecordService = medicationRecordService;
@@ -79,15 +84,24 @@ public class AiCallbackController {
         this.goalService = goalService;
         this.periodRecordService = periodRecordService;
         this.familyMemberService = familyMemberService;
+        this.userService = userService;
     }
 
     @PostMapping("/callback")
     public Map<String, Object> callback(@RequestBody AiCallbackRequest request) {
         Map<String, Object> result = new HashMap<>();
         String intent = request.getIntent() == null ? "" : request.getIntent().trim();
+        Long userId = request.getUserId();
+        String wxOpenid = request.getWxOpenid();
+        if (userId == null && wxOpenid != null && !wxOpenid.isBlank()) {
+            User user = userService.findByWxOpenid(wxOpenid.trim());
+            if (user != null) {
+                userId = user.getId();
+            }
+        }
         LoggerFactory.getLogger(AiCallbackController.class)
-            .info("AI callback received (recording disabled). userId={} intent={} payload={}",
-                request.getUserId(), intent, safeJson(request.getPayload()));
+            .info("AI callback received (recording disabled). userId={} wxOpenid={} intent={} payload={}",
+                userId, mask(wxOpenid), intent, safeJson(request.getPayload()));
 
         result.put("ok", true);
         result.put("intent", intent);
@@ -433,6 +447,16 @@ public class AiCallbackController {
         } catch (JsonProcessingException ex) {
             return node.toString();
         }
+    }
+
+    private String mask(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        if (value.length() <= 8) {
+            return value.substring(0, 2) + "***" + value.substring(value.length() - 2);
+        }
+        return value.substring(0, 3) + "***" + value.substring(value.length() - 4);
     }
 
     private static final class HandleResult {

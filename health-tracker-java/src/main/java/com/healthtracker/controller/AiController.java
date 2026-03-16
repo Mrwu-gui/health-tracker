@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthtracker.dto.AiChatRequest;
 import com.healthtracker.entity.AiChatMessage;
+import com.healthtracker.entity.User;
 import com.healthtracker.service.AiChatMessageService;
+import com.healthtracker.service.UserService;
 import jakarta.validation.Valid;
 import java.io.File;
 import java.io.IOException;
@@ -48,6 +50,7 @@ public class AiController {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
     private final AiChatMessageService aiChatMessageService;
+    private final UserService userService;
 
     @Value("${yuanqi.base-url:https://yuanqi.tencent.com}")
     private String baseUrl;
@@ -81,13 +84,15 @@ public class AiController {
 
     public AiController(ObjectMapper objectMapper,
                         RestTemplateBuilder builder,
-                        AiChatMessageService aiChatMessageService) {
+                        AiChatMessageService aiChatMessageService,
+                        UserService userService) {
         this.objectMapper = objectMapper;
         this.restTemplate = builder
             .setConnectTimeout(Duration.ofSeconds(10))
             .setReadTimeout(Duration.ofSeconds(20))
             .build();
         this.aiChatMessageService = aiChatMessageService;
+        this.userService = userService;
     }
 
     @PostMapping("/chat")
@@ -102,6 +107,7 @@ public class AiController {
         }
         String userId = resolveUserId();
         Long userIdLong = parseUserId(userId);
+        String wxOpenid = resolveWxOpenid(userIdLong);
         boolean store = request.getStore() == null || request.getStore();
 
         String text = request.getMessage() == null ? "" : request.getMessage();
@@ -139,7 +145,7 @@ public class AiController {
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("assistant_id", appId);
-        payload.put("user_id", userId);
+        payload.put("user_id", wxOpenid == null || wxOpenid.isBlank() ? userId : wxOpenid);
         payload.put("stream", false);
         payload.put("messages", List.of(message));
 
@@ -237,6 +243,17 @@ public class AiController {
         } catch (NumberFormatException ex) {
             return null;
         }
+    }
+
+    private String resolveWxOpenid(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        User user = userService.getById(userId);
+        if (user == null) {
+            return null;
+        }
+        return user.getWxOpenid();
     }
 
     private String recognizeAudio(String audioUrl) throws Exception {

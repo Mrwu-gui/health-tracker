@@ -3,6 +3,7 @@ package com.healthtracker.dto;
 import com.fasterxml.jackson.databind.JsonNode;
 public class AiCallbackRequest {
     private Long userId;
+    private String wxOpenid;
 
     private String intent;
 
@@ -15,6 +16,14 @@ public class AiCallbackRequest {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getWxOpenid() {
+        return wxOpenid;
+    }
+
+    public void setWxOpenid(String wxOpenid) {
+        this.wxOpenid = wxOpenid;
     }
 
     public String getIntent() {

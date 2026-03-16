@@ -4,12 +4,24 @@ export function getToken() {
   return localStorage.getItem("token") || "";
 }
 
+export function getAdminKey() {
+  return localStorage.getItem("admin_key") || "";
+}
+
 export function setToken(token) {
   localStorage.setItem("token", token);
 }
 
+export function setAdminKey(key) {
+  localStorage.setItem("admin_key", key);
+}
+
 export function clearToken() {
   localStorage.removeItem("token");
+}
+
+export function clearAdminKey() {
+  localStorage.removeItem("admin_key");
 }
 
 async function request(path, options = {}) {
@@ -20,6 +32,36 @@ async function request(path, options = {}) {
   const token = getToken();
   if (token) {
     headers.Authorization = `Bearer ${token}`;
+  }
+  const resp = await fetch(`${BASE_URL}${path}`, {
+    ...options,
+    headers
+  });
+  let body = null;
+  try {
+    body = await resp.json();
+  } catch (_) {}
+  if (!resp.ok) {
+    const message = body?.message || "请求失败";
+    throw new Error(message);
+  }
+  if (body && typeof body.code === "number") {
+    if (body.code !== 0) {
+      throw new Error(body.message || "请求失败");
+    }
+    return body.data;
+  }
+  return body;
+}
+
+async function adminRequest(path, options = {}) {
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {})
+  };
+  const adminKey = getAdminKey();
+  if (adminKey) {
+    headers["X-Admin-Key"] = adminKey;
   }
   const resp = await fetch(`${BASE_URL}${path}`, {
     ...options,
@@ -102,5 +144,33 @@ export const api = {
   },
   reportList(userId) {
     return request(`/api/reports/list?userId=${userId}`);
+  },
+  adminUsers(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return adminRequest(`/api/admin/users${query ? `?${query}` : ""}`);
+  },
+  adminSubscribeTasks(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return adminRequest(`/api/admin/subscribe-tasks${query ? `?${query}` : ""}`);
+  },
+  adminSubscribeTaskAdd(data) {
+    return adminRequest("/api/admin/subscribe-tasks/add", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+  },
+  adminSubscribeTaskUpdate(data) {
+    return adminRequest("/api/admin/subscribe-tasks/update", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+  },
+  adminSystemLogs(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return adminRequest(`/api/admin/logs/system${query ? `?${query}` : ""}`);
+  },
+  adminAiLogs(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return adminRequest(`/api/admin/logs/ai${query ? `?${query}` : ""}`);
   }
 };

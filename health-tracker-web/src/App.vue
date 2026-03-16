@@ -20,7 +20,10 @@ import AppSidebar from "./components/AppSidebar.vue";
 import AppTopbar from "./components/AppTopbar.vue";
 
 const route = useRoute();
-const isAuthPage = computed(() => route.name === "login" || route.name === "home");
+const isAuthPage = computed(() => {
+  if (route.path.startsWith("/admin")) return true;
+  return route.name === "login" || route.name === "home";
+});
 </script>
 
 <style>

@@ -30,6 +30,8 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,6 +43,7 @@ public class AiCallbackController {
     private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm:ss");
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     private final ReminderService reminderService;
     private final MedicationService medicationService;
@@ -102,7 +105,7 @@ public class AiCallbackController {
         }
 
         LoggerFactory.getLogger(AiCallbackController.class)
-            .info("AI callback userId={} intent={}", userId, intent);
+            .info("AI callback userId={} intent={} payload={}", userId, intent, safeJson(payload));
 
         result.put("ok", true);
         result.put("intent", intent);
@@ -481,6 +484,21 @@ public class AiCallbackController {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private String safeJson(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return "null";
+        }
+        try {
+            String text = JSON.writeValueAsString(node);
+            if (text.length() > 2000) {
+                return text.substring(0, 2000) + "...";
+            }
+            return text;
+        } catch (JsonProcessingException ex) {
+            return node.toString();
+        }
     }
 
     private static final class HandleResult {

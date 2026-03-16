@@ -26,14 +26,14 @@ public class DietController {
     public DietRecord add(@Valid @RequestBody DietRecordRequest request) {
         DietRecord record = new DietRecord();
         record.setUserId(request.getUserId());
-        record.setMealType(request.getMealType());
+        record.setMealType(defaultMealType(request.getMealType()));
         record.setFoodName(request.getFoodName());
-        record.setCalories(request.getCalories());
+        record.setCalories(request.getCalories() == null ? 0 : request.getCalories());
         record.setProtein(request.getProtein());
         record.setCarbs(request.getCarbs());
         record.setFat(request.getFat());
         record.setNote(request.getNote());
-        record.setDate(request.getDate());
+        record.setDate(request.getDate() == null ? LocalDate.now() : request.getDate());
         dietRecordService.save(record);
         return record;
     }
@@ -41,5 +41,12 @@ public class DietController {
     @GetMapping("/list")
     public List<DietRecord> list(@RequestParam Long userId, @RequestParam String date) {
         return dietRecordService.listByUserAndDate(userId, LocalDate.parse(date));
+    }
+
+    private String defaultMealType(String value) {
+        if (value == null || value.isBlank()) {
+            return "其他";
+        }
+        return value;
     }
 }

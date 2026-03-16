@@ -8,13 +8,11 @@ public class DietRecordRequest {
     @NotNull
     private Long userId;
 
-    @NotBlank
     private String mealType;
 
     @NotBlank
     private String foodName;
 
-    @NotNull
     private Integer calories;
 
     private Double protein;
@@ -22,7 +20,6 @@ public class DietRecordRequest {
     private Double fat;
     private String note;
 
-    @NotNull
     private LocalDate date;
 
     public Long getUserId() {

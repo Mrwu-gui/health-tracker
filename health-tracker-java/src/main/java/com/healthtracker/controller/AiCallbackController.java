@@ -84,80 +84,14 @@ public class AiCallbackController {
     @PostMapping("/callback")
     public Map<String, Object> callback(@RequestBody AiCallbackRequest request) {
         Map<String, Object> result = new HashMap<>();
-        Long userId = request.getUserId();
-        if (userId == null) {
-            result.put("ok", false);
-            result.put("error", "缺少 userId");
-            return result;
-        }
         String intent = request.getIntent() == null ? "" : request.getIntent().trim();
-        if (intent.isBlank()) {
-            result.put("ok", false);
-            result.put("error", "缺少 intent");
-            return result;
-        }
-        JsonNode payload = request.getPayload();
-        if (payload == null || payload.isNull()) {
-            result.put("ok", false);
-            result.put("error", "缺少 payload");
-            result.put("intent", intent);
-            return result;
-        }
-
         LoggerFactory.getLogger(AiCallbackController.class)
-            .info("AI callback userId={} intent={} payload={}", userId, intent, safeJson(payload));
+            .info("AI callback received (recording disabled). userId={} intent={} payload={}",
+                request.getUserId(), intent, safeJson(request.getPayload()));
 
         result.put("ok", true);
         result.put("intent", intent);
-
-        HandleResult handle;
-        switch (intent) {
-            case "reminder":
-                handle = handleReminder(userId, payload);
-                break;
-            case "medication":
-                handle = handleMedication(userId, payload);
-                break;
-            case "medication_record":
-                handle = handleMedicationRecord(userId, payload);
-                break;
-            case "exercise_record":
-                handle = handleExercise(userId, payload);
-                break;
-            case "diet_record":
-                handle = handleDiet(userId, payload);
-                break;
-            case "sleep_record":
-                handle = handleSleep(userId, payload);
-                break;
-            case "weight_record":
-                handle = handleWeight(userId, payload);
-                break;
-            case "health_record":
-                handle = handleHealth(userId, payload);
-                break;
-            case "goal":
-                handle = handleGoal(userId, payload);
-                break;
-            case "period_record":
-                handle = handlePeriod(userId, payload);
-                break;
-            case "family_member":
-                handle = handleFamily(userId, payload);
-                break;
-            default:
-                result.put("ok", false);
-                result.put("error", "未知意图: " + intent);
-                return result;
-        }
-
-        if (handle != null) {
-            result.put("id", handle.id);
-            if (handle.reason != null) {
-                result.put("skipped", true);
-                result.put("reason", handle.reason);
-            }
-        }
+        result.put("message", "AI 回调记录功能已暂时关闭");
         return result;
     }
 

@@ -13,6 +13,7 @@ health-tracker-miniapp/unpackage/
 health-tracker-miniapp/.hbuilderx/
 .ssh/
 health-tracker-java/uploads/
+health-tracker-docs/
 DEPLOY_CONFIG.md
 DEPLOY_STEPS.md
 ci/DEPLOY_YUNXIAO.md

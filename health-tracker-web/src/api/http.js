@@ -84,6 +84,17 @@ async function adminRequest(path, options = {}) {
   return body;
 }
 
+function buildQuery(params = {}) {
+  const entries = Object.entries(params).filter(([, value]) => {
+    if (value === undefined || value === null) return false;
+    if (value === "") return false;
+    if (value === "undefined") return false;
+    return true;
+  });
+  if (!entries.length) return "";
+  return new URLSearchParams(entries).toString();
+}
+
 export const api = {
   login(data) {
     return request("/api/user/login", {
@@ -146,11 +157,11 @@ export const api = {
     return request(`/api/reports/list?userId=${userId}`);
   },
   adminUsers(params = {}) {
-    const query = new URLSearchParams(params).toString();
+    const query = buildQuery(params);
     return adminRequest(`/api/admin/users${query ? `?${query}` : ""}`);
   },
   adminSubscribeTasks(params = {}) {
-    const query = new URLSearchParams(params).toString();
+    const query = buildQuery(params);
     return adminRequest(`/api/admin/subscribe-tasks${query ? `?${query}` : ""}`);
   },
   adminSubscribeTaskAdd(data) {
@@ -166,11 +177,11 @@ export const api = {
     });
   },
   adminSystemLogs(params = {}) {
-    const query = new URLSearchParams(params).toString();
+    const query = buildQuery(params);
     return adminRequest(`/api/admin/logs/system${query ? `?${query}` : ""}`);
   },
   adminAiLogs(params = {}) {
-    const query = new URLSearchParams(params).toString();
+    const query = buildQuery(params);
     return adminRequest(`/api/admin/logs/ai${query ? `?${query}` : ""}`);
   }
 };

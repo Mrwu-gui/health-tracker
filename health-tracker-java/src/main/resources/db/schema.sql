@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS family_member (
   age INT COMMENT 'Age',
   condition_text VARCHAR(64) COMMENT 'Condition/notes',
   role VARCHAR(16) COMMENT 'Role label',
-  status VARCHAR(16) COMMENT 'Status label',
+  status TINYINT NOT NULL DEFAULT 1 COMMENT 'Status (0=未授权,1=已授权)',
   avatar VARCHAR(255) COMMENT 'Avatar url',
   created_at DATETIME COMMENT 'Created time'
 ) COMMENT='Family members';
@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS medication (
   drug_name VARCHAR(64) NOT NULL COMMENT 'Drug name',
   dosage VARCHAR(32) NOT NULL COMMENT 'Dosage',
   frequency VARCHAR(32) NOT NULL COMMENT 'Frequency',
-  remind_time VARCHAR(16) COMMENT 'Remind time',
+  remind_time VARCHAR(16) COMMENT 'Remind time (yyyy-MM-dd HH:mm)',
   stock INT COMMENT 'Stock',
   stock_threshold INT COMMENT 'Low stock threshold',
   start_date DATE NOT NULL COMMENT 'Start date',
@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS medication_record (
   medication_id BIGINT NOT NULL COMMENT 'Medication id',
   date DATE NOT NULL COMMENT 'Date',
   time TIME NOT NULL COMMENT 'Time',
-  status VARCHAR(16) NOT NULL COMMENT 'Status'
+  status TINYINT NOT NULL COMMENT 'Status (0=未服,1=已服,2=漏服)'
 ) COMMENT='Medication intake records';
 
 CREATE TABLE IF NOT EXISTS sms_code (
@@ -147,10 +147,10 @@ CREATE TABLE IF NOT EXISTS reminder (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
   user_id BIGINT NOT NULL COMMENT 'User id',
   title VARCHAR(64) NOT NULL COMMENT 'Title',
-  type INT NOT NULL COMMENT 'Type (int)',
+  type INT NOT NULL COMMENT 'Type (1=运动,2=饮食,3=睡眠,4=用药)',
   content VARCHAR(255) COMMENT 'Content',
   remind_time DATETIME COMMENT 'Remind time',
-  status VARCHAR(16) COMMENT 'Status',
+  status TINYINT NOT NULL DEFAULT 0 COMMENT 'Status (0=未提醒,1=已提醒)',
   created_at DATETIME COMMENT 'Created time'
 ) COMMENT='Reminders';
 

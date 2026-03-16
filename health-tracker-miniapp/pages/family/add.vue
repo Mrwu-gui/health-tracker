@@ -43,7 +43,7 @@ export default {
         relation: this.form.relation,
         conditionText: this.form.conditionText,
         role: "成员",
-        status: "已授权"
+        status: 1
       })
         .then(() => {
           uni.showToast({ title: "已添加", icon: "success" });

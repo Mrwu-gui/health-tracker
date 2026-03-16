@@ -150,7 +150,8 @@ public class AiCallbackController {
         reminder.setType(type);
         reminder.setContent(text(payload, "content"));
         reminder.setRemindTime(dateTime(payload, "remind_time"));
-        reminder.setStatus(text(payload, "status") == null ? "待提醒" : text(payload, "status"));
+        Integer status = intVal(payload, "status");
+        reminder.setStatus(status == null ? 0 : status);
         reminder.setCreatedAt(LocalDateTime.now());
         reminderService.save(reminder);
         return reminder.getId();
@@ -167,7 +168,7 @@ public class AiCallbackController {
         medication.setDrugName(drugName);
         medication.setDosage(dosage);
         medication.setFrequency(frequency);
-        medication.setRemindTime(text(payload, "remind_time"));
+        medication.setRemindTime(normalizeRemindTime(text(payload, "remind_time")));
         medication.setStartDate(startDate);
         medication.setEndDate(date(payload, "end_date"));
         medication.setNotes(text(payload, "notes"));
@@ -178,7 +179,7 @@ public class AiCallbackController {
     private Long handleMedicationRecord(Long userId, JsonNode payload) {
         LocalDate date = requireDate(payload, "date");
         LocalTime time = requireTime(payload, "time");
-        String status = requireText(payload, "status");
+        Integer status = requireInt(payload, "status");
 
         MedicationRecord record = new MedicationRecord();
         record.setUserId(userId);
@@ -302,11 +303,23 @@ public class AiCallbackController {
         member.setAge(intVal(payload, "age"));
         member.setConditionText(text(payload, "condition_text"));
         member.setRole(text(payload, "role"));
-        member.setStatus(text(payload, "status"));
+        Integer status = intVal(payload, "status");
+        member.setStatus(status == null ? 1 : status);
         member.setAvatar(text(payload, "avatar"));
         member.setCreatedAt(LocalDateTime.now());
         familyMemberService.save(member);
         return member.getId();
+    }
+
+    private String normalizeRemindTime(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String trimmed = value.trim();
+        if (trimmed.length() >= 16) {
+            return trimmed.substring(0, 16);
+        }
+        return trimmed;
     }
 
     private String defaultReminderTitle(Integer type) {

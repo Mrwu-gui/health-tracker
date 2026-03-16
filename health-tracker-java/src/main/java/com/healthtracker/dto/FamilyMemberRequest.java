@@ -1,5 +1,7 @@
 package com.healthtracker.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
@@ -12,7 +14,10 @@ public class FamilyMemberRequest {
     private Integer age;
     private String conditionText;
     private String role;
-    private String status;
+    @NotNull
+    @Min(0)
+    @Max(1)
+    private Integer status;
     private String avatar;
     private LocalDateTime createdAt;
 
@@ -72,11 +77,11 @@ public class FamilyMemberRequest {
         this.role = role;
     }
 
-    public String getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 

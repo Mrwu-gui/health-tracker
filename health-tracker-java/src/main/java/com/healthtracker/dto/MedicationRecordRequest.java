@@ -1,7 +1,8 @@
 package com.healthtracker.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -13,8 +14,10 @@ public class MedicationRecordRequest {
     private LocalDate date;
     @NotNull
     private LocalTime time;
-    @NotBlank
-    private String status;
+    @NotNull
+    @Min(0)
+    @Max(2)
+    private Integer status;
 
     public Long getUserId() {
         return userId;
@@ -48,11 +51,11 @@ public class MedicationRecordRequest {
         this.time = time;
     }
 
-    public String getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 }

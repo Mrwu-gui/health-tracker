@@ -11,10 +11,12 @@ public class Reminder {
     private Long id;
     private Long userId;
     private String title;
+    /** Type (1=运动,2=饮食,3=睡眠,4=用药) */
     private Integer type;
     private String content;
     private LocalDateTime remindTime;
-    private String status;
+    /** Status (0=未提醒,1=已提醒) */
+    private Integer status;
     private LocalDateTime createdAt;
 
     public Long getId() {
@@ -65,11 +67,11 @@ public class Reminder {
         this.remindTime = remindTime;
     }
 
-    public String getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 

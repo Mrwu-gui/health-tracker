@@ -97,11 +97,7 @@ export default {
         });
     },
     setMembers(list) {
-      if (typeof this.$set === "function") {
-        this.$set(this, "members", list);
-      } else {
-        this.members = list;
-      }
+      this.members = list;
     },
     openAdd() {
       this.showModal = true;
@@ -141,7 +137,7 @@ export default {
         age: Number(this.form.age),
         conditionText: this.form.conditionText,
         role: "成员",
-        status: "已授权"
+        status: 1
       };
       const url = this.editingId ? "/api/family/update" : "/api/family/add";
       if (this.editingId) {

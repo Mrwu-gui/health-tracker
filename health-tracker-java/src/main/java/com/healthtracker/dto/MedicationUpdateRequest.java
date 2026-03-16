@@ -2,6 +2,7 @@ package com.healthtracker.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.time.LocalDate;
 
 public class MedicationUpdateRequest {
@@ -17,6 +18,7 @@ public class MedicationUpdateRequest {
     @NotBlank
     private String frequency;
 
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$", message = "提醒时间格式应为 yyyy-MM-dd HH:mm")
     private String remindTime;
     private Integer stock;
     private Integer stockThreshold;

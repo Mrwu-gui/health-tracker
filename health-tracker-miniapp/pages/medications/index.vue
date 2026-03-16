@@ -60,6 +60,12 @@
           <input class="input" v-model="form.frequency" placeholder="如 每日 1 次" />
         </view>
         <view class="field">
+          <text class="field-label">提醒日期</text>
+          <picker mode="date" @change="onDateChange">
+            <view class="input">{{ form.remindDate || "请选择日期" }}</view>
+          </picker>
+        </view>
+        <view class="field">
           <text class="field-label">提醒时间</text>
           <picker mode="time" @change="onTimeChange">
             <view class="input">{{ form.remindTime || "请选择时间" }}</view>
@@ -93,6 +99,7 @@ export default {
         dosage: "",
         frequency: "",
         remindTime: "",
+        remindDate: "",
         startDate: ""
       }
     };
@@ -120,53 +127,70 @@ export default {
         });
     },
     setMeds(list) {
-      if (typeof this.$set === "function") {
-        this.$set(this, "meds", list);
-      } else {
-        this.meds = list;
-      }
+      this.meds = list;
     },
     openAdd() {
       this.showModal = true;
       this.editingId = null;
-      this.form = { drugName: "", dosage: "", frequency: "", remindTime: "", startDate: "" };
+      this.form = { drugName: "", dosage: "", frequency: "", remindTime: "", remindDate: "", startDate: "" };
     },
     openEdit(item) {
       if (!item) return;
+      const split = this.splitDateTime(item.remindTime);
       this.editingId = item.id;
       this.showModal = true;
       this.form = {
         drugName: item.drugName || "",
         dosage: item.dosage || "",
         frequency: item.frequency || "",
-        remindTime: item.remindTime || "",
+        remindTime: split.time || "",
+        remindDate: split.date || "",
         startDate: item.startDate || ""
       };
     },
     closeModal() {
       this.showModal = false;
     },
+    onDateChange(e) {
+      this.form.remindDate = e.detail.value;
+    },
     onTimeChange(e) {
       this.form.remindTime = e.detail.value;
+    },
+    splitDateTime(value) {
+      if (!value || typeof value !== "string") return { date: "", time: "" };
+      const trimmed = value.trim();
+      if (trimmed.includes(" ")) {
+        const parts = trimmed.split(" ");
+        return { date: parts[0] || "", time: (parts[1] || "").slice(0, 5) };
+      }
+      if (/^\\d{2}:\\d{2}$/.test(trimmed)) {
+        return { date: "", time: trimmed };
+      }
+      return { date: "", time: "" };
     },
     submitAdd() {
       if (!this.form.drugName || !this.form.dosage || !this.form.frequency) {
         uni.showToast({ title: "请完整填写药物信息", icon: "none" });
         return;
       }
-      if (this.form.remindTime && !/^\d{2}:\d{2}$/.test(this.form.remindTime)) {
-        uni.showToast({ title: "时间格式不正确", icon: "none" });
-        return;
-      }
       this.saving = true;
       const userId = uni.getStorageSync("userId") || 1;
       const today = new Date().toISOString().slice(0, 10);
+      if ((this.form.remindDate && !this.form.remindTime) || (!this.form.remindDate && this.form.remindTime)) {
+        uni.showToast({ title: "请选择完整的提醒日期和时间", icon: "none" });
+        this.saving = false;
+        return;
+      }
+      const remindAt = this.form.remindDate && this.form.remindTime
+        ? `${this.form.remindDate} ${this.form.remindTime}`
+        : null;
       const payload = {
         userId,
         drugName: this.form.drugName,
         dosage: this.form.dosage,
         frequency: this.form.frequency,
-        remindTime: this.form.remindTime,
+        remindTime: remindAt,
         startDate: this.form.startDate || today
       };
       const url = this.editingId ? "/api/medication/update" : "/api/medication/add";

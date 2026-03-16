@@ -12,7 +12,8 @@ public class FamilyMember {
     private Integer age;
     private String conditionText;
     private String role;
-    private String status;
+    /** Status (0=未授权,1=已授权) */
+    private Integer status;
     private String avatar;
     private LocalDateTime createdAt;
 
@@ -72,11 +73,11 @@ public class FamilyMember {
         this.role = role;
     }
 
-    public String getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 

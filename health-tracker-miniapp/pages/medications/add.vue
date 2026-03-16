@@ -15,7 +15,7 @@
       </view>
       <view class="field">
         <text class="label">提醒时间</text>
-        <input class="input" v-model="form.remindTime" placeholder="如 08:00" />
+        <input class="input" v-model="form.remindTime" placeholder="如 2026-03-16 08:00" />
       </view>
     </view>
     <view class="save-btn" @tap="save">保存</view>
@@ -42,13 +42,17 @@ export default {
         uni.showToast({ title: "请填写药物名称", icon: "none" });
         return;
       }
+      if (this.form.remindTime && !/^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$/.test(this.form.remindTime)) {
+        uni.showToast({ title: "提醒时间格式应为 yyyy-MM-dd HH:mm", icon: "none" });
+        return;
+      }
       const userId = uni.getStorageSync("userId") || 1;
       request("/api/medication/add", "POST", {
         userId,
         drugName: this.form.drugName,
         dosage: this.form.dosage,
         frequency: this.form.frequency,
-        remindTime: this.form.remindTime,
+        remindTime: this.form.remindTime || null,
         stock: 30,
         stockThreshold: 5,
         startDate: this.todayDate()

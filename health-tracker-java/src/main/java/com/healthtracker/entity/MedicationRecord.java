@@ -14,7 +14,8 @@ public class MedicationRecord {
     private Long medicationId;
     private LocalDate date;
     private LocalTime time;
-    private String status;
+    /** Status (0=未服,1=已服,2=漏服) */
+    private Integer status;
 
     public Long getId() {
         return id;
@@ -56,11 +57,11 @@ public class MedicationRecord {
         this.time = time;
     }
 
-    public String getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 }

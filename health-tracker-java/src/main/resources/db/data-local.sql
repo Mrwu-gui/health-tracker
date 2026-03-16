@@ -36,7 +36,7 @@ VALUES
 
 INSERT INTO reminder (user_id, title, type, content, remind_time, status, created_at)
 VALUES
-  (1, '晚间服药', 4, '维生素D 1粒', TIMESTAMP '2026-03-14 20:00:00', '待提醒', TIMESTAMP '2026-03-14 08:00:00');
+  (1, '晚间服药', 4, '维生素D 1粒', TIMESTAMP '2026-03-14 20:00:00', 0, TIMESTAMP '2026-03-14 08:00:00');
 
 INSERT INTO privacy_settings (user_id, allow_subscribe, allow_cloud_sync, allow_family_share, created_at, updated_at)
 VALUES
@@ -44,5 +44,5 @@ VALUES
 
 INSERT INTO family_member (user_id, name, relation, age, condition_text, role, status, created_at)
 VALUES
-  (1, '李阿姨', '家人', 68, '高血压', '成员', '已授权', TIMESTAMP '2026-03-14 08:00:00'),
-  (1, '张先生', '儿子', 35, '健康', '管理员', '已授权', TIMESTAMP '2026-03-14 08:00:00');
+  (1, '李阿姨', '家人', 68, '高血压', '成员', 1, TIMESTAMP '2026-03-14 08:00:00'),
+  (1, '张先生', '儿子', 35, '健康', '管理员', 1, TIMESTAMP '2026-03-14 08:00:00');

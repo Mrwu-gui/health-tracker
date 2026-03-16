@@ -47,7 +47,7 @@ public class ReminderController {
         reminder.setType(request.getType());
         reminder.setContent(request.getContent());
         reminder.setRemindTime(parseTime(request.getRemindTime()));
-        reminder.setStatus("待提醒");
+        reminder.setStatus(0);
         reminder.setCreatedAt(LocalDateTime.now());
         reminderService.save(reminder);
 

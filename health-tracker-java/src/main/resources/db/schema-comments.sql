@@ -38,7 +38,7 @@ ALTER TABLE family_member
   MODIFY age INT COMMENT 'Age',
   MODIFY condition_text VARCHAR(64) COMMENT 'Condition/notes',
   MODIFY role VARCHAR(16) COMMENT 'Role label',
-  MODIFY status VARCHAR(16) COMMENT 'Status label',
+  MODIFY status TINYINT NOT NULL DEFAULT 1 COMMENT 'Status (0=未授权,1=已授权)',
   MODIFY avatar VARCHAR(255) COMMENT 'Avatar url',
   MODIFY created_at DATETIME COMMENT 'Created time',
   COMMENT='Family members';
@@ -119,7 +119,7 @@ ALTER TABLE medication
   MODIFY drug_name VARCHAR(64) NOT NULL COMMENT 'Drug name',
   MODIFY dosage VARCHAR(32) NOT NULL COMMENT 'Dosage',
   MODIFY frequency VARCHAR(32) NOT NULL COMMENT 'Frequency',
-  MODIFY remind_time VARCHAR(16) COMMENT 'Remind time',
+  MODIFY remind_time VARCHAR(16) COMMENT 'Remind time (yyyy-MM-dd HH:mm)',
   MODIFY stock INT COMMENT 'Stock',
   MODIFY stock_threshold INT COMMENT 'Low stock threshold',
   MODIFY start_date DATE NOT NULL COMMENT 'Start date',
@@ -133,7 +133,7 @@ ALTER TABLE medication_record
   MODIFY medication_id BIGINT NOT NULL COMMENT 'Medication id',
   MODIFY date DATE NOT NULL COMMENT 'Date',
   MODIFY time TIME NOT NULL COMMENT 'Time',
-  MODIFY status VARCHAR(16) NOT NULL COMMENT 'Status',
+  MODIFY status TINYINT NOT NULL COMMENT 'Status (0=未服,1=已服,2=漏服)',
   COMMENT='Medication intake records';
 
 ALTER TABLE sms_code
@@ -149,10 +149,10 @@ ALTER TABLE reminder
   MODIFY id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
   MODIFY user_id BIGINT NOT NULL COMMENT 'User id',
   MODIFY title VARCHAR(64) NOT NULL COMMENT 'Title',
-  MODIFY type INT NOT NULL COMMENT 'Type (int)',
+  MODIFY type INT NOT NULL COMMENT 'Type (1=运动,2=饮食,3=睡眠,4=用药)',
   MODIFY content VARCHAR(255) COMMENT 'Content',
   MODIFY remind_time DATETIME COMMENT 'Remind time',
-  MODIFY status VARCHAR(16) COMMENT 'Status',
+  MODIFY status TINYINT NOT NULL DEFAULT 0 COMMENT 'Status (0=未提醒,1=已提醒)',
   MODIFY created_at DATETIME COMMENT 'Created time',
   COMMENT='Reminders';
 

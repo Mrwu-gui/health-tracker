@@ -89,11 +89,13 @@ public class AiController {
                         RestTemplateBuilder builder,
                         AiChatMessageService aiChatMessageService,
                         UserService userService,
-                        AiLogService aiLogService) {
+                        AiLogService aiLogService,
+                        @Value("${ai.http.connect-timeout-seconds:10}") int connectTimeoutSeconds,
+                        @Value("${ai.http.read-timeout-seconds:60}") int readTimeoutSeconds) {
         this.objectMapper = objectMapper;
         this.restTemplate = builder
-            .setConnectTimeout(Duration.ofSeconds(10))
-            .setReadTimeout(Duration.ofSeconds(20))
+            .setConnectTimeout(Duration.ofSeconds(connectTimeoutSeconds))
+            .setReadTimeout(Duration.ofSeconds(readTimeoutSeconds))
             .build();
         this.aiChatMessageService = aiChatMessageService;
         this.userService = userService;
@@ -165,7 +167,7 @@ public class AiController {
             response = restTemplate.postForEntity(url, entity, String.class);
         } catch (ResourceAccessException ex) {
             saveAiLog(userIdLong, wxOpenid, text, null, 1, "AI 请求超时");
-            throw new IllegalArgumentException("AI 服务请求超时，请稍后再试", ex);
+            throw new IllegalArgumentException("服务响应较慢，请稍后再试", ex);
         } catch (Exception ex) {
             saveAiLog(userIdLong, wxOpenid, text, null, 1, ex.getMessage());
             if (request.getImageUrl() != null && !request.getImageUrl().isBlank()) {

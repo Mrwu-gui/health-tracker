@@ -71,6 +71,11 @@ yuanqi:
   appid: ${YUANQI_APPID:}
   appkey: ${YUANQI_APPKEY:}
 
+ai:
+  http:
+    connect-timeout-seconds: ${AI_HTTP_CONNECT_TIMEOUT_SECONDS:10}
+    read-timeout-seconds: ${AI_HTTP_READ_TIMEOUT_SECONDS:60}
+
 tencent:
   asr:
     secret-id: ${TENCENT_ASR_SECRET_ID:}

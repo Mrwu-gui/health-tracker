@@ -122,7 +122,7 @@ export default {
 .body.end {
   margin-top: 8px;
   text-align: center;
-  color: #6366f1;
+  color: #f97316;
   white-space: normal;
 }
 </style>

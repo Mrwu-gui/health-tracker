@@ -2,7 +2,7 @@
   <view class="page">
     <view class="doc">
       <text class="doc-title">智康AI用户协议</text>
-      <text class="doc-updated">更新日期：2025年1月</text>
+      <text class="doc-updated">更新日期：2026年3月</text>
 
       <text class="section-title">一、协议的接受与变更</text>
       <text class="body">
@@ -107,6 +107,6 @@ export default {
 .body.end {
   margin-top: 8px;
   text-align: center;
-  color: #6366f1;
+  color: #f97316;
 }
 </style>

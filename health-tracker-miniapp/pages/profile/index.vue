@@ -42,7 +42,7 @@
         </view>
         <text class="menu-arrow">›</text>
       </navigator>
-      <navigator class="menu-item" url="/pages/period/index" hover-class="none">
+      <navigator v-if="showPeriod" class="menu-item" url="/pages/period/index" hover-class="none">
         <view class="menu-icon icon-p">
           <image class="icon-img" src="/static/tabbar/period.png" mode="widthFix"></image>
         </view>
@@ -197,6 +197,12 @@ export default {
       }
     };
   },
+  computed: {
+    showPeriod() {
+      const sex = this.profile.sex || uni.getStorageSync("userSex") || "";
+      return String(sex).includes("女");
+    }
+  },
   onLoad() {
   },
   onShow() {
@@ -239,6 +245,7 @@ export default {
             this.profile.diastolic = data.diastolic || "";
             this.profile.heartRate = data.heartRate || "";
             uni.setStorageSync("userAvatar", this.profile.avatar || "");
+            uni.setStorageSync("userSex", this.profile.sex || "");
             if (this.profile.name && this.profile.name !== "未登录") {
               uni.setStorageSync("userName", this.profile.name);
               if (this.profile.sex || this.profile.age || this.profile.height || this.profile.weight) {
@@ -521,25 +528,25 @@ export default {
   flex-shrink: 0;
 }
 
-/* 用药管理（icon-y）：医疗/健康属性 → 沉稳的深青蓝+浅青蓝背景 */
+/* 用药管理（icon-y）：医疗/健康属性 → 橙色系 */
 .menu-icon.icon-y {
 	border-radius: 18px;
-	background: #eff6ff; /* 浅青蓝背景，柔和不刺眼 */
-	color: #1d4ed8;      /* 深青蓝文字/图标，体现医疗专业性 */
+	background: #fff7ed;
+	color: #ea580c;
 }
 
-/* 目标管理（icon-g）：目标/进度属性 → 清爽的浅蓝+深蓝背景 */
+/* 目标管理（icon-g）：目标/进度属性 → 橙色系 */
 .menu-icon.icon-g {
 	border-radius: 18px;
-	background: #dbeafe; /* 浅蓝背景 */
-	color: #2563eb;      /* 主色蓝 */
+	background: #fff7ed;
+	color: #f97316;
 }
 
-/* 提醒设置（icon-t）：通知/提醒属性 → 醒目的蓝紫+浅紫背景 */
+/* 提醒设置（icon-t）：通知/提醒属性 → 橙色系 */
 .menu-icon.icon-t {
 	border-radius: 18px;
-	background: #f5f3ff; /* 浅紫背景，区分提醒功能 */
-	color: #7c3aed;      /* 蓝紫文字/图标，醒目且不突兀 */
+	background: #fff7ed;
+	color: #f59e0b;
 }
 
 /* 家庭（icon-f）：亲情/温暖属性 → 治愈的浅绿+深绿背景 */
@@ -752,7 +759,7 @@ export default {
 }
 
 .modal-sheet-btn.primary {
-  background: #2563eb;
+  background: #f97316;
   color: #fff;
 }
 
@@ -807,9 +814,9 @@ export default {
 }
 
 .radio-item.active {
-  border-color: #2563eb;
-  color: #2563eb;
-  background: #eff6ff;
+  border-color: #f97316;
+  color: #f97316;
+  background: #fff7ed;
 }
 
 .ghost {

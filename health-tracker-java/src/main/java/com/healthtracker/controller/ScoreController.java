@@ -52,7 +52,7 @@ public class ScoreController {
             Map.of("label", "饮食（20%）", "desc", "清淡均衡更高分，高油高糖会扣分"),
             Map.of("label", "体重（20%）", "desc", "稳定或接近目标得高分")
         ));
-        data.put("tips", List.of("连续 3 天改善可加分", "连续达标会有额外奖励"));
+        data.put("tips", List.of());
         return data;
     }
 
@@ -95,8 +95,8 @@ public class ScoreController {
         int weightScore = weightResult.score;
 
         int base = stepsScore + sleepScore + dietScore + weightScore;
-        int bonus = calcBonus(userId, date);
-        int total = Math.min(100, base + bonus);
+        int bonus = 0;
+        int total = Math.min(100, base);
 
         Map<String, Object> breakdown = new HashMap<>();
         breakdown.put("steps", steps);
@@ -108,7 +108,6 @@ public class ScoreController {
         breakdown.put("dietScore", dietScore);
         breakdown.put("weightDelta", weightResult.delta);
         breakdown.put("weightScore", weightScore);
-        breakdown.put("bonus", bonus);
         breakdown.put("base", base);
         breakdown.put("total", total);
 
@@ -197,25 +196,6 @@ public class ScoreController {
         if (hours > 0 && (hours < 6 || hours > 9)) return 10;
         if (hours >= 10 || hours <= 4) return 0;
         return 0;
-    }
-
-    private int calcBonus(Long userId, LocalDate date) {
-        ScoreResult d1 = calcScoreSimple(userId, date.minusDays(2));
-        ScoreResult d2 = calcScoreSimple(userId, date.minusDays(1));
-        ScoreResult d3 = calcScoreSimple(userId, date);
-        if (d1.total >= 80 && d2.total >= 80 && d3.total >= 80) return 5;
-        if (d1.total < d2.total && d2.total < d3.total) return 3;
-        return 0;
-    }
-
-    private ScoreResult calcScoreSimple(Long userId, LocalDate date) {
-        int stepsScore = scoreSteps(getStepsTarget(userId) > 0 ? (double) getSteps(userId, date) / getStepsTarget(userId) : 0);
-        int sleepScore = scoreSleep(getSleepHours(userId, date));
-        int dietScore = getDietScore(userId, date).score;
-        int weightScore = getWeightScore(userId, date).score;
-        ScoreResult result = new ScoreResult();
-        result.total = Math.min(100, stepsScore + sleepScore + dietScore + weightScore);
-        return result;
     }
 
     private String statusText(int score) {

@@ -57,9 +57,12 @@ public class StatisticsController {
     @GetMapping("/overview")
     public Map<String, Object> overview(@RequestParam Long userId, @RequestParam String period) {
         LocalDate endDate = LocalDate.now();
+        LocalDate today = endDate;
+        LocalDate yesterday = endDate.minusDays(1);
         LocalDate startDate = switch (period) {
             case "week" -> endDate.minusDays(6);
             case "month" -> endDate.minusDays(29);
+            case "half" -> endDate.minusDays(179);
             default -> endDate;
         };
 
@@ -68,12 +71,46 @@ public class StatisticsController {
             .between(WeRunRecord::getRecordDate, startDate, endDate)
             .list();
         int stepTotal = steps.stream().mapToInt(item -> item.getSteps() == null ? 0 : item.getSteps()).sum();
+        int stepsToday = steps.stream()
+            .filter(item -> today.equals(item.getRecordDate()))
+            .mapToInt(item -> item.getSteps() == null ? 0 : item.getSteps())
+            .sum();
+        int stepsYesterday;
+        if (startDate.isAfter(yesterday)) {
+            stepsYesterday = weRunRecordService.lambdaQuery()
+                .eq(WeRunRecord::getUserId, userId)
+                .eq(WeRunRecord::getRecordDate, yesterday)
+                .list()
+                .stream()
+                .mapToInt(item -> item.getSteps() == null ? 0 : item.getSteps())
+                .sum();
+        } else {
+            stepsYesterday = steps.stream()
+                .filter(item -> yesterday.equals(item.getRecordDate()))
+                .mapToInt(item -> item.getSteps() == null ? 0 : item.getSteps())
+                .sum();
+        }
 
         List<DietRecord> diets = dietRecordService.lambdaQuery()
             .eq(DietRecord::getUserId, userId)
             .between(DietRecord::getDate, startDate, endDate)
             .list();
         int dietCalories = diets.stream().mapToInt(item -> item.getCalories() == null ? 0 : item.getCalories()).sum();
+        int dietCaloriesToday = diets.stream()
+            .filter(item -> today.equals(item.getDate()))
+            .mapToInt(item -> item.getCalories() == null ? 0 : item.getCalories())
+            .sum();
+        int dietCaloriesYesterday;
+        if (startDate.isAfter(yesterday)) {
+            dietCaloriesYesterday = dietRecordService.listByUserAndDate(userId, yesterday).stream()
+                .mapToInt(item -> item.getCalories() == null ? 0 : item.getCalories())
+                .sum();
+        } else {
+            dietCaloriesYesterday = diets.stream()
+                .filter(item -> yesterday.equals(item.getDate()))
+                .mapToInt(item -> item.getCalories() == null ? 0 : item.getCalories())
+                .sum();
+        }
 
         List<ExerciseRecord> exercises = exerciseRecordService.lambdaQuery()
             .eq(ExerciseRecord::getUserId, userId)
@@ -89,10 +126,37 @@ public class StatisticsController {
             .between(SleepRecord::getStartTime, startTime, endTime)
             .list();
         long sleepMinutes = 0;
+        long sleepMinutesToday = 0;
+        long sleepMinutesYesterday = 0;
         if (!sleeps.isEmpty()) {
             SleepRecord latest = sleeps.get(sleeps.size() - 1);
             if (latest.getStartTime() != null && latest.getEndTime() != null) {
                 sleepMinutes = Duration.between(latest.getStartTime(), latest.getEndTime()).toMinutes();
+            }
+        }
+        for (SleepRecord item : sleeps) {
+            LocalDate recordDate = item.getRecordDate();
+            if (recordDate == null && item.getEndTime() != null) {
+                recordDate = item.getEndTime().toLocalDate();
+            }
+            if (recordDate == null && item.getStartTime() != null) {
+                recordDate = item.getStartTime().toLocalDate();
+            }
+            if (recordDate == null || item.getStartTime() == null || item.getEndTime() == null) continue;
+            long minutes = Duration.between(item.getStartTime(), item.getEndTime()).toMinutes();
+            if (today.equals(recordDate)) {
+                sleepMinutesToday = Math.max(sleepMinutesToday, minutes);
+            }
+            if (yesterday.equals(recordDate)) {
+                sleepMinutesYesterday = Math.max(sleepMinutesYesterday, minutes);
+            }
+        }
+        if (startDate.isAfter(yesterday) && sleepMinutesYesterday == 0) {
+            List<SleepRecord> sleepYesterdayList = sleepRecordService.listByUserAndDate(userId, yesterday);
+            for (SleepRecord item : sleepYesterdayList) {
+                if (item.getStartTime() == null || item.getEndTime() == null) continue;
+                long minutes = Duration.between(item.getStartTime(), item.getEndTime()).toMinutes();
+                sleepMinutesYesterday = Math.max(sleepMinutesYesterday, minutes);
             }
         }
         String sleepText = sleepMinutes > 0
@@ -105,6 +169,21 @@ public class StatisticsController {
             .list();
         Double weight = weights.isEmpty() ? null : weights.get(weights.size() - 1).getWeight();
         Double bmi = weights.isEmpty() ? null : weights.get(weights.size() - 1).getBmi();
+        Double weightToday = null;
+        Double weightYesterday = null;
+        if (!weights.isEmpty()) {
+            for (WeightRecord item : weights) {
+                if (item.getDate() == null || item.getWeight() == null) continue;
+                if (today.equals(item.getDate())) weightToday = item.getWeight();
+                if (yesterday.equals(item.getDate())) weightYesterday = item.getWeight();
+            }
+        }
+        if (startDate.isAfter(yesterday) && weightYesterday == null) {
+            List<WeightRecord> weightYesterdayList = weightRecordService.listByUserAndDate(userId, yesterday);
+            if (!weightYesterdayList.isEmpty() && weightYesterdayList.get(0).getWeight() != null) {
+                weightYesterday = weightYesterdayList.get(0).getWeight();
+            }
+        }
 
         List<HealthRecord> healthRecords = healthRecordService.lambdaQuery()
             .eq(HealthRecord::getUserId, userId)
@@ -116,14 +195,26 @@ public class StatisticsController {
         data.put("userId", userId);
         data.put("period", period);
         data.put("steps", stepTotal > 0 ? String.valueOf(stepTotal) : "0");
+        data.put("stepsToday", stepsToday);
+        data.put("stepsYesterday", stepsYesterday);
+        data.put("stepsDelta", stepsToday - stepsYesterday);
         data.put("sleep", sleepText);
+        data.put("sleepMinutesToday", sleepMinutesToday);
+        data.put("sleepMinutesYesterday", sleepMinutesYesterday);
+        data.put("sleepDeltaMinutes", sleepMinutesToday - sleepMinutesYesterday);
         data.put("calories", String.valueOf(dietCalories + exerciseCalories));
+        data.put("dietCaloriesToday", dietCaloriesToday);
+        data.put("dietCaloriesYesterday", dietCaloriesYesterday);
+        data.put("dietDeltaCalories", dietCaloriesToday - dietCaloriesYesterday);
         data.put("dietCalories", dietCalories);
         data.put("exerciseCalories", exerciseCalories);
         data.put("exerciseMinutes", exerciseMinutes);
         data.put("dietCount", diets.size());
         data.put("weight", weight == null ? "" : weight);
         data.put("bmi", bmi == null ? "" : bmi);
+        data.put("weightToday", weightToday);
+        data.put("weightYesterday", weightYesterday);
+        data.put("weightDelta", (weightToday != null && weightYesterday != null) ? weightToday - weightYesterday : null);
         data.put("bpStatus", bpStatus);
         return data;
     }
@@ -152,6 +243,8 @@ public class StatisticsController {
             .between(SleepRecord::getStartTime, startDate.atStartOfDay(), endDate.atTime(23, 59, 59))
             .list();
         Map<LocalDate, Double> sleepMap = new TreeMap<>();
+        Map<LocalDate, Integer> sleepDeepMap = new TreeMap<>();
+        Map<LocalDate, Integer> sleepLightMap = new TreeMap<>();
         for (SleepRecord item : sleeps) {
             LocalDate key = item.getRecordDate();
             if (key == null && item.getStartTime() != null) {
@@ -160,6 +253,12 @@ public class StatisticsController {
             if (key == null || item.getStartTime() == null || item.getEndTime() == null) continue;
             double hours = Math.max(0, Duration.between(item.getStartTime(), item.getEndTime()).toMinutes() / 60.0);
             sleepMap.put(key, Math.max(sleepMap.getOrDefault(key, 0.0), hours));
+            if (item.getDeepSleepMinutes() != null) {
+                sleepDeepMap.put(key, Math.max(sleepDeepMap.getOrDefault(key, 0), item.getDeepSleepMinutes()));
+            }
+            if (item.getLightSleepMinutes() != null) {
+                sleepLightMap.put(key, Math.max(sleepLightMap.getOrDefault(key, 0), item.getLightSleepMinutes()));
+            }
         }
 
         List<WeightRecord> weights = weightRecordService.lambdaQuery()
@@ -176,9 +275,29 @@ public class StatisticsController {
             .eq(DietRecord::getUserId, userId)
             .between(DietRecord::getDate, startDate, endDate)
             .list();
-        Map<LocalDate, Long> dietMap = diets.stream()
-            .filter(item -> item.getDate() != null)
-            .collect(Collectors.groupingBy(DietRecord::getDate, Collectors.counting()));
+        Map<LocalDate, Integer> dietTotalMap = new TreeMap<>();
+        Map<LocalDate, Integer> dietBreakfastMap = new TreeMap<>();
+        Map<LocalDate, Integer> dietLunchMap = new TreeMap<>();
+        Map<LocalDate, Integer> dietDinnerMap = new TreeMap<>();
+        Map<LocalDate, Integer> dietSnackMap = new TreeMap<>();
+        for (DietRecord item : diets) {
+            if (item.getDate() == null) continue;
+            int calories = item.getCalories() == null ? 0 : item.getCalories();
+            LocalDate key = item.getDate();
+            dietTotalMap.put(key, dietTotalMap.getOrDefault(key, 0) + calories);
+            String mealType = item.getMealType() == null ? "" : item.getMealType();
+            if (mealType.contains("早")) {
+                dietBreakfastMap.put(key, dietBreakfastMap.getOrDefault(key, 0) + calories);
+            } else if (mealType.contains("午")) {
+                dietLunchMap.put(key, dietLunchMap.getOrDefault(key, 0) + calories);
+            } else if (mealType.contains("晚")) {
+                dietDinnerMap.put(key, dietDinnerMap.getOrDefault(key, 0) + calories);
+            } else if (mealType.contains("加")) {
+                dietSnackMap.put(key, dietSnackMap.getOrDefault(key, 0) + calories);
+            } else {
+                dietSnackMap.put(key, dietSnackMap.getOrDefault(key, 0) + calories);
+            }
+        }
 
         List<PeriodRecord> periodRecords = periodRecordService.lambdaQuery()
             .eq(PeriodRecord::getUserId, userId)
@@ -193,14 +312,32 @@ public class StatisticsController {
         List<Map<String, Object>> weightSeries = buildSeries(startDate, days, period,
             date -> weightMap.getOrDefault(date, 0.0));
         List<Map<String, Object>> dietSeries = buildSeries(startDate, days, period,
-            date -> dietMap.getOrDefault(date, 0L));
+            date -> dietTotalMap.getOrDefault(date, 0));
+        List<Map<String, Object>> dietBreakfastSeries = buildSeries(startDate, days, period,
+            date -> dietBreakfastMap.getOrDefault(date, 0));
+        List<Map<String, Object>> dietLunchSeries = buildSeries(startDate, days, period,
+            date -> dietLunchMap.getOrDefault(date, 0));
+        List<Map<String, Object>> dietDinnerSeries = buildSeries(startDate, days, period,
+            date -> dietDinnerMap.getOrDefault(date, 0));
+        List<Map<String, Object>> dietSnackSeries = buildSeries(startDate, days, period,
+            date -> dietSnackMap.getOrDefault(date, 0));
+        List<Map<String, Object>> sleepDeepSeries = buildSeries(startDate, days, period,
+            date -> sleepDeepMap.getOrDefault(date, 0));
+        List<Map<String, Object>> sleepLightSeries = buildSeries(startDate, days, period,
+            date -> sleepLightMap.getOrDefault(date, 0));
         List<Map<String, Object>> periodSeries = buildSeries(startDate, days, period,
-            date -> isInPeriod(date, periodRecords) ? 1 : 0);
+            date -> periodFlowForDate(date, periodRecords));
 
         series.put("steps", stepsSeries);
         series.put("sleep", sleepSeries);
+        series.put("sleepDeep", sleepDeepSeries);
+        series.put("sleepLight", sleepLightSeries);
         series.put("weight", weightSeries);
         series.put("diet", dietSeries);
+        series.put("dietBreakfast", dietBreakfastSeries);
+        series.put("dietLunch", dietLunchSeries);
+        series.put("dietDinner", dietDinnerSeries);
+        series.put("dietSnack", dietSnackSeries);
         series.put("period", periodSeries);
 
         Map<String, Object> data = new HashMap<>();
@@ -239,16 +376,16 @@ public class StatisticsController {
         return date.getMonthValue() + "/" + date.getDayOfMonth();
     }
 
-    private boolean isInPeriod(LocalDate date, List<PeriodRecord> records) {
-        if (records == null || records.isEmpty()) return false;
+    private int periodFlowForDate(LocalDate date, List<PeriodRecord> records) {
+        if (records == null || records.isEmpty()) return 0;
         for (PeriodRecord record : records) {
             if (record.getStartDate() == null) continue;
             LocalDate end = record.getEndDate() == null ? record.getStartDate() : record.getEndDate();
             if ((date.isEqual(record.getStartDate()) || date.isAfter(record.getStartDate()))
                 && (date.isEqual(end) || date.isBefore(end))) {
-                return true;
+                return record.getFlow() == null ? 1 : record.getFlow();
             }
         }
-        return false;
+        return 0;
     }
 }

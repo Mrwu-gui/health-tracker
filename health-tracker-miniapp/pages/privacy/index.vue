@@ -171,7 +171,7 @@ export default {
 }
 
 .btn-dark {
-  background: #2563eb;
+  background: #f97316;
   color: #ffffff;
   border-radius: 12px;
   font-size: 11px;
@@ -179,7 +179,7 @@ export default {
 }
 
 .primary {
-  background: #2563eb;
+  background: #f97316;
   color: #ffffff;
   border-radius: 16px;
   font-size: 12px;

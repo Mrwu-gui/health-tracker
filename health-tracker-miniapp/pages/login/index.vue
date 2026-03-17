@@ -1,32 +1,45 @@
 <template>
   <view class="page">
+    <!-- 装饰背景 -->
+    <view class="bg-decor">
+      <view class="bg-circle bg-circle-1"></view>
+      <view class="bg-circle bg-circle-2"></view>
+      <view class="bg-circle bg-circle-3"></view>
+    </view>
+
     <view class="hero">
       <view class="logo-wrap">
-        <view class="logo">智康</view>
+        <view class="logo">
+          <text class="logo-text">智康</text>
+        </view>
+        <view class="logo-glow"></view>
       </view>
-      <text class="app-name">智康AI</text>
+      <text class="app-name">智康 AI</text>
       <text class="slogan">懂你的健康，一问即得</text>
-      <text class="slogan-sub">饮食 · 运动 · 睡眠</text>
     </view>
 
     <view class="bottom-wrap">
+      <!-- 协议勾选 -->
+      <view class="agreement-wrap">
+        <view class="checkbox" :class="{ checked: agreed }" @tap="toggleAgree">
+          <text v-if="agreed" class="check-icon">✓</text>
+        </view>
+        <text class="agreement-text">我已阅读并同意</text>
+        <text class="agreement-link" @tap="openAgreement('user')">《用户协议》</text>
+        <text class="agreement-text">与</text>
+        <text class="agreement-link" @tap="openAgreement('privacy')">《隐私政策》</text>
+      </view>
+
       <!-- #ifdef MP-WEIXIN -->
-        <button class="btn-wx" @tap="loginWeChat" :disabled="loading">
+        <button class="btn-wx" @tap="loginWeChat" :disabled="loading || !agreed" :class="{ disabled: !agreed }">
           <text>{{ loading ? "登录中..." : "微信一键登录" }}</text>
         </button>
       <!-- #endif -->
       <!-- #ifndef MP-WEIXIN -->
       <view class="btn-wx disabled">
-        <text class="btn-wx-icon">微</text>
         <text>请使用微信小程序打开</text>
       </view>
       <!-- #endif -->
-      <view class="policy-wrap">
-        <text class="policy">登录即表示同意</text>
-        <text class="policy-link" @tap="openAgreement('user')">《用户协议》</text>
-        <text class="policy">与</text>
-        <text class="policy-link" @tap="openAgreement('privacy')">《隐私政策》</text>
-      </view>
       <text v-if="message" class="message">{{ message }}</text>
     </view>
   </view>
@@ -39,7 +52,8 @@ export default {
   data() {
     return {
       loading: false,
-      message: ""
+      message: "",
+      agreed: false
     };
   },
   onShow() {
@@ -50,11 +64,18 @@ export default {
     }
   },
   methods: {
+    toggleAgree() {
+      this.agreed = !this.agreed;
+    },
     openAgreement(type) {
       const path = type === "user" ? "/pages/agreement/user" : "/pages/agreement/privacy";
       uni.navigateTo({ url: path });
     },
     loginWeChat() {
+      if (!this.agreed) {
+        uni.showToast({ title: "请先同意用户协议", icon: "none" });
+        return;
+      }
       this.loading = true;
       this.message = "";
       uni.login({
@@ -116,13 +137,55 @@ export default {
   overflow: hidden;
   padding: 0 24px;
   padding-top: calc(env(safe-area-inset-top) + 24px);
-  padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 32px);
   box-sizing: border-box;
-  background: linear-gradient(180deg, #fef9f3 0%, #fef5eb 35%, #fef3c7 100%);
+  background: linear-gradient(165deg, #fef9f3 0%, #fff7ed 40%, #ffedd5 100%);
   color: #1c1917;
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
+}
+
+/* 装饰背景 */
+.bg-decor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.4;
+}
+
+.bg-circle-1 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, #fed7aa 0%, transparent 70%);
+  top: -100px;
+  right: -80px;
+}
+
+.bg-circle-2 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, #fecaca 0%, transparent 70%);
+  bottom: 20%;
+  left: -60px;
+}
+
+.bg-circle-3 {
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, #fef08a 0%, transparent 70%);
+  bottom: 40%;
+  right: -30px;
 }
 
 .hero {
@@ -132,58 +195,122 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 12px 0 16px;
+  padding: 24px 0 16px;
+  position: relative;
+  z-index: 1;
 }
 
 .logo-wrap {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  position: relative;
 }
 
 .logo {
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
-  background: linear-gradient(145deg, #f59e0b 0%, #ea580c 100%);
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  background: linear-gradient(145deg, #f97316 0%, #ea580c 100%);
   color: #fff;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 12px 32px rgba(249, 115, 22, 0.4);
+  position: relative;
+  z-index: 2;
+}
+
+.logo-text {
+  letter-spacing: 2px;
+}
+
+.logo-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.25) 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: 1;
 }
 
 .app-name {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 26px;
+  font-weight: 800;
   color: #1c1917;
-  letter-spacing: 0.5px;
-  margin-bottom: 6px;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
 }
 
 .slogan {
-  font-size: 13px;
+  font-size: 15px;
   color: #78716c;
-  margin-bottom: 4px;
-}
-
-.slogan-sub {
-  font-size: 12px;
-  color: #a8a29e;
+  font-weight: 500;
 }
 
 .bottom-wrap {
   flex-shrink: 0;
   width: 100%;
   max-width: 320px;
-  padding-top: 12px;
+  padding-top: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+/* 协议勾选 */
+.agreement-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1.5px solid #d6d3d1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.checkbox.checked {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  border-color: #f97316;
+}
+
+.check-icon {
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.agreement-text {
+  font-size: 12px;
+  color: #78716c;
+}
+
+.agreement-link {
+  font-size: 12px;
+  color: #f97316;
+  font-weight: 500;
 }
 
 .btn-wx {
   width: 100%;
-  height: 48px;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+  height: 52px;
+  border-radius: 26px;
+  background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
   color: #fff;
   font-size: 16px;
   font-weight: 600;
@@ -192,28 +319,8 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
-  margin-bottom: 14px;
-}
-
-.btn-test {
-  width: 100%;
-  height: 48px;
-  border-radius: 14px;
-  background: #fff7ed;
-  color: #9a3412;
-  font-size: 14px;
-  font-weight: 600;
-  border: 1px solid rgba(251, 146, 60, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 12px;
-  box-shadow: 0 4px 16px rgba(251, 146, 60, 0.18);
-}
-
-.btn-test::after {
-  border: none;
+  box-shadow: 0 8px 24px rgba(7, 193, 96, 0.35);
+  letter-spacing: 0.5px;
 }
 
 .btn-wx::after {
@@ -221,14 +328,26 @@ export default {
 }
 
 .btn-wx.disabled {
-  background: #d6d3d1;
-  color: #78716c;
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
   box-shadow: none;
+  opacity: 0.7;
 }
 
-.btn-wx-icon {
-  font-size: 20px;
-  font-weight: 600;
+.wx-icon {
+  width: 22px;
+  height: 22px;
+  background: #fff;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wx-icon-svg {
+  font-size: 10px;
+  font-weight: bold;
+  color: #07c160;
+  letter-spacing: 0;
 }
 
 .policy-wrap {
@@ -237,7 +356,8 @@ export default {
   justify-content: center;
   align-items: center;
   gap: 2px;
-  line-height: 1.5;
+  line-height: 1.6;
+  margin-top: 16px;
 }
 
 .policy {
@@ -247,16 +367,16 @@ export default {
 
 .policy-link {
   font-size: 11px;
-  color: #ea580c;
+  color: #f97316;
   font-weight: 500;
   text-decoration: underline;
 }
 
 .message {
   font-size: 13px;
-  color: #dc2626;
+  color: #ef4444;
   text-align: center;
   display: block;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 </style>

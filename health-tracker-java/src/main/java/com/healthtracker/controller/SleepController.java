@@ -24,20 +24,31 @@ public class SleepController {
 
     @PostMapping("/add")
     public SleepRecord add(@Valid @RequestBody SleepRecordRequest request) {
-        SleepRecord record = new SleepRecord();
+        LocalDate recordDate = request.getRecordDate();
+        if (recordDate == null && request.getEndTime() != null) {
+            recordDate = request.getEndTime().toLocalDate();
+        }
+        if (recordDate == null && request.getStartTime() != null) {
+            recordDate = request.getStartTime().toLocalDate();
+        }
+        if (recordDate == null) {
+            recordDate = LocalDate.now();
+        }
+        List<SleepRecord> existing = sleepRecordService.listByUserAndDate(request.getUserId(), recordDate);
+        SleepRecord record = existing.isEmpty() ? new SleepRecord() : existing.get(0);
         record.setUserId(request.getUserId());
         record.setStartTime(request.getStartTime());
         record.setEndTime(request.getEndTime());
-        if (request.getRecordDate() != null) {
-            record.setRecordDate(request.getRecordDate());
-        } else if (request.getStartTime() != null) {
-            record.setRecordDate(request.getStartTime().toLocalDate());
-        }
+        record.setRecordDate(recordDate);
         record.setDeepSleepMinutes(request.getDeepSleepMinutes());
         record.setLightSleepMinutes(request.getLightSleepMinutes());
         record.setQuality(request.getQuality());
         record.setRoutine(request.getRoutine());
-        sleepRecordService.save(record);
+        if (record.getId() == null) {
+            sleepRecordService.save(record);
+        } else {
+            sleepRecordService.updateById(record);
+        }
         return record;
     }
 

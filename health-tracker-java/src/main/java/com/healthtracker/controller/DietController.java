@@ -24,17 +24,27 @@ public class DietController {
 
     @PostMapping("/add")
     public DietRecord add(@Valid @RequestBody DietRecordRequest request) {
-        DietRecord record = new DietRecord();
+        LocalDate date = request.getDate() == null ? LocalDate.now() : request.getDate();
+        String mealType = defaultMealType(request.getMealType());
+        List<DietRecord> existing = dietRecordService.listByUserAndDate(request.getUserId(), date);
+        DietRecord record = existing.stream()
+            .filter(item -> mealType.equals(item.getMealType()))
+            .findFirst()
+            .orElseGet(DietRecord::new);
         record.setUserId(request.getUserId());
-        record.setMealType(defaultMealType(request.getMealType()));
+        record.setMealType(mealType);
         record.setFoodName(request.getFoodName());
         record.setCalories(request.getCalories() == null ? 0 : request.getCalories());
         record.setProtein(request.getProtein());
         record.setCarbs(request.getCarbs());
         record.setFat(request.getFat());
         record.setNote(request.getNote());
-        record.setDate(request.getDate() == null ? LocalDate.now() : request.getDate());
-        dietRecordService.save(record);
+        record.setDate(date);
+        if (record.getId() == null) {
+            dietRecordService.save(record);
+        } else {
+            dietRecordService.updateById(record);
+        }
         return record;
     }
 

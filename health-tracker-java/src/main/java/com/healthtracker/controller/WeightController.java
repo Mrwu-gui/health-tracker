@@ -24,12 +24,18 @@ public class WeightController {
 
     @PostMapping("/add")
     public WeightRecord add(@Valid @RequestBody WeightRecordRequest request) {
-        WeightRecord record = new WeightRecord();
+        LocalDate date = request.getDate() == null ? LocalDate.now() : request.getDate();
+        List<WeightRecord> existing = weightRecordService.listByUserAndDate(request.getUserId(), date);
+        WeightRecord record = existing.isEmpty() ? new WeightRecord() : existing.get(0);
         record.setUserId(request.getUserId());
         record.setWeight(request.getWeight());
         record.setBmi(request.getBmi());
-        record.setDate(request.getDate());
-        weightRecordService.save(record);
+        record.setDate(date);
+        if (record.getId() == null) {
+            weightRecordService.save(record);
+        } else {
+            weightRecordService.updateById(record);
+        }
         return record;
     }
 

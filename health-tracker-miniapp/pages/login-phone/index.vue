@@ -297,7 +297,7 @@ export default {
 
 .policy-link {
   font-size: 11px;
-  color: #6366f1;
+  color: #f97316;
   font-weight: 600;
   text-decoration: underline;
 }

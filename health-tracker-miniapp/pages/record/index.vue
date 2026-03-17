@@ -13,6 +13,12 @@
         </view>
         <text class="quick-entry-text">昨晚睡眠</text>
       </view>
+      <view class="quick-entry-item" @tap="goRecord('weight')">
+        <view class="quick-entry-icon">
+          <image class="quick-entry-icon-img" src="/static/tabbar/weight.png" mode="aspectFit" />
+        </view>
+        <text class="quick-entry-text">记录体重</text>
+      </view>
     </view>
     <view class="card">
       <text class="title">{{ pageTitle }}</text>
@@ -108,10 +114,6 @@
         <view class="field">
           <text class="label">体重(kg)</text>
           <input class="input" type="digit" placeholder="62.5" v-model="form.weight" />
-        </view>
-        <view class="field">
-          <text class="label">身高(cm)</text>
-          <input class="input" type="number" placeholder="170" v-model="form.height" />
         </view>
       </view>
       <view v-else-if="type === 'period'" class="form">
@@ -409,6 +411,6 @@ export default {
 .picker { border: 1px solid #e8e2db; border-radius: 10px; padding: 10px 12px; font-size: 14px; color: #0f172a; background: #fff; }
 .pill-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
 .pill { padding: 8px 14px; border-radius: 20px; background: #f5f1eb; color: #64748b; font-size: 13px; }
-.pill.active { background: #2563eb; color: #fff; }
-.save-btn-view { background: #2563eb; color: #fff; text-align: center; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; }
+.pill.active { background: #f97316; color: #fff; }
+.save-btn-view { background: #f97316; color: #fff; text-align: center; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; }
 </style>

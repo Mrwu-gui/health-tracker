@@ -455,9 +455,9 @@ export default {
   width: 36px;
   height: 36px;
   border-radius: 18px;
-  border: 1px solid #e8e2db;
-  background: #ffffff;
-  color: #2563eb;
+  border: 1px solid #fed7aa;
+  background: #fff7ed;
+  color: #f97316;
   font-size: 18px;
   line-height: 1;
   display: flex;
@@ -487,8 +487,8 @@ export default {
 
 .tag {
   font-size: 10px;
-  color: #2563eb;
-  background: #dbeafe;
+  color: #f97316;
+  background: #fff7ed;
   padding: 4px 8px;
   border-radius: 999px;
   flex-shrink: 0;
@@ -599,7 +599,7 @@ export default {
   width: 100%;
   padding: 14px;
   border-radius: 14px;
-  background: #2563eb;
+  background: #f97316;
   color: #fff;
   font-size: 15px;
   font-weight: 600;

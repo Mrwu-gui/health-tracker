@@ -1,96 +1,278 @@
 <template>
   <view class="page">
-    <view class="header">
-      <text class="title">智康健康分析</text>
-      <navigator class="btn-link" url="/pages/ai/index">去对话</navigator>
-    </view>
-
-    <view class="tabs">
+    <!-- 时间切换 -->
+    <view class="period-tabs">
       <view
-        v-for="item in periods"
+        v-for="item in periodTabs"
         :key="item.value"
-        class="tab"
+        class="period-tab"
         :class="{ active: period === item.value }"
         @tap="switchPeriod(item.value)"
       >
-        {{ item.label }}
+        <text class="period-tab-text">{{ item.label }}</text>
       </view>
     </view>
 
-    <view class="section-card">
-      <view class="section-head">
-        <view class="section-title-wrap">
-          <view class="section-icon section-icon-data"><text class="section-icon-txt">数</text></view>
-          <text class="section-title">本{{ periodLabel }}数据</text>
+    <!-- 维度切换 -->
+    <scroll-view scroll-x class="dim-scroll" :show-scrollbar="false">
+      <view class="dim-tabs">
+        <view
+          v-for="item in visibleDims"
+          :key="item.value"
+          class="dim-tab"
+          :class="{ active: dimension === item.value }"
+          @tap="switchDimension(item.value)"
+        >
+          <text class="dim-label">{{ item.label }}</text>
         </view>
       </view>
-      <view class="data-grid">
-        <view class="data-item">
-          <text class="data-label">步数</text>
-          <text class="data-value">{{ overview.steps }} 步</text>
+    </scroll-view>
+
+    <!-- 图表卡片 -->
+    <view class="chart-card">
+      <!-- 卡片标题 -->
+      <view class="chart-header">
+        <view class="chart-title-row">
+          <text class="chart-title">{{ currentDimLabel }}·趋势</text>
+          <view class="chart-badge">{{ periodLabel }}</view>
         </view>
-        <view class="data-item">
-          <text class="data-label">睡眠</text>
-          <text class="data-value">{{ overview.sleep }}</text>
+        
+        <!-- 图例（仅饮食） -->
+        <view v-if="dimension === 'diet'" class="chart-legend">
+          <view class="legend-item">
+            <view class="legend-dot legend-breakfast"></view>
+            <text class="legend-label">早餐</text>
+          </view>
+          <view class="legend-item">
+            <view class="legend-dot legend-lunch"></view>
+            <text class="legend-label">午餐</text>
+          </view>
+          <view class="legend-item">
+            <view class="legend-dot legend-dinner"></view>
+            <text class="legend-label">晚餐</text>
+          </view>
+          <view class="legend-item">
+            <view class="legend-dot legend-snack"></view>
+            <text class="legend-label">加餐</text>
+          </view>
         </view>
-        <view class="data-item">
-          <text class="data-label">体重/BMI</text>
-          <text class="data-value">{{ overview.weightBmi }}</text>
+      </view>
+
+      <!-- 步数柱状图 -->
+      <view v-if="dimension === 'steps'" class="chart-body">
+        <view class="bar-chart">
+          <view class="bar-y-axis">
+            <text class="y-label">{{ stepsMax }}</text>
+            <text class="y-label">{{ Math.round(stepsMax / 2) }}</text>
+            <text class="y-label">0</text>
+          </view>
+          <view class="bar-container">
+            <!-- 达标虚线 8000步 -->
+            <view v-if="stepsMax >= 8000" class="target-line" :style="'bottom: ' + getTargetLinePos(8000, stepsMax)">
+              <text class="target-label">达标 8000步</text>
+            </view>
+            <view v-for="(item, idx) in stepsSeries" :key="idx" class="bar-item">
+              <view class="bar-wrapper">
+                <view class="bar-bg"></view>
+                <view class="bar-fill" :class="{ 'bar-exceed': item.value >= 8000 }" :style="'height: ' + getBarHeight(item.value, stepsMax)">
+                  <text v-if="item.value > 0" class="bar-value">{{ item.value >= 1000 ? Math.round(item.value / 1000 * 10) / 10 + 'k' : item.value }}</text>
+                </view>
+              </view>
+              <text class="bar-label">{{ item.label }}</text>
+            </view>
+          </view>
         </view>
-        <view class="data-item">
-          <text class="data-label">运动</text>
-          <text class="data-value">{{ overview.exerciseMinutes || '0' }} 分钟</text>
+      </view>
+
+      <!-- 睡眠柱状图 - 单色 -->
+      <view v-else-if="dimension === 'sleep'" class="chart-body">
+        <view class="bar-chart">
+          <view class="bar-y-axis">
+            <text class="y-label">{{ formatSleepStat(sleepMax) }}</text>
+            <text class="y-label">{{ formatSleepStat(Math.round(sleepMax / 2)) }}</text>
+            <text class="y-label">0</text>
+          </view>
+          <view class="bar-container">
+            <!-- 达标虚线 7小时=420分钟 -->
+            <view v-if="sleepMax >= 420" class="target-line" :style="'bottom: ' + getTargetLinePos(420, sleepMax)">
+              <text class="target-label">达标 7h</text>
+            </view>
+            <view v-for="(item, idx) in sleepSeries" :key="idx" class="bar-item">
+              <view class="bar-wrapper">
+                <view class="bar-bg"></view>
+                <view class="bar-fill bar-sleep" :class="{ 'bar-exceed': item.total >= 420 }" :style="'height: ' + getBarHeight(item.total, sleepMax)">
+                  <text v-if="item.total > sleepMax * 0.3" class="bar-value">{{ formatSleepShort(item.total) }}</text>
+                </view>
+              </view>
+              <text class="bar-label">{{ item.label }}</text>
+            </view>
+          </view>
         </view>
-        <view class="data-item">
-          <text class="data-label">饮食</text>
-          <text class="data-value">{{ overview.dietCount || '--' }}</text>
+      </view>
+
+      <!-- 饮食堆叠柱状图 -->
+      <view v-else-if="dimension === 'diet'" class="chart-body">
+        <view class="bar-chart">
+          <view class="bar-y-axis">
+            <text class="y-label">{{ dietMax }}</text>
+            <text class="y-label">{{ Math.round(dietMax / 2) }}</text>
+            <text class="y-label">0</text>
+          </view>
+          <view class="bar-container">
+            <view v-for="(item, idx) in dietSeries" :key="idx" class="bar-item">
+              <view class="bar-wrapper">
+                <view class="bar-bg"></view>
+                <view class="bar-stack">
+                  <view class="stack-seg stack-breakfast" :style="'height: ' + getBarHeight(item.breakfast, dietMax)"></view>
+                  <view class="stack-seg stack-lunch" :style="'height: ' + getBarHeight(item.lunch, dietMax)"></view>
+                  <view class="stack-seg stack-dinner" :style="'height: ' + getBarHeight(item.dinner, dietMax)"></view>
+                  <view class="stack-seg stack-snack" :style="'height: ' + getBarHeight(item.snack, dietMax)"></view>
+                </view>
+              </view>
+              <text class="bar-label">{{ item.label }}</text>
+            </view>
+          </view>
         </view>
-        <view class="data-item data-item-period">
-          <text class="data-label">经期</text>
-          <text class="data-value data-value-period">{{ overview.periodSummary || '--' }}</text>
+      </view>
+
+      <!-- 体重趋势图 - 简化柱状图 -->
+      <view v-else-if="dimension === 'weight'" class="chart-body">
+        <view class="bar-chart">
+          <view class="bar-y-axis">
+            <text class="y-label">{{ formatWeightStat(weightSeries, 'max') }}</text>
+            <text class="y-label">{{ formatWeightStat(weightSeries, 'avg') }}</text>
+            <text class="y-label">{{ formatWeightStat(weightSeries, 'min') }}</text>
+          </view>
+          <view class="bar-container">
+            <view v-for="(item, idx) in weightSeries" :key="idx" class="bar-item">
+              <view class="bar-wrapper">
+                <view class="bar-bg"></view>
+                <view class="bar-fill bar-weight" :style="'height: ' + getWeightBarHeight(item.value)">
+                  <text v-if="Number(item.value) > 0" class="bar-value">{{ Number(item.value).toFixed(1) }}</text>
+                </view>
+              </view>
+              <text class="bar-label">{{ item.label }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 经期热力图 -->
+      <view v-else-if="dimension === 'period'" class="chart-body">
+        <view class="period-heatmap">
+          <view class="period-header">
+            <text class="period-title">日历热力图</text>
+            <view class="period-legend">
+              <view class="period-legend-item">
+                <view class="period-legend-dot period-level-0"></view>
+                <text class="period-legend-label">无</text>
+              </view>
+              <view class="period-legend-item">
+                <view class="period-legend-dot period-level-1"></view>
+                <text class="period-legend-label">少</text>
+              </view>
+              <view class="period-legend-item">
+                <view class="period-legend-dot period-level-2"></view>
+                <text class="period-legend-label">中</text>
+              </view>
+              <view class="period-legend-item">
+                <view class="period-legend-dot period-level-3"></view>
+                <text class="period-legend-label">多</text>
+              </view>
+            </view>
+          </view>
+          <view class="period-grid">
+            <view
+              v-for="(item, idx) in periodSeries"
+              :key="idx"
+              class="period-cell"
+              :class="'period-flow-' + item.flow"
+            >
+              <text class="period-cell-label">{{ item.label }}</text>
+              <!-- 流量标记点 -->
+              <view v-if="item.flow > 0" class="period-flow-dot"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 统计数据 -->
+      <view v-if="showStats" class="stats-section">
+        <view class="stat-card">
+          <text class="stat-label">最高</text>
+          <view class="stat-value-row">
+            <text class="stat-value">{{ statMax }}</text>
+            <text class="stat-unit">{{ statUnit }}</text>
+          </view>
+        </view>
+        <view class="stat-card stat-highlight">
+          <text class="stat-label">平均</text>
+          <view class="stat-value-row">
+            <text class="stat-value stat-value-theme">{{ statAvg }}</text>
+            <text class="stat-unit">{{ statUnit }}</text>
+          </view>
+          <text v-if="dimension === 'sleep'" class="stat-desc">{{ sleepStatusText }}</text>
+        </view>
+        <view class="stat-card">
+          <text class="stat-label">最低</text>
+          <view class="stat-value-row">
+            <text class="stat-value">{{ statMin }}</text>
+            <text class="stat-unit">{{ statUnit }}</text>
+          </view>
         </view>
       </view>
     </view>
 
-    <view class="section-card ai-card">
-      <view class="section-head">
-        <view class="section-title-wrap">
-          <view class="section-icon section-icon-ai"><text class="section-icon-txt">智</text></view>
-          <text class="section-title">智康 为你解读</text>
+    <!-- AI 分析卡片 -->
+    <view class="ai-card">
+      <view class="ai-header">
+        <view class="ai-title-wrap">
+          <view class="ai-title-row">
+            <view class="ai-icon">AI</view>
+            <text class="ai-title">AI健康分析</text>
+          </view>
+          <text class="ai-subtitle">{{ periodLabel }}综合解读</text>
         </view>
-        <text v-if="!aiLoading && aiContent" class="btn-text" @tap="refreshAnalysis">重新分析</text>
+        <view class="ai-action">
+          <view class="ai-refresh-btn" @tap="fetchAiInsight(true)">
+            <text class="ai-refresh-text">{{ aiLoading ? '分析中...' : '重新分析' }}</text>
+          </view>
+        </view>
       </view>
-      <view class="ai-body">
+
+      <view class="ai-content">
+        <!-- 加载状态 -->
         <view v-if="aiLoading" class="ai-loading">
-          <text class="ai-loading-dot">·</text>
-          <text class="ai-loading-text">分析中…</text>
+          <view class="loading-spinner"></view>
+          <text class="loading-text">正在分析您的健康数据...</text>
         </view>
-        <view v-else-if="aiError" class="ai-error">
-          <text>{{ aiError }}</text>
-          <text class="ai-retry" @tap="refreshAnalysis">点击重试</text>
-        </view>
-        <view v-else-if="aiContent" class="ai-content">
-          <text class="ai-text">{{ aiContent }}</text>
-        </view>
-        <view v-else class="ai-empty">
-          <text>暂无解读</text>
-          <text class="ai-retry" @tap="refreshAnalysis">点击生成</text>
-        </view>
-      </view>
-    </view>
 
-    <view class="tips-section">
-      <view class="tips-head">
-        <view class="section-icon section-icon-tips"><text class="section-icon-txt">贴</text></view>
-        <text class="tips-title">健康小贴士</text>
-      </view>
-      <scroll-view class="tips-scroll" scroll-y :show-scrollbar="true">
-        <view v-for="(item, i) in healthTips" :key="i" class="tip-card">
-          <text class="tip-tag">{{ item.tag }}</text>
-          <text class="tip-headline">{{ item.title }}</text>
-          <text class="tip-body">{{ item.content }}</text>
+        <!-- 错误状态 -->
+        <view v-else-if="aiError" class="ai-error">
+          <text class="error-icon">⚠️</text>
+          <text class="error-text">{{ aiError }}</text>
+          <view class="error-retry" @tap="fetchAiInsight(true)">
+            <text class="error-retry-text">点击重试</text>
+          </view>
         </view>
-      </scroll-view>
+
+        <!-- 分析结果 -->
+        <view v-else class="ai-result">
+          <view class="ai-summary-section">
+            <text class="ai-summary-text">{{ aiSummary }}</text>
+          </view>
+
+          <view v-if="aiAdvice.length > 0" class="ai-advice-section">
+            <text class="ai-advice-title">行动建议</text>
+            <view class="ai-advice-list">
+              <view v-for="(tip, idx) in aiAdvice" :key="idx" class="advice-item">
+                <view class="advice-number">{{ idx + 1 }}</view>
+                <text class="advice-text">{{ tip }}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
     </view>
   </view>
 </template>
@@ -101,541 +283,1210 @@ import { request } from "../../utils/api";
 export default {
   data() {
     return {
-      period: "day",
-      periods: [
-        { label: "今日", value: "day" },
-        { label: "本周", value: "week" },
-        { label: "本月", value: "month" }
+      period: "week",
+      dimension: "steps",
+      userSex: "",
+      periodTabs: [
+        { label: "7天", value: "week" },
+        { label: "30天", value: "month" },
+        { label: "半年", value: "half" }
       ],
-      overview: {
-        steps: "0",
-        sleep: "0小时0分",
-        weight: "",
-        bmi: "",
-        weightBmi: "--",
-        exerciseMinutes: "0",
-        dietCount: "",
-        periodSummary: "",
-        periodLastDate: "",
-        periodNextDate: ""
-      },
-      aiContent: "",
+      dimensions: [
+        { label: "步数", value: "steps" },
+        { label: "睡眠", value: "sleep" },
+        { label: "饮食", value: "diet" },
+        { label: "体重", value: "weight" },
+        { label: "经期", value: "period" }
+      ],
+      series: {},
+      aiSummary: "",
+      aiAdvice: [],
       aiLoading: false,
-      aiError: "",
-      healthTips: [
-        {
-          tag: "减脂饮食",
-          title: "减脂期该怎么吃？",
-          content: "优先保证蛋白质（蛋奶、瘦肉、豆类）和足量蔬菜，主食用粗粮替代部分精米白面，每餐七分饱。少油少糖、戒掉含糖饮料，晚餐可适当提前、减少碳水。"
-        },
-        {
-          tag: "睡眠",
-          title: "睡不好会影响减脂吗？",
-          content: "会。睡眠不足会升高皮质醇、增加饥饿感，更容易囤脂。建议固定作息、睡前少看屏幕，保证 7～8 小时睡眠，有助稳定代谢。"
-        },
-        {
-          tag: "运动",
-          title: "每天动多久合适？",
-          content: "WHO 建议成人每周至少 150 分钟中等强度有氧（如快走）或 75 分钟高强度，外加每周 2 次力量训练。从每天 6000 步开始，再逐步加量。"
-        },
-        {
-          tag: "饮水",
-          title: "一天要喝多少水？",
-          content: "一般建议每日 1.5～2 升（约 8 杯）。运动多、天热可适当增加。晨起一杯水、餐前少量饮水有助控制食欲，少喝含糖饮料。"
-        },
-        {
-          tag: "加餐",
-          title: "下午饿可以吃什么？",
-          content: "可选无糖酸奶、一小把坚果、水果（如苹果、蓝莓）、煮蛋或全麦面包。避免高糖零食和油炸食品，控制分量更利于控热量。"
-        },
-        {
-          tag: "心态",
-          title: "健康习惯坚持不下来怎么办？",
-          content: "从小目标开始：先养成一个习惯（如每天多走 1000 步或固定睡觉时间），再叠加下一个。记录进度、找同伴互相督促，比一次改很多更容易坚持。"
-        },
-        {
-          tag: "早餐",
-          title: "早餐怎么吃更健康？",
-          content: "建议有优质蛋白（蛋、奶、豆）和适量碳水，搭配一点蔬果。避免只吃精制主食或高糖糕点，早餐吃好有助稳定上午血糖和精力。"
-        },
-        {
-          tag: "久坐",
-          title: "久坐族怎么动？",
-          content: "每 30～45 分钟起身活动 2～3 分钟，做做伸展、走动。下班后可步行一段、爬楼梯，或在家做 10～15 分钟徒手训练，减少久坐带来的风险。"
-        },
-        {
-          tag: "压力",
-          title: "压力大时怎么调节？",
-          content: "试试深呼吸、短时散步或听音乐；保证睡眠、少熬夜。规律运动有助释放压力，必要时可与人倾诉或寻求专业支持。"
-        },
-        {
-          tag: "护眼",
-          title: "长时间用眼怎么护眼？",
-          content: "遵循 20-20-20 法则：每 20 分钟看 20 英尺外约 20 秒。屏幕亮度适中、保持距离，多眨眼；户外活动也有益眼健康。"
-        },
-        {
-          tag: "体重",
-          title: "体重波动正常吗？",
-          content: "日内或几天内 1～2 斤波动多与水分、饮食有关，属正常。更关注长期趋势：每周固定时间、空腹称重并记录，比单次数值更有参考意义。"
-        },
-        {
-          tag: "经期",
-          title: "经期可以运动吗？",
-          content: "可以。经期适度运动有助缓解不适、改善情绪。建议选择快走、瑜伽、拉伸等中低强度，避免剧烈跑跳和腹部挤压。量力而行，不适时休息。"
-        },
-        {
-          tag: "经期",
-          title: "经期饮食要注意什么？",
-          content: "多吃含铁食物（红肉、动物血、深色蔬菜）和维生素 C 助吸收；少喝冷饮、少吃生冷，可喝温水、红糖姜茶。保证睡眠、少熬夜，有助周期稳定。"
-        },
-        {
-          tag: "经期",
-          title: "经期周期多少天算正常？",
-          content: "一般 21～35 天为常见范围，经期 3～7 天。偶尔提前或推后几天多与压力、作息有关。建议记录周期，若长期不规律或异常出血，可咨询医生。"
-        }
-      ]
+      aiError: ""
     };
   },
   computed: {
+    showPeriod() {
+      var sex = this.userSex || uni.getStorageSync("userSex") || "";
+      return String(sex).includes("女");
+    },
+    visibleDims() {
+      if (this.showPeriod) {
+        return this.dimensions;
+      }
+      return this.dimensions.filter(function(item) {
+        return item.value !== "period";
+      });
+    },
     periodLabel() {
-      const map = { day: "日", week: "周", month: "月" };
-      return map[this.period] || "期";
+      if (this.period === "month") return "近30天";
+      if (this.period === "half") return "近半年";
+      return "近7天";
+    },
+    currentDimLabel() {
+      var item = this.dimensions.find(function(d) {
+        return d.value === this.dimension;
+      }.bind(this));
+      return item ? item.label : "";
+    },
+    stepsSeries() {
+      return this.series.steps || [];
+    },
+    weightSeries() {
+      return this.series.weight || [];
+    },
+    sleepSeries() {
+      var total = this.series.sleep || [];
+      var deep = this.series.sleepDeep || [];
+      var light = this.series.sleepLight || [];
+      return total.map(function(item, idx) {
+        var deepVal = Number((deep[idx] && deep[idx].value) || 0);
+        var lightVal = Number((light[idx] && light[idx].value) || 0);
+        var totalMinutes = Math.max(0, Math.round(Number(item.value || 0) * 60));
+        var fallbackLight = totalMinutes > 0 && deepVal + lightVal === 0 ? totalMinutes : 0;
+        return {
+          label: item.label,
+          deep: deepVal,
+          light: lightVal + fallbackLight,
+          total: deepVal + lightVal + fallbackLight
+        };
+      });
+    },
+    dietSeries() {
+      var total = this.series.diet || [];
+      var breakfast = this.series.dietBreakfast || [];
+      var lunch = this.series.dietLunch || [];
+      var dinner = this.series.dietDinner || [];
+      var snack = this.series.dietSnack || [];
+      return total.map(function(item, idx) {
+        return {
+          label: item.label,
+          breakfast: Number((breakfast[idx] && breakfast[idx].value) || 0),
+          lunch: Number((lunch[idx] && lunch[idx].value) || 0),
+          dinner: Number((dinner[idx] && dinner[idx].value) || 0),
+          snack: Number((snack[idx] && snack[idx].value) || 0),
+          total: Number(item.value || 0)
+        };
+      });
+    },
+    periodSeries() {
+      var series = this.series.period || [];
+      return series.map(function(item) {
+        return {
+          label: item.label,
+          flow: Number(item.value || 0)
+        };
+      });
+    },
+    stepsMax() {
+      var max = this.maxValue(this.stepsSeries);
+      return Math.max(max, 10000); // 确保至少显示10000步
+    },
+    sleepMax() {
+      var max = 0;
+      this.sleepSeries.forEach(function(cur) {
+        if (cur.total > max) max = cur.total;
+      });
+      return Math.max(max, 480); // 确保至少显示8小时
+    },
+    dietMax() {
+      var max = 0;
+      this.dietSeries.forEach(function(cur) {
+        if (cur.total > max) max = cur.total;
+      });
+      return max > 0 ? max : 1;
+    },
+    weightLineDots() {
+      var valid = this.weightSeries.filter(function(item) {
+        return Number(item.value) > 0;
+      });
+      if (valid.length === 0) return [];
+      var values = valid.map(function(item) {
+        return Number(item.value);
+      });
+      var min = Math.min.apply(null, values);
+      var max = Math.max.apply(null, values);
+      var span = max - min || 1;
+      var dots = valid.map(function(item, idx) {
+        var x = valid.length === 1 ? 50 : (idx * (100 / (valid.length - 1)));
+        var y = ((Number(item.value) - min) / span) * 80 + 10;
+        return { x: x, y: y };
+      });
+      // 计算连接线角度
+      for (var i = 1; i < dots.length; i++) {
+        var dx = (dots[i].x - dots[i-1].x) * 2; // 比例
+        var dy = dots[i].y - dots[i-1].y;
+        var angle = Math.atan2(-dy, dx) * 180 / Math.PI;
+        var len = Math.sqrt(dx * dx + dy * dy);
+        dots[i].angle = angle;
+        dots[i].lineLen = len;
+      }
+      return dots;
+    },
+    weightLinePoints() {
+      // 不再使用SVG，保留空函数避免报错
+      return "";
+    },
+    showStats() {
+      return this.dimension !== "period";
+    },
+    statMax() {
+      if (this.dimension === "steps") return this.stepsMax;
+      if (this.dimension === "sleep") return this.formatSleepStat(this.sleepMax);
+      if (this.dimension === "diet") return this.dietMax;
+      if (this.dimension === "weight") return parseFloat(this.formatWeightStat(this.weightSeries, "max"));
+      return "";
+    },
+    statMin() {
+      if (this.dimension === "steps") return this.minValue(this.stepsSeries);
+      if (this.dimension === "sleep") return this.formatSleepStat(this.minSleep());
+      if (this.dimension === "diet") return this.minValue(this.series.diet || []);
+      if (this.dimension === "weight") return parseFloat(this.formatWeightStat(this.weightSeries, "min"));
+      return "";
+    },
+    statAvg() {
+      if (this.dimension === "steps") return this.avgValue(this.stepsSeries);
+      if (this.dimension === "sleep") return this.formatSleepStat(this.avgSleep());
+      if (this.dimension === "diet") return this.avgValue(this.series.diet || []);
+      if (this.dimension === "weight") return parseFloat(this.formatWeightStat(this.weightSeries, "avg"));
+      return "";
+    },
+    statUnit() {
+      if (this.dimension === "steps") return "步";
+      if (this.dimension === "sleep") return "";
+      if (this.dimension === "diet") return "kcal";
+      if (this.dimension === "weight") return "kg";
+      return "";
+    },
+    sleepStatusText() {
+      var avg = this.avgSleep();
+      if (avg < 360) return "偏少";
+      if (avg >= 420) return "达标";
+      return "接近达标";
     }
   },
-  onShow() {
-    const pages = getCurrentPages();
-    const page = pages[pages.length - 1];
-    if (page && typeof page.getTabBar === "function") {
-      const tabBar = page.getTabBar();
-      if (tabBar && typeof tabBar.setData === "function") tabBar.setData({ selected: 1 });
-    }
-    this.fetchOverview();
+  onLoad() {
+    this.userSex = uni.getStorageSync("userSex") || "";
+    this.fetchUserSex();
   },
   methods: {
-    switchPeriod(value) {
-      this.period = value;
-      this.fetchOverview();
-    },
-    async fetchOverview() {
-      const userId = uni.getStorageSync("userId") || 1;
-      try {
-        const data = await request("/api/statistics/overview", "GET", { userId, period: this.period });
-        this.overview.steps = data.steps != null ? String(data.steps) : "0";
-        this.overview.sleep = data.sleep || "0小时0分";
-        this.overview.weight = data.weight != null ? String(data.weight) : "";
-        this.overview.bmi = data.bmi != null ? String(data.bmi) : "";
-        if (this.overview.weight || this.overview.bmi) {
-          this.overview.weightBmi = this.overview.weight ? `${this.overview.weight} kg` : "";
-          if (this.overview.bmi) this.overview.weightBmi += (this.overview.weightBmi ? " · " : "") + this.overview.bmi;
-        } else {
-          this.overview.weightBmi = "--";
+    fetchUserSex: function() {
+      var self = this;
+      var userId = uni.getStorageSync("userId") || 1;
+      request("/api/user/profile", "GET", { userId: userId }).then(function(data) {
+        if (data && data.sex) {
+          self.userSex = data.sex;
+          uni.setStorageSync("userSex", data.sex);
         }
-        this.overview.exerciseMinutes = data.exerciseMinutes != null ? String(data.exerciseMinutes) : "0";
-        this.overview.dietCount = data.dietCount != null ? `已记录 ${data.dietCount} 餐` : "";
-        await this.loadPeriodSummary();
-        this.fetchAiAnalysis();
-      } catch (err) {
-        this.aiError = "获取数据失败，请稍后重试";
-        this.aiContent = "";
-      }
+      }).finally(function() {
+        if (!self.showPeriod && self.dimension === "period") {
+          self.dimension = "steps";
+        }
+        self.fetchTrend();
+      });
     },
-    async loadPeriodSummary() {
-      const STORAGE_KEY = "periodRecords";
-      let list = [];
-      try {
-        const data = await request("/api/period/list", "GET", { userId: uni.getStorageSync("userId") || 1 });
-        if (Array.isArray(data)) list = data;
-      } catch (e) {
-        try {
-          const raw = uni.getStorageSync(STORAGE_KEY);
-          if (raw) list = JSON.parse(raw);
-        } catch (_) {}
-      }
-      if (list.length === 0) {
-        this.overview.periodSummary = "";
-        this.overview.periodLastDate = "";
-        this.overview.periodNextDate = "";
-        return;
-      }
-      const sorted = list
-        .map((item) => ({ start: item.startDate || item.start_date, end: item.endDate || item.end_date }))
-        .filter((item) => item.start)
-        .sort((a, b) => (b.start || "").localeCompare(a.start || ""));
-      const last = sorted[0];
-      if (!last) {
-        this.overview.periodSummary = "";
-        this.overview.periodLastDate = "";
-        this.overview.periodNextDate = "";
-        return;
-      }
-      const lastStr = last.start;
-      const d = new Date(lastStr.replace(/-/g, "/"));
-      d.setDate(d.getDate() + 28);
-      const nextStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-      this.overview.periodLastDate = lastStr;
-      this.overview.periodNextDate = nextStr;
-      const shortLast = lastStr.length >= 5 ? lastStr.slice(-5) : lastStr;
-      const shortNext = nextStr.length >= 5 ? nextStr.slice(-5) : nextStr;
-      this.overview.periodSummary = `${shortLast} → ${shortNext}`;
+    switchPeriod: function(val) {
+      if (this.period === val) return;
+      this.period = val;
+      this.fetchTrend();
     },
-    getCacheKey() {
-      const today = new Date();
-      return `ai_analysis_${this.period}_${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+    switchDimension: function(val) {
+      if (this.dimension === val) return;
+      this.dimension = val;
+      this.fetchTrend();
     },
-    async fetchAiAnalysis(forceRefresh) {
+    getBarHeight: function(value, maxValue) {
+      var max = maxValue > 0 ? maxValue : 1;
+      var h = Math.round((Number(value || 0) / max) * 100);
+      return Math.max(2, h) + "%";
+    },
+    getTargetLinePos: function(target, maxValue) {
+      var max = maxValue > 0 ? maxValue : 1;
+      var pos = Math.round((target / max) * 100);
+      return Math.min(pos, 95) + "%";
+    },
+    formatSleepShort: function(minutes) {
+      var h = Math.floor(minutes / 60);
+      var m = Math.round(minutes % 60);
+      if (h > 0) {
+        return h + "." + Math.round(m / 6) + "h";
+      }
+      return m + "m";
+    },
+    getDietStatus: function(total) {
+      if (total > 2200) return "high";
+      if (total < 1500) return "low";
+      return "normal";
+    },
+    getDietStatusText: function(total) {
+      if (total > 2200) return "偏高";
+      if (total < 1500) return "偏低";
+      return "正常";
+    },
+    getWeightBarHeight: function(value) {
+      var valid = this.weightSeries.filter(function(item) {
+        return Number(item.value) > 0;
+      });
+      if (valid.length === 0) return "0%";
+      var values = valid.map(function(item) {
+        return Number(item.value);
+      });
+      var min = Math.min.apply(null, values);
+      var max = Math.max.apply(null, values);
+      var span = max - min || 1;
+      var h = ((Number(value || 0) - min) / span) * 80 + 10;
+      return Math.max(5, Math.min(100, h)) + "%";
+    },
+    maxValue: function(list) {
+      if (!Array.isArray(list) || list.length === 0) return 0;
+      var max = 0;
+      list.forEach(function(cur) {
+        if (Number(cur.value || 0) > max) max = Number(cur.value || 0);
+      });
+      return max;
+    },
+    minValue: function(list) {
+      if (!Array.isArray(list) || list.length === 0) return 0;
+      var values = list.map(function(item) {
+        return Number(item.value || 0);
+      });
+      return Math.min.apply(null, values);
+    },
+    avgValue: function(list) {
+      if (!Array.isArray(list) || list.length === 0) return 0;
+      var sum = 0;
+      list.forEach(function(cur) {
+        sum += Number(cur.value || 0);
+      });
+      return Math.round(sum / list.length);
+    },
+    avgSleep: function() {
+      if (this.sleepSeries.length === 0) return 0;
+      var sum = 0;
+      this.sleepSeries.forEach(function(cur) {
+        sum += cur.total || 0;
+      });
+      return sum / this.sleepSeries.length;
+    },
+    minSleep: function() {
+      if (this.sleepSeries.length === 0) return 0;
+      var min = this.sleepSeries[0].total || 0;
+      this.sleepSeries.forEach(function(cur) {
+        if (cur.total < min) min = cur.total;
+      });
+      return min;
+    },
+    formatSleepStat: function(minutes) {
+      var h = Math.floor(minutes / 60);
+      var m = Math.round(minutes % 60);
+      return h + "h" + m + "m";
+    },
+    formatWeightStat: function(list, type) {
+      var valid = list.filter(function(item) {
+        return Number(item.value) > 0;
+      });
+      if (valid.length === 0) return "--";
+      var values = valid.map(function(item) {
+        return Number(item.value);
+      });
+      if (type === "max") return Math.max.apply(null, values).toFixed(1);
+      if (type === "min") return Math.min.apply(null, values).toFixed(1);
+      var sum = 0;
+      values.forEach(function(v) { sum += v; });
+      return (sum / values.length).toFixed(1);
+    },
+    fetchTrend: function() {
+      var self = this;
+      var userId = uni.getStorageSync("userId") || 1;
+      request("/api/statistics/trend", "GET", { userId: userId, period: this.period }).then(function(data) {
+        self.series = (data && data.series) ? data.series : {};
+        self.fetchAiInsight(true);
+      }).catch(function() {
+        self.series = {};
+        self.aiSummary = "";
+        self.aiAdvice = [];
+      });
+    },
+    buildAiPrompt: function() {
+      var dim = this.dimension;
+      var label = this.currentDimLabel;
+      var range = this.periodLabel;
+      var dataContext = "";
+      var specificHint = "";
+
+      if (dim === "steps") {
+        var max = this.stepsMax;
+        var avg = this.avgValue(this.stepsSeries);
+        var min = this.minValue(this.stepsSeries);
+        var trend = max > avg ? "上升" : avg > min ? "稳定" : "波动";
+        dataContext = "步数数据：最高" + max + "步，平均" + avg + "步，最低" + min + "步，整体趋势" + trend + "。";
+        specificHint = "建议需具体到运动方式（如快走、慢跑、爬楼梯）、时间段（如饭后、上下班途中）、持续时间。";
+      } else if (dim === "sleep") {
+        var avgSleep = this.avgSleep();
+        var maxSleep = this.sleepMax;
+        var minSleep = this.minSleep();
+        var avgHours = Math.floor(avgSleep / 60);
+        var avgMins = Math.round(avgSleep % 60);
+        dataContext = "睡眠数据：平均睡眠" + avgHours + "小时" + avgMins + "分钟，最长" + this.formatSleepStat(maxSleep) + "，最短" + this.formatSleepStat(minSleep) + "。";
+        specificHint = "建议需具体到入睡时间（如23点前）、睡前准备（如提前1小时关灯）、睡眠环境。";
+      } else if (dim === "diet") {
+        var max = this.dietMax;
+        var avg = this.avgValue(this.series.diet || []);
+        var min = this.minValue(this.series.diet || []);
+        dataContext = "饮食热量数据：最高" + max + "kcal，平均" + avg + "kcal，最低" + min + "kcal。";
+        specificHint = "建议需具体到餐次、食物种类、分量。";
+      } else if (dim === "weight") {
+        var avgWeight = this.formatWeightStat(this.weightSeries, "avg");
+        var maxWeight = this.formatWeightStat(this.weightSeries, "max");
+        var minWeight = this.formatWeightStat(this.weightSeries, "min");
+        dataContext = "体重数据：平均" + avgWeight + "kg，最高" + maxWeight + "kg，最低" + minWeight + "kg。";
+        specificHint = "建议需具体到饮食调整、运动计划、称重习惯。";
+      } else if (dim === "period") {
+        var periodDays = this.periodSeries.filter(function(item) { return item.flow > 0; }).length;
+        var flowLevels = { low: 0, medium: 0, high: 0 };
+        this.periodSeries.forEach(function(item) {
+          if (item.flow === 1) flowLevels.low++;
+          else if (item.flow === 2) flowLevels.medium++;
+          else if (item.flow === 3) flowLevels.high++;
+        });
+        dataContext = "经期数据：本周期共记录" + periodDays + "天经期，其中量少" + flowLevels.low + "天、量中" + flowLevels.medium + "天、量多" + flowLevels.high + "天。";
+        specificHint = "建议需具体到经期护理、运动调整、饮食补充。";
+      }
+
+      return "你是一位专业健康顾问。请根据" + range + "的" + label + "数据生成JSON格式回复：\n"
+        + "{ \"summary\": \"3-4句话总结\", \"advice\": [\"建议1\",\"建议2\",\"建议3\",\"建议4\",\"建议5\"] }\n"
+        + "要求：summary总结趋势，advice为5条具体可执行建议。不要寒暄。\n"
+        + specificHint + "\n数据背景：" + dataContext;
+    },
+    fetchAiInsight: function(force) {
+      var self = this;
       if (this.aiLoading) return;
-      const key = this.getCacheKey();
-      if (!forceRefresh) {
-        const cached = uni.getStorageSync(key);
-        if (cached && typeof cached === "string" && cached.length > 0) {
-          this.aiContent = cached;
-          this.aiError = "";
-          return;
-        }
-      }
+      if (!force && this.aiSummary) return;
       this.aiLoading = true;
       this.aiError = "";
-      this.aiContent = "";
-      const periodLabel = this.period === "day" ? "今日" : this.period === "week" ? "本周" : "本月";
-      let dataLine = `步数 ${this.overview.steps} 步，睡眠 ${this.overview.sleep}，体重/BMI ${this.overview.weightBmi || "未记录"}，运动 ${this.overview.exerciseMinutes} 分钟，饮食 ${this.overview.dietCount || "未记录"}`;
-      let periodInstruction = "";
-      if (this.overview.periodLastDate && this.overview.periodNextDate) {
-        dataLine += `，经期：最近一次 ${this.overview.periodLastDate}，预计下次 ${this.overview.periodNextDate}`;
-        periodInstruction = "上述数据中包含经期信息，请在总结或建议中至少包含一句与经期相关的健康提醒或注意事项。";
-      }
-      const prompt = `你是一位贴心的健康顾问。请根据以下${periodLabel}的健康数据，用 2～4 句话简要总结健康状况，然后给出 2～3 条具体、可执行的改进建议。每条建议一行，简洁明了，每条不超过 25 字。不要寒暄，直接输出分析和建议。${periodInstruction ? "\n\n" + periodInstruction : ""}
-
-数据：${dataLine}。`;
-      try {
-        const userId = uni.getStorageSync("userId") || 1;
-        const data = await request("/api/ai/chat", "POST", { userId, message: prompt, store: false });
-        const content = (data && data.content) ? String(data.content).trim() : "";
-        if (content) {
-          this.aiContent = content;
-          uni.setStorageSync(key, content);
+      var userId = uni.getStorageSync("userId") || 1;
+      var prompt = this.buildAiPrompt();
+      request("/api/ai/chat", "POST", { userId: userId, message: prompt, store: false }).then(function(data) {
+        var raw = data && data.content ? String(data.content) : "";
+        var parsed = self.safeParseJson(raw);
+        if (parsed && parsed.summary) {
+          self.aiSummary = parsed.summary;
+          self.aiAdvice = Array.isArray(parsed.advice) ? parsed.advice.slice(0, 5) : [];
         } else {
-          this.aiError = "AI 暂未返回解读";
+          self.aiSummary = raw || "暂无解读";
+          self.aiAdvice = [];
         }
-      } catch (err) {
-        this.aiError = err.message || "分析失败，请稍后重试";
-      } finally {
-        this.aiLoading = false;
-      }
+      }).catch(function() {
+        self.aiError = "分析失败，请稍后再试";
+      }).finally(function() {
+        self.aiLoading = false;
+      });
     },
-    refreshAnalysis() {
-      const key = this.getCacheKey();
-      uni.removeStorageSync(key);
-      this.fetchAiAnalysis(true);
+    safeParseJson: function(text) {
+      if (!text) return null;
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        var first = text.indexOf("{");
+        var last = text.lastIndexOf("}");
+        if (first !== -1 && last !== -1) {
+          try {
+            return JSON.parse(text.slice(first, last + 1));
+          } catch (_) {}
+        }
+        return null;
+      }
     }
   }
 };
 </script>
 
 <style>
+/* 页面背景 - 米白底 */
+page {
+  background: #faf8f5;
+}
+
 .page {
-  padding: 20px 18px;
-  padding-bottom: calc(56px + env(safe-area-inset-bottom));
-  min-height: 100vh;
-  background: linear-gradient(180deg, #f5f1eb 0%, #e8e2db 50%, #fefcf9 100%);
-  color: #0f172a;
+  padding: 16rpx 20rpx 140rpx;
+}
+
+/* 时间切换 - 胶囊按钮 */
+.period-tabs {
   display: flex;
-  flex-direction: column;
-  gap: 18px;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #0f172a;
-  letter-spacing: 0.3px;
-}
-
-.btn-link {
-  font-size: 13px;
-  color: #4f46e5;
-  font-weight: 500;
-}
-
-.tabs {
-  display: inline-flex;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 12px;
-  padding: 4px;
-  gap: 4px;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
-}
-
-.tab {
-  font-size: 13px;
-  padding: 8px 18px;
-  border-radius: 10px;
-  color: #64748b;
-  transition: all 0.2s ease;
-}
-
-.tab.active {
-  background: #ffffff;
-  color: #334155;
-  font-weight: 600;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
-}
-
-.section-card {
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 0;
-  border: none;
-  overflow: hidden;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
-}
-
-.section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 18px;
-  border-bottom: 1px solid #f2ede8;
-}
-
-.section-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.section-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 12px;
+.period-tab {
+  flex: 1;
+  height: 56rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  font-weight: 700;
+  border-radius: 28rpx;
+  background: #fff;
+  border: 1rpx solid #e5e5e5;
 }
 
-.section-icon-txt {
-  color: inherit;
+.period-tab.active {
+  background: #f97316;
+  border-color: #f97316;
 }
 
-.section-icon-data {
-  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-  color: #4f46e5;
-}
-
-.section-icon-ai {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  color: #b45309;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.btn-text {
-  font-size: 12px;
-  color: #6366f1;
+.period-tab-text {
+  font-size: 24rpx;
+  color: #9ca3af;
   font-weight: 500;
 }
 
-.data-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  padding: 18px;
+.period-tab.active .period-tab-text {
+  color: #fff;
 }
 
-.data-item {
+/* 维度切换 - 胶囊按钮 */
+.dim-scroll {
+  margin-bottom: 16rpx;
+}
+
+.dim-tabs {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px 10px;
-  background: #fefcf9;
-  border-radius: 12px;
-  text-align: center;
+  gap: 12rpx;
+  padding: 0 4rpx;
 }
 
-.data-label {
-  font-size: 11px;
-  color: #94a3b8;
-}
-
-.data-value {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.data-item-period .data-value-period {
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.4;
-  word-break: break-all;
-  white-space: normal;
-  text-align: center;
-  display: block;
-}
-
-.ai-card {
-  box-shadow: 0 4px 20px rgba(79, 70, 229, 0.08);
-}
-
-.ai-card .section-head {
-  border-bottom-color: #fef9c3;
-  background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
-}
-
-.ai-body {
-  padding: 18px;
-  min-height: 100px;
-  background: #ffffff;
-}
-
-.ai-loading {
+.dim-tab {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: #64748b;
+  justify-content: center;
+  padding: 10rpx 24rpx;
+  border-radius: 24rpx;
+  background: #fff;
+  border: 1rpx solid #e5e5e5;
 }
 
-.ai-loading-dot {
-  font-size: 18px;
-  animation: blink 0.8s ease-in-out infinite;
+.dim-tab.active {
+  border-color: #f97316;
+  background: #fff;
 }
 
-@keyframes blink {
-  50% { opacity: 0.3; }
+.dim-label {
+  font-size: 24rpx;
+  color: #9ca3af;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
-.ai-loading-text {
-  font-size: 14px;
+.dim-tab.active .dim-label {
+  color: #f97316;
+  font-weight: 600;
 }
 
-.ai-error,
-.ai-empty {
-  font-size: 14px;
-  color: #64748b;
-  text-align: center;
+/* 图表卡片 - 白色卡片，大圆角 */
+.chart-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 20rpx;
+  border: 1rpx solid #f1e5d7;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+  margin-bottom: 16rpx;
+}
+
+.chart-header {
+  margin-bottom: 12rpx;
+}
+
+.chart-title-row {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.ai-retry {
-  font-size: 13px;
-  color: #4f46e5;
+.chart-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.chart-badge {
+  padding: 4rpx 12rpx;
+  border-radius: 10rpx;
+  background: #f5f5f5;
+  font-size: 20rpx;
+  color: #9ca3af;
   font-weight: 500;
 }
 
-.ai-content {
-  width: 100%;
+.chart-legend {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 10rpx;
+  flex-wrap: wrap;
 }
 
-.ai-text {
-  font-size: 14px;
-  line-height: 1.75;
-  color: #334155;
-  white-space: pre-wrap;
-  word-break: break-word;
-  display: block;
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
 }
 
-.tips-section {
-  background: #ffffff;
-  border-radius: 20px;
-  overflow: hidden;
+.legend-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 4rpx;
+}
+
+.legend-label {
+  font-size: 20rpx;
+  color: #6b7280;
+}
+
+/* 图例颜色 - 暖色系 */
+.legend-deep { background: #c2410c; }
+.legend-light { background: #fdba74; }
+.legend-breakfast { background: #fcd34d; }
+.legend-lunch { background: #fb923c; }
+.legend-dinner { background: #f97316; }
+.legend-snack { background: #ea580c; }
+
+/* 图表区域 */
+.chart-body {
+  margin-top: 12rpx;
+}
+
+.bar-chart {
+  display: flex;
+  gap: 8rpx;
+  height: 200rpx;
+}
+
+.bar-y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2rpx 0;
+}
+
+.y-label {
+  font-size: 18rpx;
+  color: #9ca3af;
+  text-align: right;
+  width: 48rpx;
+}
+
+.bar-container {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  min-height: 0;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+  justify-content: space-between;
+  gap: 8rpx;
+  position: relative;
+  padding: 0 4rpx;
 }
 
-.tips-head {
+/* 达标虚线 */
+.target-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1rpx;
+  background: #f97316;
+  z-index: 10;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 16px 18px;
-  border-bottom: 1px solid #f2ede8;
-  background: linear-gradient(180deg, #fefcf9 0%, #ffffff 100%);
 }
 
-.section-icon-tips {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #2563eb;
-}
-
-.tips-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.tips-scroll {
-  height: 56vh;
-  max-height: 480px;
-  padding: 16px 18px 24px;
-  box-sizing: border-box;
-}
-
-.tip-card {
-  background: #fefcf9;
-  border-radius: 16px;
-  padding: 16px 18px;
-  margin-bottom: 14px;
-  border: 1px solid #f2ede8;
-  position: relative;
-  overflow: hidden;
-}
-
-.tip-card::before {
+.target-line::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 0;
+  right: 0;
+  border-top: 2rpx dashed #f97316;
+}
+
+.target-label {
+  position: absolute;
+  right: 0;
+  top: -24rpx;
+  font-size: 16rpx;
+  color: #f97316;
+  background: #fff;
+  padding: 0 4rpx;
+  white-space: nowrap;
+}
+
+.bar-item {
+  flex: 1;
+  max-width: 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.bar-wrapper {
+  width: 100%;
+  height: 160rpx;
+  position: relative;
+}
+
+.bar-bg {
+  position: absolute;
   bottom: 0;
-  width: 4px;
-  background: linear-gradient(180deg, #6366f1 0%, #818cf8 100%);
-  border-radius: 4px 0 0 4px;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: #fafafa;
+  border-radius: 4rpx;
 }
 
-.tip-card:last-child {
-  margin-bottom: 0;
+.bar-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 4rpx;
+  background: linear-gradient(180deg, #fb923c 0%, #f97316 100%);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4rpx;
 }
 
-.tip-tag {
-  display: inline-block;
-  font-size: 11px;
-  color: #4f46e5;
-  background: #e0e7ff;
-  padding: 4px 10px;
-  border-radius: 8px;
-  margin-bottom: 10px;
+/* 达标柱子 */
+.bar-exceed {
+  background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+}
+
+/* 睡眠柱子 */
+.bar-sleep {
+  background: linear-gradient(180deg, #fb923c 0%, #f97316 100%);
+}
+
+.bar-sleep.bar-exceed {
+  background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+}
+
+.bar-value {
+  font-size: 16rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+.bar-label {
+  font-size: 18rpx;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.bar-stack {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 4rpx;
+  overflow: hidden;
+}
+
+.stack-seg {
+  width: 100%;
+}
+
+/* 饮食状态标签 */
+.diet-status {
+  position: absolute;
+  top: -22rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2rpx 8rpx;
+  border-radius: 6rpx;
+  font-size: 14rpx;
+  white-space: nowrap;
+}
+
+.diet-high {
+  background: #fef2f2;
+  border: 1rpx solid #fecaca;
+}
+
+.diet-high .diet-status-text {
+  color: #ef4444;
+}
+
+.diet-normal {
+  background: #fff7ed;
+  border: 1rpx solid #fed7aa;
+}
+
+.diet-normal .diet-status-text {
+  color: #ea580c;
+}
+
+.diet-low {
+  background: #fefce8;
+  border: 1rpx solid #fef08a;
+}
+
+.diet-low .diet-status-text {
+  color: #ca8a04;
+}
+
+.diet-status-text {
+  font-size: 14rpx;
   font-weight: 500;
 }
 
-.tip-headline {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1e293b;
-  display: block;
-  margin-bottom: 8px;
-  line-height: 1.4;
+/* 饮食总热量标签 */
+.diet-total-label {
+  position: absolute;
+  bottom: 4rpx;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
 }
 
-.tip-body {
-  font-size: 13px;
-  color: #64748b;
-  line-height: 1.6;
-  display: block;
+.diet-total-text {
+  font-size: 14rpx;
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.3);
+}
+
+/* 堆叠颜色 - 暖色系 */
+.stack-light { background: #fdba74; }
+.stack-deep { background: #c2410c; }
+.stack-breakfast { background: #fcd34d; }
+.stack-lunch { background: #fb923c; }
+.stack-dinner { background: #f97316; }
+.stack-snack { background: #ea580c; }
+
+/* 折线图 */
+.line-chart {
+  display: flex;
+  gap: 8rpx;
+  height: 200rpx;
+}
+
+.line-y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2rpx 0;
+}
+
+.line-container {
+  flex: 1;
+  position: relative;
+  height: 160rpx;
+}
+
+.line-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1rpx;
+  background: #f0f0f0;
+}
+
+.grid-line:nth-child(1) { top: 0; }
+.grid-line:nth-child(2) { top: 50%; }
+.grid-line:nth-child(3) { bottom: 0; }
+
+.line-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.line-point {
+  position: absolute;
+  transform: translate(-50%, 50%);
+}
+
+.point-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: #fff;
+  border: 3rpx solid #f97316;
+}
+
+.point-line {
+  position: absolute;
+  right: 8rpx;
+  bottom: 8rpx;
+  height: 3rpx;
+  background: #f97316;
+  transform-origin: right center;
+}
+
+.line-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4rpx;
+}
+
+.line-label {
+  font-size: 18rpx;
+  color: #9ca3af;
+  text-align: center;
+}
+
+/* 体重柱状图 */
+.bar-weight {
+  background: linear-gradient(180deg, #fb923c 0%, #f97316 100%);
+}
+
+/* 经期热力图 */
+.period-heatmap {
+  padding: 4rpx 0;
+}
+
+.period-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+}
+
+.period-title {
+  font-size: 22rpx;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.period-legend {
+  display: flex;
+  gap: 10rpx;
+}
+
+.period-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.period-legend-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 3rpx;
+}
+
+.period-legend-label {
+  font-size: 18rpx;
+  color: #9ca3af;
+}
+
+.period-level-0 { background: #f5f5f4; }
+.period-level-1 { background: #fecdd3; }
+.period-level-2 { background: #f472b6; }
+.period-level-3 { background: #db2777; }
+
+.period-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6rpx;
+}
+
+.period-cell {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.period-flow-0 { background: #f5f5f4; }
+.period-flow-1 { background: #fecdd3; }
+.period-flow-2 { background: #f472b6; }
+.period-flow-3 { background: #db2777; }
+
+.period-flow-dot {
+  position: absolute;
+  bottom: 4rpx;
+  right: 4rpx;
+  width: 6rpx;
+  height: 6rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.period-cell-label {
+  font-size: 18rpx;
+  color: #6b7280;
+}
+
+.period-flow-2 .period-cell-label,
+.period-flow-3 .period-cell-label {
+  color: #fff;
+}
+
+/* 统计数据 - 三列均分 */
+.stats-section {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.stat-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+  padding: 12rpx 6rpx;
+  border-radius: 12rpx;
+  background: #fafafa;
+}
+
+.stat-highlight {
+  background: #fff7ed;
+  border: 1rpx solid #fed7aa;
+}
+
+.stat-label {
+  font-size: 20rpx;
+  color: #9ca3af;
+}
+
+.stat-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 2rpx;
+}
+
+.stat-value {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.stat-value-theme {
+  color: #f97316;
+}
+
+.stat-unit {
+  font-size: 18rpx;
+  color: #9ca3af;
+}
+
+.stat-desc {
+  font-size: 18rpx;
+  color: #f97316;
+  margin-top: 2rpx;
+}
+
+/* AI 分析卡片 */
+.ai-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 24rpx;
+  border: 1rpx solid #f1e5d7;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.ai-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.ai-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.ai-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.ai-icon {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: #f97316;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.ai-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.ai-subtitle {
+  font-size: 24rpx;
+  color: #9ca3af;
+  padding-left: 56rpx;
+}
+
+.ai-action {
+  flex-shrink: 0;
+}
+
+.ai-refresh-btn {
+  padding: 8rpx 20rpx;
+  border-radius: 20rpx;
+  background: #fff;
+  border: 1rpx solid #fdba74;
+}
+
+.ai-refresh-text {
+  font-size: 22rpx;
+  color: #f97316;
+  font-weight: 500;
+}
+
+/* 加载状态 */
+.ai-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  padding: 30rpx 0;
+}
+
+.loading-spinner {
+  width: 40rpx;
+  height: 40rpx;
+  border: 3rpx solid #f0f0f0;
+  border-top-color: #f97316;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 22rpx;
+  color: #9ca3af;
+}
+
+/* 错误状态 */
+.ai-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  padding: 24rpx 0;
+}
+
+.error-icon {
+  font-size: 36rpx;
+}
+
+.error-text {
+  font-size: 22rpx;
+  color: #ef4444;
+}
+
+.error-retry {
+  margin-top: 6rpx;
+  padding: 8rpx 20rpx;
+  border-radius: 12rpx;
+  background: #fef2f2;
+  border: 1rpx solid #fecaca;
+}
+
+.error-retry-text {
+  font-size: 22rpx;
+  color: #ef4444;
+}
+
+/* 分析结果 */
+.ai-result {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+/* AI总结 - 浅米色背景，左侧橙色竖线 */
+.ai-summary-section {
+  padding: 20rpx 24rpx;
+  border-radius: 14rpx;
+  background: #faf5ef;
+  border-left: 4rpx solid #f97316;
+}
+
+.ai-summary-text {
+  font-size: 26rpx;
+  color: #374151;
+  line-height: 1.8;
+  letter-spacing: 0.5rpx;
+}
+
+/* 行动建议标题 */
+.ai-advice-title {
+  font-size: 26rpx;
+  color: #9ca3af;
+  text-align: center;
+  margin-bottom: 14rpx;
+}
+
+.ai-advice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+/* 行动建议 - 浅橙底圆角块 */
+.advice-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14rpx;
+  padding: 16rpx 20rpx;
+  background: #fff7ed;
+  border-radius: 14rpx;
+}
+
+/* 橙色圆形编号 */
+.advice-number {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  background: #f97316;
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.advice-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: #4b5563;
+  line-height: 1.7;
+  letter-spacing: 0.5rpx;
 }
 </style>

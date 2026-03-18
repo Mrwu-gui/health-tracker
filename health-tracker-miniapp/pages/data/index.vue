@@ -465,8 +465,14 @@ export default {
       return "接近达标";
     }
   },
-  onLoad() {
+  onLoad(options) {
     this.userSex = uni.getStorageSync("userSex") || "";
+    if (options && options.dimension) {
+      this.dimension = options.dimension;
+    }
+    if (options && options.period) {
+      this.period = options.period;
+    }
     this.fetchUserSex();
   },
   methods: {

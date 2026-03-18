@@ -1,82 +1,143 @@
 <template>
   <div class="reminders">
-    <a-card title="即将提醒" class="panel">
-      <a-list :data-source="reminders" bordered :loading="loading">
-        <template #renderItem="{ item }">
-          <a-list-item>
-            <div class="list-row">
-              <div>
-                <div class="list-title">{{ item.title }}</div>
-                <div class="list-sub">{{ item.time }}</div>
-              </div>
-              <a-tag :color="item.color">{{ item.type }}</a-tag>
-            </div>
-          </a-list-item>
-        </template>
-      </a-list>
-      <div v-if="!loading && reminders.length === 0" class="empty">暂无提醒</div>
-    </a-card>
+    <h1 class="page-title">提醒列表</h1>
+
+    <div class="reminder-list">
+      <div 
+        class="reminder-card" 
+        v-for="item in reminders" 
+        :key="item.id"
+        :class="{ completed: item.status === 'completed' }"
+      >
+        <div class="reminder-time">{{ item.time }}</div>
+        <div class="reminder-content">
+          <span class="reminder-text">{{ item.content }}</span>
+          <span class="reminder-type">{{ typeMap[item.type] }}</span>
+        </div>
+        <div class="reminder-status" :class="item.status">
+          {{ statusMap[item.status] }}
+        </div>
+      </div>
+    </div>
+
+    <div v-if="reminders.length === 0" class="empty">
+      暂无提醒记录
+    </div>
   </div>
 </template>
 
 <script setup>
-  import { onMounted, ref } from "vue";
-  import { api } from "../api/http";
+import { ref, onMounted } from "vue";
+import { mockData } from "../mock/data";
+import { getUserId, getReminderList } from "../api";
 
-  const reminders = ref([]);
-  const loading = ref(false);
+const reminders = ref([]);
 
-  const fetchReminders = async () => {
-    loading.value = true;
-    try {
-      const userId = Number(localStorage.getItem("userId") || 1);
-      const list = await api.medicationList(userId);
-      reminders.value = Array.isArray(list)
-        ? list.map((item) => ({
-            title: item.drugName || "用药提醒",
-            time: item.remindTime ? `提醒 ${item.remindTime}` : item.frequency || "未设置时间",
-            type: "用药",
-            color: "green"
-          }))
-        : [];
-    } finally {
-      loading.value = false;
-    }
-  };
+const typeMap = {
+  medication: "用药",
+  habit: "习惯",
+  exercise: "运动",
+  sleep: "睡眠",
+  diet: "饮食"
+};
 
-  onMounted(fetchReminders);
+const statusMap = {
+  pending: "待执行",
+  completed: "已完成",
+  missed: "已错过"
+};
+
+onMounted(async () => {
+  const userId = getUserId();
+  try {
+    const data = await getReminderList(userId);
+    if (data) reminders.value = data;
+  } catch (e) {
+    reminders.value = mockData.reminders;
+  }
+});
 </script>
 
 <style scoped>
 .reminders {
-  display: grid;
-  gap: 18px;
+  max-width: 900px;
 }
 
-.panel {
-  border-radius: 16px;
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #333;
 }
 
-.list-row {
+.reminder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reminder-card {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
+  padding: 20px 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  gap: 24px;
 }
 
-.list-title {
+.reminder-card.completed {
+  opacity: 0.6;
+}
+
+.reminder-time {
+  font-size: 18px;
   font-weight: 600;
+  color: #ff7a45;
+  min-width: 60px;
 }
 
-.list-sub {
-  color: #64748b;
-  font-size: 0.85rem;
+.reminder-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reminder-text {
+  font-size: 15px;
+  color: #333;
+}
+
+.reminder-type {
+  font-size: 12px;
+  color: #999;
+}
+
+.reminder-status {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.reminder-status.pending {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+
+.reminder-status.completed {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.reminder-status.missed {
+  background: #fff1f0;
+  color: #ff4d4f;
 }
 
 .empty {
-  color: #94a3b8;
-  font-size: 0.9rem;
-  margin-top: 12px;
   text-align: center;
+  padding: 60px;
+  color: #999;
 }
 </style>

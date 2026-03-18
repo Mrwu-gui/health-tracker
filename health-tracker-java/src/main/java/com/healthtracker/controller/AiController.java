@@ -6,9 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthtracker.dto.AiChatRequest;
 import com.healthtracker.entity.AiChatMessage;
 import com.healthtracker.entity.AiLog;
+import com.healthtracker.entity.FileRecord;
 import com.healthtracker.entity.User;
 import com.healthtracker.service.AiChatMessageService;
 import com.healthtracker.service.AiLogService;
+import com.healthtracker.service.FileRecordService;
 import com.healthtracker.service.UserService;
 import jakarta.validation.Valid;
 import java.io.File;
@@ -54,6 +56,7 @@ public class AiController {
     private final AiChatMessageService aiChatMessageService;
     private final UserService userService;
     private final AiLogService aiLogService;
+    private final FileRecordService fileRecordService;
 
     @Value("${yuanqi.base-url:https://yuanqi.tencent.com}")
     private String baseUrl;
@@ -90,6 +93,7 @@ public class AiController {
                         AiChatMessageService aiChatMessageService,
                         UserService userService,
                         AiLogService aiLogService,
+                        FileRecordService fileRecordService,
                         @Value("${ai.http.connect-timeout-seconds:10}") int connectTimeoutSeconds,
                         @Value("${ai.http.read-timeout-seconds:60}") int readTimeoutSeconds) {
         this.objectMapper = objectMapper;
@@ -100,6 +104,7 @@ public class AiController {
         this.aiChatMessageService = aiChatMessageService;
         this.userService = userService;
         this.aiLogService = aiLogService;
+        this.fileRecordService = fileRecordService;
     }
 
     @PostMapping("/chat")
@@ -234,8 +239,20 @@ public class AiController {
 
         String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
         String url = baseUrl + "/uploads/ai/" + filename;
+        FileRecord record = new FileRecord();
+        record.setUserId(parseUserId(resolveUserId()));
+        record.setType("ai");
+        record.setOriginalName(file.getOriginalFilename());
+        record.setFileName(filename);
+        record.setFilePath(target.toString());
+        record.setFileUrl(url);
+        record.setFileSize(file.getSize());
+        record.setContentType(file.getContentType());
+        record.setCreatedAt(LocalDateTime.now());
+        fileRecordService.save(record);
         Map<String, Object> body = new HashMap<>();
         body.put("url", url);
+        body.put("id", record.getId());
         return body;
     }
 

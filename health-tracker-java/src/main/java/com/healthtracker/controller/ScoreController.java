@@ -80,23 +80,30 @@ public class ScoreController {
 
     private ScoreResult calcScore(Long userId, LocalDate date) {
         ScoreResult result = new ScoreResult();
-        int steps = getSteps(userId, date);
+        boolean hasSteps = hasStepsRecord(userId, date);
+        boolean hasSleep = hasSleepRecord(userId, date);
+        boolean hasDiet = hasDietRecord(userId, date);
+        boolean hasWeight = hasWeightRecord(userId, date);
+
+        int steps = hasSteps ? getSteps(userId, date) : 0;
         int stepsTarget = getStepsTarget(userId);
         double completion = stepsTarget > 0 ? (double) steps / stepsTarget : 0;
-        int stepsScore = scoreSteps(completion);
+        int stepsScore = hasSteps ? scoreSteps(completion) : 0;
 
-        double sleepHours = getSleepHours(userId, date);
-        int sleepScore = scoreSleep(sleepHours);
+        double sleepHours = hasSleep ? getSleepHours(userId, date) : 0;
+        int sleepScore = hasSleep ? scoreSleep(sleepHours) : 0;
 
-        DietResult dietResult = getDietScore(userId, date);
-        int dietScore = dietResult.score;
+        DietResult dietResult = hasDiet ? getDietScore(userId, date) : new DietResult("未记录", 0);
+        int dietScore = hasDiet ? dietResult.score : 0;
 
-        WeightResult weightResult = getWeightScore(userId, date);
-        int weightScore = weightResult.score;
+        WeightResult weightResult = hasWeight ? getWeightScore(userId, date) : new WeightResult(0, 0);
+        int weightScore = hasWeight ? weightResult.score : 0;
 
+        int totalWeight = (hasSteps ? 30 : 0) + (hasSleep ? 30 : 0) + (hasDiet ? 20 : 0) + (hasWeight ? 20 : 0);
         int base = stepsScore + sleepScore + dietScore + weightScore;
-        int bonus = 0;
-        int total = Math.min(100, base);
+        int total = totalWeight > 0 ? (int) Math.round(base * 100.0 / totalWeight) : 0;
+        if (totalWeight > 0 && total < 30) total = 30;
+        if (total > 100) total = 100;
 
         Map<String, Object> breakdown = new HashMap<>();
         breakdown.put("steps", steps);
@@ -109,11 +116,26 @@ public class ScoreController {
         breakdown.put("weightDelta", weightResult.delta);
         breakdown.put("weightScore", weightScore);
         breakdown.put("base", base);
+        breakdown.put("weightTotal", totalWeight);
+        breakdown.put("hasSteps", hasSteps);
+        breakdown.put("hasSleep", hasSleep);
+        breakdown.put("hasDiet", hasDiet);
+        breakdown.put("hasWeight", hasWeight);
+        breakdown.put("missingDimensions", buildMissing(hasSteps, hasSleep, hasDiet, hasWeight));
         breakdown.put("total", total);
 
         result.total = total;
         result.breakdown = breakdown;
         return result;
+    }
+
+    private List<String> buildMissing(boolean hasSteps, boolean hasSleep, boolean hasDiet, boolean hasWeight) {
+        List<String> list = new java.util.ArrayList<>();
+        if (!hasSteps) list.add("steps");
+        if (!hasSleep) list.add("sleep");
+        if (!hasDiet) list.add("diet");
+        if (!hasWeight) list.add("weight");
+        return list;
     }
 
     private int getSteps(Long userId, LocalDate date) {
@@ -136,13 +158,7 @@ public class ScoreController {
     }
 
     private double getSleepHours(Long userId, LocalDate date) {
-        LocalDateTime start = date.atStartOfDay();
-        LocalDateTime end = date.atTime(23, 59, 59);
-        List<SleepRecord> records = sleepRecordService.lambdaQuery()
-            .eq(SleepRecord::getUserId, userId)
-            .between(SleepRecord::getStartTime, start, end)
-            .orderByDesc(SleepRecord::getEndTime)
-            .list();
+        List<SleepRecord> records = sleepRecordService.listByUserAndDate(userId, date);
         if (records.isEmpty()) return 0;
         SleepRecord latest = records.get(0);
         if (latest.getStartTime() == null || latest.getEndTime() == null) return 0;
@@ -196,6 +212,30 @@ public class ScoreController {
         if (hours > 0 && (hours < 6 || hours > 9)) return 10;
         if (hours >= 10 || hours <= 4) return 0;
         return 0;
+    }
+
+    private boolean hasStepsRecord(Long userId, LocalDate date) {
+        return !weRunRecordService.lambdaQuery()
+            .eq(WeRunRecord::getUserId, userId)
+            .eq(WeRunRecord::getRecordDate, date)
+            .list()
+            .isEmpty();
+    }
+
+    private boolean hasSleepRecord(Long userId, LocalDate date) {
+        return !sleepRecordService.listByUserAndDate(userId, date).isEmpty();
+    }
+
+    private boolean hasDietRecord(Long userId, LocalDate date) {
+        return !dietRecordService.lambdaQuery()
+            .eq(DietRecord::getUserId, userId)
+            .eq(DietRecord::getDate, date)
+            .list()
+            .isEmpty();
+    }
+
+    private boolean hasWeightRecord(Long userId, LocalDate date) {
+        return !weightRecordService.listByUserAndDate(userId, date).isEmpty();
     }
 
     private String statusText(int score) {

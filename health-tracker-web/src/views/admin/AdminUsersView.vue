@@ -1,60 +1,153 @@
 <template>
-  <a-card title="用户管理" class="admin-card">
-    <div class="admin-toolbar">
-      <a-input
-        v-model:value="keyword"
-        placeholder="搜索用户名 / 手机 / OpenId"
-        style="width: 260px"
-        allow-clear
-      />
-      <a-input-number v-model:value="limit" :min="10" :max="500" />
-      <a-button type="primary" :loading="loading" @click="load">查询</a-button>
+  <div class="admin-users">
+    <div class="page-header">
+      <h1>用户管理</h1>
+      <div class="search-box">
+        <input 
+          type="text" 
+          v-model="keyword" 
+          placeholder="搜索用户昵称/手机号..."
+          @input="handleSearch"
+        />
+      </div>
     </div>
-    <a-table :columns="columns" :data-source="rows" :loading="loading" row-key="id" />
-  </a-card>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>昵称</th>
+            <th>手机号</th>
+            <th>微信OpenID</th>
+            <th>创建时间</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="user in users" :key="user.id">
+            <td>{{ user.id }}</td>
+            <td>{{ user.nickname }}</td>
+            <td>{{ user.phone || '-' }}</td>
+            <td class="openid">{{ user.openid }}</td>
+            <td>{{ user.createTime }}</td>
+            <td>
+              <span class="status-tag" :class="user.status">
+                {{ user.status === 'active' ? '正常' : '禁用' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { api } from "../../api/http";
+import { ref, onMounted } from "vue";
+import { mockData } from "../../mock/data";
+import { getAdminUsers } from "../../api";
 
 const keyword = ref("");
-const limit = ref(200);
-const loading = ref(false);
-const rows = ref([]);
+const users = ref([]);
 
-const columns = [
-  { title: "ID", dataIndex: "id", width: 80 },
-  { title: "用户名", dataIndex: "username" },
-  { title: "手机号", dataIndex: "phone" },
-  { title: "OpenId", dataIndex: "wxOpenid" },
-  { title: "微信昵称", dataIndex: "wxNickname" },
-  { title: "创建时间", dataIndex: "createdAt" }
-];
-
-async function load() {
-  loading.value = true;
+async function loadUsers() {
   try {
-    rows.value = await api.adminUsers({
-      keyword: keyword.value || undefined,
-      limit: limit.value
-    });
-  } finally {
-    loading.value = false;
+    const data = await getAdminUsers(keyword.value, 200);
+    if (data) users.value = data;
+  } catch (e) {
+    users.value = mockData.adminUsers;
   }
 }
 
-load();
+function handleSearch() {
+  loadUsers();
+}
+
+onMounted(() => {
+  loadUsers();
+});
 </script>
 
 <style scoped>
-.admin-card {
-  border-radius: 12px;
+.admin-users {
+  max-width: 1200px;
 }
-.admin-toolbar {
+
+.page-header {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
+  justify-content: space-between;
   align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.search-box input {
+  width: 280px;
+  padding: 10px 16px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: #ff7a45;
+}
+
+.table-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 14px 20px;
+  text-align: left;
+}
+
+th {
+  background: #fafafa;
+  font-weight: 500;
+  color: #666;
+  font-size: 13px;
+}
+
+td {
+  border-top: 1px solid #f0f0f0;
+  color: #333;
+}
+
+.openid {
+  font-family: monospace;
+  font-size: 12px;
+  color: #999;
+}
+
+.status-tag {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.status-tag.active {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.status-tag.inactive {
+  background: #fff1f0;
+  color: #ff4d4f;
 }
 </style>

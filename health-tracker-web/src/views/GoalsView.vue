@@ -1,133 +1,142 @@
 <template>
   <div class="goals">
-    <a-card title="本周目标" class="panel">
-      <div class="goal" v-for="goal in goals" :key="goal.id">
-        <div class="goal__info">
-          <strong>{{ goalTypeLabel(goal.goalType) }}</strong>
-          <span>{{ goal.currentValue }} / {{ goal.targetValue }}</span>
+    <h2>健康目标</h2>
+    <div class="goals-grid">
+      <div class="goal-card" v-for="item in goals" :key="item.label">
+        <div class="goal-header">
+          <span class="goal-title">{{ item.label }}</span>
+          <span class="goal-value">{{ item.value }}</span>
         </div>
-        <a-progress :percent="goal.percent" />
+        <div class="progress-bar">
+          <div class="progress-fill" :style="{ width: item.percent + '%' }"></div>
+        </div>
+        <div class="goal-status">
+          <span>完成度</span>
+          <span :class="item.percent >= 100 ? 'complete' : 'pending'">
+            {{ item.percent }}%
+          </span>
+        </div>
       </div>
-    </a-card>
+    </div>
 
-    <a-card title="创建新目标" class="panel">
-      <a-form layout="vertical">
-        <a-form-item label="目标类型">
-          <a-select v-model:value="form.goalType" placeholder="选择目标">
-            <a-select-option value="steps">步数</a-select-option>
-            <a-select-option value="sleep">睡眠</a-select-option>
-            <a-select-option value="diet">饮食</a-select-option>
-          </a-select>
-        </a-form-item>
-        <a-form-item label="目标值">
-          <a-input v-model:value="form.targetValue" placeholder="例如 10000" />
-        </a-form-item>
-        <a-form-item label="周期">
-          <a-select v-model:value="form.period" placeholder="请选择周期">
-            <a-select-option value="daily">每日</a-select-option>
-            <a-select-option value="weekly">每周</a-select-option>
-          </a-select>
-        </a-form-item>
-        <a-button type="primary" :loading="loading" @click="saveGoal">保存目标</a-button>
-        <div class="status-row" v-if="message">{{ message }}</div>
-      </a-form>
-    </a-card>
+    <div class="tips">
+      <h3>健康小贴士</h3>
+      <ul>
+        <li>建议每天保持 8,000-10,000 步的运动量</li>
+        <li>成年人每天需要 7-9 小时的睡眠</li>
+        <li>保持规律的运动习惯对健康至关重要</li>
+        <li>合理的饮食搭配有助于维持健康体重</li>
+      </ul>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from "vue";
-import { api } from "../api/http";
+import { mockData } from "../mock/data";
 
-const goals = ref([]);
-const form = reactive({
-  goalType: "",
-  targetValue: "",
-  period: ""
-});
-const loading = ref(false);
-const message = ref("");
-
-function normalize(list) {
-  return list.map((item) => {
-    const percent = item.targetValue
-      ? Math.min(100, Math.round((item.currentValue / item.targetValue) * 100))
-      : 0;
-    return { ...item, percent };
-  });
-}
-
-function goalTypeLabel(type) {
-  if (type === "steps") return "步数";
-  if (type === "sleep") return "睡眠";
-  if (type === "diet") return "饮食";
-  return type || "目标";
-}
-
-async function loadGoals() {
-  const userId = localStorage.getItem("userId");
-  if (!userId) return;
-  try {
-    const data = await api.goalList(userId);
-    goals.value = normalize(data || []);
-  } catch (err) {
-    message.value = err.message || "获取目标失败";
-  }
-}
-
-async function saveGoal() {
-  loading.value = true;
-  message.value = "";
-  const userId = localStorage.getItem("userId");
-  if (!userId) {
-    message.value = "请先登录";
-    loading.value = false;
-    return;
-  }
-  try {
-    await api.goalAdd({
-      userId: Number(userId),
-      goalType: form.goalType,
-      targetValue: Number(form.targetValue),
-      period: form.period
-    });
-    form.goalType = "";
-    form.targetValue = "";
-    form.period = "";
-    await loadGoals();
-  } catch (err) {
-    message.value = err.message || "保存失败";
-  } finally {
-    loading.value = false;
-  }
-}
-
-onMounted(loadGoals);
+const goals = mockData.goals;
 </script>
 
 <style scoped>
-.goals {
+.goals h2 {
+  margin-bottom: 32px;
+  color: #fff;
+}
+
+.goals-grid {
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 18px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 40px;
 }
 
-.panel {
-  border-radius: 16px;
+.goal-card {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.goal {
+.goal-header {
+  display: flex;
+  justify-content: space-between;
   margin-bottom: 16px;
 }
 
-.goal__info {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
+.goal-title {
+  font-size: 1.1rem;
+  color: #fff;
 }
 
-@media (max-width: 1000px) {
-  .goals {
+.goal-value {
+  color: #00d9ff;
+}
+
+.progress-bar {
+  height: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00d9ff, #00ff88);
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+
+.goal-status {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.complete {
+  color: #10b981;
+}
+
+.pending {
+  color: #f59e0b;
+}
+
+.tips {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tips h3 {
+  margin-bottom: 16px;
+  color: #fff;
+}
+
+.tips ul {
+  list-style: none;
+  padding: 0;
+}
+
+.tips li {
+  padding: 10px 0;
+  color: #aaa;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tips li:last-child {
+  border-bottom: none;
+}
+
+.tips li::before {
+  content: "•";
+  color: #00d9ff;
+  margin-right: 10px;
+}
+
+@media (max-width: 900px) {
+  .goals-grid {
     grid-template-columns: 1fr;
   }
 }

@@ -119,11 +119,10 @@ public class StatisticsController {
         int exerciseCalories = exercises.stream().mapToInt(item -> item.getCalories() == null ? 0 : item.getCalories()).sum();
         int exerciseMinutes = exercises.stream().mapToInt(item -> item.getDuration() == null ? 0 : item.getDuration()).sum();
 
-        LocalDateTime startTime = startDate.atStartOfDay();
-        LocalDateTime endTime = endDate.atTime(23, 59, 59);
         List<SleepRecord> sleeps = sleepRecordService.lambdaQuery()
             .eq(SleepRecord::getUserId, userId)
-            .between(SleepRecord::getStartTime, startTime, endTime)
+            .between(SleepRecord::getRecordDate, startDate, endDate)
+            .orderByAsc(SleepRecord::getStartTime)
             .list();
         long sleepMinutes = 0;
         long sleepMinutesToday = 0;
@@ -134,28 +133,27 @@ public class StatisticsController {
                 sleepMinutes = Duration.between(latest.getStartTime(), latest.getEndTime()).toMinutes();
             }
         }
-        for (SleepRecord item : sleeps) {
-            LocalDate recordDate = item.getRecordDate();
-            if (recordDate == null && item.getEndTime() != null) {
-                recordDate = item.getEndTime().toLocalDate();
-            }
-            if (recordDate == null && item.getStartTime() != null) {
-                recordDate = item.getStartTime().toLocalDate();
-            }
-            if (recordDate == null || item.getStartTime() == null || item.getEndTime() == null) continue;
-            long minutes = Duration.between(item.getStartTime(), item.getEndTime()).toMinutes();
-            if (today.equals(recordDate)) {
-                sleepMinutesToday = Math.max(sleepMinutesToday, minutes);
-            }
-            if (yesterday.equals(recordDate)) {
-                sleepMinutesYesterday = Math.max(sleepMinutesYesterday, minutes);
+        if (!sleeps.isEmpty()) {
+            for (SleepRecord item : sleeps) {
+                if (item.getStartTime() == null || item.getEndTime() == null) continue;
+                LocalDate recordDate = item.getRecordDate();
+                if (recordDate == null) {
+                    recordDate = item.getStartTime().toLocalDate();
+                }
+                long minutes = Math.max(0, Duration.between(item.getStartTime(), item.getEndTime()).toMinutes());
+                if (today.equals(recordDate)) {
+                    sleepMinutesToday = Math.max(sleepMinutesToday, minutes);
+                }
+                if (yesterday.equals(recordDate)) {
+                    sleepMinutesYesterday = Math.max(sleepMinutesYesterday, minutes);
+                }
             }
         }
-        if (startDate.isAfter(yesterday) && sleepMinutesYesterday == 0) {
+        if (sleepMinutesYesterday == 0) {
             List<SleepRecord> sleepYesterdayList = sleepRecordService.listByUserAndDate(userId, yesterday);
             for (SleepRecord item : sleepYesterdayList) {
                 if (item.getStartTime() == null || item.getEndTime() == null) continue;
-                long minutes = Duration.between(item.getStartTime(), item.getEndTime()).toMinutes();
+                long minutes = Math.max(0, Duration.between(item.getStartTime(), item.getEndTime()).toMinutes());
                 sleepMinutesYesterday = Math.max(sleepMinutesYesterday, minutes);
             }
         }

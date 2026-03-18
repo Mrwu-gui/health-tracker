@@ -208,3 +208,16 @@ CREATE TABLE IF NOT EXISTS ai_log (
   error TEXT COMMENT 'Error message',
   created_at DATETIME NOT NULL COMMENT 'Created time'
 ) COMMENT='AI logs';
+
+CREATE TABLE IF NOT EXISTS file_record (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
+  user_id BIGINT COMMENT 'User id',
+  type VARCHAR(32) COMMENT 'File type',
+  original_name VARCHAR(255) COMMENT 'Original file name',
+  file_name VARCHAR(255) COMMENT 'Stored file name',
+  file_path VARCHAR(512) COMMENT 'Local file path',
+  file_url VARCHAR(512) COMMENT 'Public URL',
+  file_size BIGINT COMMENT 'File size',
+  content_type VARCHAR(128) COMMENT 'Content type',
+  created_at DATETIME NOT NULL COMMENT 'Created time'
+) COMMENT='File records';

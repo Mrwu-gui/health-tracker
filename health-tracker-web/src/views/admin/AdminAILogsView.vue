@@ -1,38 +1,36 @@
 <template>
-  <div class="admin-logs">
+  <div class="admin-ai-logs">
     <div class="page-header">
-      <h1>系统日志</h1>
-      <div class="filters">
-        <select v-model="level" @change="loadLogs">
-          <option value="">全部级别</option>
-          <option value="info">Info</option>
-          <option value="warn">Warn</option>
-          <option value="error">Error</option>
-        </select>
-      </div>
+      <h1>AI 调用日志</h1>
     </div>
 
     <div class="table-card">
       <table>
         <thead>
           <tr>
-            <th>级别</th>
-            <th>模块</th>
-            <th>路径</th>
-            <th>消息</th>
+            <th>ID</th>
+            <th>用户ID</th>
+            <th>OpenID</th>
+            <th>请求内容</th>
+            <th>响应</th>
+            <th>状态</th>
+            <th>错误信息</th>
             <th>时间</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="log in logs" :key="log.id">
+            <td>{{ log.id }}</td>
+            <td>{{ log.userId }}</td>
+            <td class="openid">{{ log.openid }}</td>
+            <td class="request">{{ log.request }}</td>
+            <td class="response">{{ log.response || '-' }}</td>
             <td>
-              <span class="level-tag" :class="log.level">
-                {{ log.level.toUpperCase() }}
+              <span class="status-tag" :class="log.status">
+                {{ log.status === 'success' ? '成功' : '失败' }}
               </span>
             </td>
-            <td>{{ log.module }}</td>
-            <td class="path">{{ log.path }}</td>
-            <td>{{ log.message }}</td>
+            <td class="error">{{ log.error || '-' }}</td>
             <td>{{ log.time }}</td>
           </tr>
         </tbody>
@@ -40,7 +38,7 @@
     </div>
 
     <div v-if="logs.length === 0" class="empty">
-      暂无日志记录
+      暂无AI调用日志
     </div>
   </div>
 </template>
@@ -48,17 +46,16 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { mockData } from "../../mock/data";
-import { getSystemLogs } from "../../api";
+import { getAILogs } from "../../api";
 
-const level = ref("");
 const logs = ref([]);
 
 async function loadLogs() {
   try {
-    const data = await getSystemLogs(level.value, 200);
+    const data = await getAILogs(200);
     if (data) logs.value = data;
   } catch (e) {
-    logs.value = mockData.systemLogs;
+    logs.value = mockData.aiLogs;
   }
 }
 
@@ -68,8 +65,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.admin-logs {
-  max-width: 1200px;
+.admin-ai-logs {
+  max-width: 1400px;
 }
 
 .page-header {
@@ -85,28 +82,22 @@ onMounted(() => {
   color: #333;
 }
 
-.filters select {
-  padding: 8px 16px;
-  border: 1px solid #d9d9d9;
-  border-radius: 8px;
-  font-size: 14px;
-  background: #fff;
-}
-
 .table-card {
   background: #fff;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow-x: auto;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 1000px;
 }
 
 th, td {
-  padding: 14px 20px;
+  padding: 14px 16px;
   text-align: left;
 }
 
@@ -122,35 +113,46 @@ td {
   color: #333;
 }
 
-.level-tag {
-  padding: 4px 8px;
+.openid {
+  font-family: monospace;
+  font-size: 12px;
+  color: #999;
+}
+
+.request {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.response {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #666;
+}
+
+.status-tag {
+  padding: 4px 10px;
   border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
 }
 
-.level-tag.info {
-  background: #fff0eb;
-  color: #ff7a45;
+.status-tag.success {
+  background: #f6ffed;
+  color: #52c41a;
 }
 
-.level-tag.warn {
-  background: #fff7e6;
-  color: #fa8c16;
-}
-
-.level-tag.error {
+.status-tag.error {
   background: #fff1f0;
   color: #ff4d4f;
 }
 
-.path {
-  font-family: monospace;
+.error {
+  color: #ff4d4f;
   font-size: 12px;
-  color: #666;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .empty {

@@ -22,139 +22,178 @@
           </div>
         </div>
       </div>
-      <a-card class="hero__side" bordered>
-        <div class="hero__side-title">运动结构</div>
-        <div v-if="activityMix.length === 0" class="empty">暂无运动数据</div>
-        <div class="meter" v-else v-for="item in activityMix" :key="item.label">
+      <div class="hero__side">
+        <h3>运动结构</h3>
+        <div class="meter" v-for="item in activityMix" :key="item.label">
           <span>{{ item.label }}</span>
-          <a-progress :percent="item.value" :show-info="false" :status="item.status" />
+          <div class="progress-bar">
+            <div class="progress-fill" :style="{ width: item.value + '%' }"></div>
+          </div>
+          <span class="progress-text">{{ item.value }}%</span>
         </div>
-      </a-card>
+      </div>
     </section>
 
     <section class="grid">
-      <a-card class="panel" title="快速记录">
-        <div class="quick">
-          <a-button disabled>运动</a-button>
-          <a-button disabled>饮食</a-button>
-          <a-button disabled>睡眠</a-button>
-          <a-button disabled>体重</a-button>
-          <a-button disabled>用药</a-button>
-        </div>
-        <div class="quick-hint">快速记录暂不可用，请到“记录”页面维护。</div>
-      </a-card>
-      <a-card class="panel" title="目标">
-        <div v-if="goalItems.length === 0" class="empty">暂无目标</div>
-        <div class="goal" v-for="item in goalItems" :key="item.label">
+      <div class="panel">
+        <h3>目标进度</h3>
+        <div class="goal" v-for="item in goals" :key="item.label">
           <div class="goal__info">
             <strong>{{ item.label }}</strong>
             <span>{{ item.value }}</span>
           </div>
-          <a-progress :percent="item.percent" />
+          <div class="progress-bar large">
+            <div class="progress-fill" :style="{ width: item.percent + '%' }"></div>
+          </div>
         </div>
-      </a-card>
-      <a-card class="panel" title="提醒">
-        <div v-if="reminders.length === 0" class="empty">暂无提醒</div>
+      </div>
+
+      <div class="panel">
+        <h3>今日提醒</h3>
         <div class="tags">
-          <a-tag v-for="item in reminders" :key="item.label" :color="item.color">
+          <span class="tag" v-for="item in reminders" :key="item.label" :class="item.color">
             {{ item.label }}
-          </a-tag>
+          </span>
         </div>
-      </a-card>
+      </div>
+
+      <div class="panel">
+        <h3>健康趋势</h3>
+        <div class="trend">
+          <div class="trend-item">
+            <span class="trend-label">本周平均步数</span>
+            <span class="trend-value">{{ trendStats.avgSteps }}</span>
+          </div>
+          <div class="trend-item">
+            <span class="trend-label">本周平均睡眠</span>
+            <span class="trend-value">{{ trendStats.avgSleep }}小时</span>
+          </div>
+          <div class="trend-item">
+            <span class="trend-label">本周平均热量</span>
+            <span class="trend-value">{{ trendStats.avgDiet }} kcal</span>
+          </div>
+        </div>
+      </div>
     </section>
-    <div class="status-row" v-if="loading">加载中...</div>
-    <div class="status-row" v-if="message">{{ message }}</div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from "vue";
-import { api } from "../api/http";
+import { ref, onMounted } from "vue";
+import { getUserId, getStatisticsOverview, getStatisticsTrend, getReminderList, getGoalList } from "../api";
 
-const overview = reactive({
-  steps: "--",
-  stepsHint: "暂无目标",
-  sleep: "--",
-  sleepHint: "暂无记录",
-  calories: "--",
-  caloriesHint: "暂无记录"
+const overview = ref({
+  steps: 0,
+  sleep: "0小时0分",
+  calories: 0,
+  stepsHint: "暂无数据",
+  sleepHint: "暂无数据",
+  caloriesHint: "暂无数据"
 });
-
-const activityMix = ref([]);
-
+const activityMix = ref([
+  { label: "步数", value: 0 },
+  { label: "睡眠", value: 0 },
+  { label: "饮食", value: 0 }
+]);
+const trendStats = ref({
+  avgSteps: 0,
+  avgSleep: 0,
+  avgDiet: 0
+});
+const goals = ref([]);
 const reminders = ref([]);
-const goalItems = ref([]);
-const loading = ref(false);
-const message = ref("");
 
-onMounted(async () => {
-  const userId = localStorage.getItem("userId");
-  if (!userId) return;
-  loading.value = true;
-  message.value = "";
+const formatDelta = (value, unit) => {
+  if (value === 0 || value === null || value === undefined) return `与昨日持平`;
+  const sign = value > 0 ? "↑" : "↓";
+  const abs = Math.abs(value);
+  return `${sign} ${abs}${unit}`;
+};
+
+const goalLabel = (goal) => {
+  const map = {
+    1: "步数目标",
+    2: "睡眠目标",
+    3: "热量目标",
+    4: "体重目标"
+  };
+  return map[goal.goalType] || `目标 ${goal.goalType || ""}`.trim();
+};
+
+const loadDashboard = async () => {
+  const userId = getUserId();
   try {
-    const today = new Date().toISOString().slice(0, 10);
-    const [data, goals, meds, exercises] = await Promise.all([
-      api.dashboard(userId),
-      api.goalList(userId),
-      api.medicationList(userId),
-      api.exerciseList(userId, today)
+    const [overviewData, reminderData, goalData, trendData] = await Promise.all([
+      getStatisticsOverview(userId, "day"),
+      getReminderList(userId),
+      getGoalList(userId, "day"),
+      getStatisticsTrend(userId, "week")
     ]);
-    if (data?.steps) overview.steps = data.steps;
-    if (data?.sleep) overview.sleep = data.sleep;
-    if (data?.calories) overview.calories = data.calories;
-    overview.sleepHint = data?.sleep && data.sleep !== "0小时0分" ? "已记录" : "暂无记录";
-    overview.caloriesHint = data?.calories && data.calories !== "0" ? "饮食 + 运动累计" : "暂无记录";
-    if (data?.steps && Array.isArray(goals)) {
-      const stepGoal = goals.find((item) => item.goalType === "步数" || item.goalType === "steps");
-      if (stepGoal) {
-        const pct = stepGoal.targetValue
-          ? Math.round((stepGoal.currentValue / stepGoal.targetValue) * 100)
-          : 0;
-        overview.stepsHint = `完成 ${pct}%`;
-      }
+
+    if (overviewData) {
+      overview.value.steps = Number(overviewData.stepsToday || overviewData.steps || 0);
+      overview.value.sleep = overviewData.sleep || "0小时0分";
+      overview.value.calories = Number(overviewData.dietCaloriesToday || overviewData.dietCalories || 0);
+      overview.value.stepsHint = formatDelta(overviewData.stepsDelta || 0, "步");
+      overview.value.sleepHint = formatDelta(overviewData.sleepDeltaMinutes || 0, "分");
+      overview.value.caloriesHint = formatDelta(overviewData.dietDeltaCalories || 0, "kcal");
+
+      const stepsValue = Number(overviewData.stepsToday || 0);
+      const sleepValue = Number(overviewData.sleepMinutesToday || 0);
+      const dietValue = Number(overviewData.dietCaloriesToday || 0);
+      const total = stepsValue + sleepValue + dietValue;
+      activityMix.value = [
+        { label: "步数", value: total ? Math.round((stepsValue / total) * 100) : 0 },
+        { label: "睡眠", value: total ? Math.round((sleepValue / total) * 100) : 0 },
+        { label: "饮食", value: total ? Math.round((dietValue / total) * 100) : 0 }
+      ];
     }
-    goalItems.value = Array.isArray(goals)
-      ? goals.map((item) => {
-          const percent = item.targetValue
-            ? Math.round((item.currentValue / item.targetValue) * 100)
-            : 0;
-          return {
-            label: item.goalType,
-            value: `${item.currentValue} / ${item.targetValue}`,
-            percent
-          };
-        })
-      : [];
-    reminders.value = Array.isArray(meds)
-      ? meds.map((item) => ({
-          label: `${item.drugName || "用药"} ${item.remindTime || item.frequency || ""}`.trim(),
-          color: "green"
-        }))
-      : [];
-    if (Array.isArray(exercises) && exercises.length > 0) {
-      const totals = new Map();
-      let sum = 0;
-      exercises.forEach((item) => {
-        const key = item.type || "其他";
-        const value = Number(item.duration || 0);
-        totals.set(key, (totals.get(key) || 0) + value);
-        sum += value;
-      });
-      activityMix.value = Array.from(totals.entries()).map(([label, value]) => ({
-        label,
-        value: sum > 0 ? Math.round((value / sum) * 100) : 0,
-        status: "normal"
+
+    if (Array.isArray(reminderData)) {
+      reminders.value = reminderData.slice(0, 6).map((item) => ({
+        label: item.title || item.content || item.remindTime || "提醒",
+        color: item.status === 1 ? "green" : "orange"
       }));
-    } else {
-      activityMix.value = [];
     }
-  } catch (err) {
-    message.value = err.message || "获取概览失败";
-  } finally {
-    loading.value = false;
+
+    if (Array.isArray(goalData)) {
+      goals.value = goalData.map((item) => {
+        const target = Number(item.targetValue || 0);
+        const current = Number(item.currentValue || 0);
+        const percent = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+        return {
+          label: goalLabel(item),
+          value: target ? `${current}/${target}` : `${current}`,
+          percent
+        };
+      });
+    }
+
+    if (trendData && trendData.series) {
+      const stepsSeries = trendData.series.steps || [];
+      const sleepSeries = trendData.series.sleep || [];
+      const dietSeries = trendData.series.diet || [];
+      const avgSteps = stepsSeries.length
+        ? Math.round(stepsSeries.reduce((sum, item) => sum + Number(item.value || 0), 0) / stepsSeries.length)
+        : 0;
+      const avgSleep = sleepSeries.length
+        ? (sleepSeries.reduce((sum, item) => sum + Number(item.value || 0), 0) / sleepSeries.length).toFixed(1)
+        : 0;
+      const avgDiet = dietSeries.length
+        ? Math.round(dietSeries.reduce((sum, item) => sum + Number(item.value || 0), 0) / dietSeries.length)
+        : 0;
+      trendStats.value = {
+        avgSteps,
+        avgSleep,
+        avgDiet
+      };
+    }
+  } catch (e) {
+    console.warn("Dashboard 使用默认数据", e);
   }
-});
+};
+
+onMounted(loadDashboard);
 </script>
 
 <style scoped>
@@ -166,122 +205,178 @@ onMounted(async () => {
 .hero {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 18px;
+  gap: 24px;
 }
 
 .hero__card {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(255, 255, 255, 0.85));
-  border-radius: 18px;
-  padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(12px);
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(255, 255, 255, 0.1));
+  border-radius: 20px;
+  padding: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.hero__card h2 {
+  margin-bottom: 8px;
+  color: #fff;
 }
 
 .hero__subtitle {
-  color: #64748b;
-  margin-top: 6px;
+  color: #888;
+  margin-bottom: 24px;
 }
 
 .hero__stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 20px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
 }
 
 .stat {
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 14px;
-  padding: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px;
   display: grid;
-  gap: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .stat__label {
-  color: #64748b;
-  font-size: 0.85rem;
+  color: #888;
+  font-size: 0.9rem;
 }
 
 .stat__value {
-  font-size: 1.4rem;
+  font-size: 1.8rem;
   font-weight: 600;
+  color: #00d9ff;
 }
 
 .stat__hint {
   color: #10b981;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
 }
 
 .hero__side {
-  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.hero__side-title {
-  font-weight: 600;
-  margin-bottom: 12px;
+.hero__side h3 {
+  margin-bottom: 20px;
+  color: #fff;
 }
 
 .meter {
   display: grid;
-  gap: 6px;
-  margin-bottom: 12px;
-  color: #475569;
+  grid-template-columns: 60px 1fr 40px;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  color: #aaa;
+}
+
+.progress-bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar.large {
+  height: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00d9ff, #00ff88);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  color: #00d9ff;
+  font-size: 0.85rem;
+  text-align: right;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
 }
 
 .panel {
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.quick {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.quick-hint {
-  margin-top: 10px;
-  color: #94a3b8;
-  font-size: 12px;
+.panel h3 {
+  margin-bottom: 20px;
+  color: #fff;
 }
 
 .goal {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .goal__info {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  color: #ccc;
 }
 
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
 }
 
-.empty {
-  color: #94a3b8;
-  font-size: 0.9rem;
+.tag {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tag.green { border-left: 3px solid #10b981; }
+.tag.blue { border-left: 3px solid #3b82f6; }
+.tag.orange { border-left: 3px solid #f59e0b; }
+.tag.purple { border-left: 3px solid #8b5cf6; }
+
+.trend {
+  display: grid;
+  gap: 16px;
+}
+
+.trend-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.trend-label {
+  color: #888;
+}
+
+.trend-value {
+  color: #00d9ff;
+  font-weight: 600;
 }
 
 @media (max-width: 1100px) {
-  .hero {
+  .hero, .grid {
     grid-template-columns: 1fr;
   }
-
+  
   .hero__stats {
-    grid-template-columns: 1fr;
-  }
-
-  .grid {
     grid-template-columns: 1fr;
   }
 }

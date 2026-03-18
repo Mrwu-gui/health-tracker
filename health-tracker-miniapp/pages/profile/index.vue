@@ -162,7 +162,7 @@
 </template>
 
 <script>
-import { request } from "../../utils/api";
+import { request, API_BASE_URL } from "../../utils/api";
 
 export default {
   data() {
@@ -220,6 +220,54 @@ export default {
     this.loadLocalProfile();
   },
   methods: {
+    uploadAvatarFile(filePath) {
+      return new Promise((resolve, reject) => {
+        const token = uni.getStorageSync("token");
+        uni.uploadFile({
+          url: `${API_BASE_URL}/api/user/avatar/upload`,
+          filePath,
+          name: "file",
+          header: {
+            Authorization: token ? `Bearer ${token}` : ""
+          },
+          success: (res) => {
+            try {
+              const body = JSON.parse(res.data || "{}");
+              if ((typeof body.code === "number" || typeof body.code === "string") && Number(body.code) !== 0) {
+                reject(new Error(body.message || "上传失败"));
+                return;
+              }
+              const data = body.data || body;
+              if (data && data.url) {
+                resolve(String(data.url));
+                return;
+              }
+              reject(new Error("上传失败"));
+            } catch (err) {
+              reject(err);
+            }
+          },
+          fail: (err) => reject(err)
+        });
+      });
+    },
+    async uploadAvatar(avatarUrl) {
+      if (!avatarUrl) return "";
+      if (String(avatarUrl).startsWith("http")) {
+        const tempPath = await new Promise((resolve, reject) => {
+          uni.downloadFile({
+            url: avatarUrl,
+            success: (res) => {
+              if (res.statusCode === 200 && res.tempFilePath) resolve(res.tempFilePath);
+              else reject(new Error("下载头像失败"));
+            },
+            fail: reject
+          });
+        });
+        return this.uploadAvatarFile(tempPath);
+      }
+      return this.uploadAvatarFile(avatarUrl);
+    },
     fetchProfile() {
       this.loading = true;
       this.error = "";
@@ -416,13 +464,23 @@ export default {
         uni.showToast({ title: "未获取头像", icon: "none" });
         return;
       }
-      this.profile.avatar = String(avatarUrl);
-      uni.setStorageSync("userAvatar", avatarUrl);
-      request("/api/user/profile/update", "POST", {
-        userId: uni.getStorageSync("userId") || 1,
-        wxNickname: this.bodyForm.nickname || this.profile.name || "",
-        wxAvatar: avatarUrl
-      }).catch(() => {});
+      this.bodySaving = true;
+      this.uploadAvatar(String(avatarUrl))
+        .then((serverUrl) => {
+          this.profile.avatar = serverUrl;
+          uni.setStorageSync("userAvatar", serverUrl);
+          return request("/api/user/profile/update", "POST", {
+            userId: uni.getStorageSync("userId") || 1,
+            wxNickname: this.bodyForm.nickname || this.profile.name || "",
+            wxAvatar: serverUrl
+          });
+        })
+        .catch(() => {
+          uni.showToast({ title: "头像上传失败", icon: "none" });
+        })
+        .finally(() => {
+          this.bodySaving = false;
+        });
     }
   }
 };

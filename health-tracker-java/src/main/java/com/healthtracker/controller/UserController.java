@@ -4,12 +4,21 @@ import com.healthtracker.dto.UserLoginRequest;
 import com.healthtracker.dto.UserProfileUpdateRequest;
 import com.healthtracker.dto.UserRegisterRequest;
 import com.healthtracker.entity.User;
+import com.healthtracker.entity.FileRecord;
 import com.healthtracker.security.JwtService;
+import com.healthtracker.service.FileRecordService;
 import com.healthtracker.service.PasswordService;
 import com.healthtracker.service.UserService;
 import jakarta.validation.Valid;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.http.HttpStatus;
@@ -20,6 +29,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/user")
@@ -27,11 +39,16 @@ public class UserController {
     private final UserService userService;
     private final PasswordService passwordService;
     private final JwtService jwtService;
+    private final FileRecordService fileRecordService;
+    @Value("${file.upload-dir:uploads}")
+    private String uploadDir;
 
-    public UserController(UserService userService, PasswordService passwordService, JwtService jwtService) {
+    public UserController(UserService userService, PasswordService passwordService, JwtService jwtService,
+                          FileRecordService fileRecordService) {
         this.userService = userService;
         this.passwordService = passwordService;
         this.jwtService = jwtService;
+        this.fileRecordService = fileRecordService;
     }
 
     @PostMapping("/register")
@@ -99,6 +116,41 @@ public class UserController {
         }
         userService.updateById(user);
         return sanitize(user);
+    }
+
+    @PostMapping("/avatar/upload")
+    public Map<String, Object> uploadAvatar(@RequestParam("file") MultipartFile file) throws Exception {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("文件为空");
+        }
+        String ext = StringUtils.getFilenameExtension(file.getOriginalFilename());
+        String name = UUID.randomUUID().toString().replace("-", "");
+        String filename = ext == null || ext.isBlank() ? name : name + "." + ext;
+        Path dirPath = Paths.get(uploadDir).toAbsolutePath().normalize().resolve("avatar");
+        try {
+            Files.createDirectories(dirPath);
+        } catch (IOException ex) {
+            throw new IllegalArgumentException("创建目录失败", ex);
+        }
+        Path target = dirPath.resolve(filename);
+        file.transferTo(target.toFile());
+        String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+        String url = baseUrl + "/uploads/avatar/" + filename;
+        FileRecord record = new FileRecord();
+        record.setUserId(resolveUserId(null));
+        record.setType("avatar");
+        record.setOriginalName(file.getOriginalFilename());
+        record.setFileName(filename);
+        record.setFilePath(target.toString());
+        record.setFileUrl(url);
+        record.setFileSize(file.getSize());
+        record.setContentType(file.getContentType());
+        record.setCreatedAt(LocalDateTime.now());
+        fileRecordService.save(record);
+        Map<String, Object> body = new HashMap<>();
+        body.put("url", url);
+        body.put("id", record.getId());
+        return body;
     }
 
     private User sanitize(User user) {

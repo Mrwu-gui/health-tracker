@@ -237,7 +237,10 @@ public class AuthController {
     }
 
     @GetMapping("/web/qr")
-    public Map<String, Object> webQr() {
+    public Map<String, Object> webQr(jakarta.servlet.http.HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Expires", "0");
         String state = UUID.randomUUID().toString().replace("-", "");
         String qrUrl = weChatService.buildWebQrUrl(state);
         Map<String, Object> body = new HashMap<>();

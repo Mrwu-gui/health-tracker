@@ -48,7 +48,7 @@
         </view>
 
         <!-- 睡眠 -->
-        <view class="metric-mini metric-mini-sleep" @tap="openRecord('sleep')">
+        <view class="metric-mini metric-mini-sleep">
           <view class="metric-mini-top">
             <view class="metric-mini-icon metric-mini-icon-sleep">
               <image class="metric-mini-icon-img" src="/static/tabbar/sleep.png" mode="aspectFit" />
@@ -62,7 +62,7 @@
         </view>
 
         <!-- 体重 -->
-        <view class="metric-mini metric-mini-weight" @tap="openRecord('weight')">
+        <view class="metric-mini metric-mini-weight">
           <view class="metric-mini-top">
             <view class="metric-mini-icon metric-mini-icon-weight">
               <image class="metric-mini-icon-img" src="/static/tabbar/weight.png" mode="aspectFit" />
@@ -76,7 +76,7 @@
         </view>
 
         <!-- 饮食 -->
-        <view class="metric-mini metric-mini-diet" @tap="openRecord('diet')">
+        <view class="metric-mini metric-mini-diet">
           <view class="metric-mini-top">
             <view class="metric-mini-icon metric-mini-icon-diet">
               <image class="metric-mini-icon-img" src="/static/tabbar/food.png" mode="aspectFit" />
@@ -578,6 +578,10 @@ export default {
             if (start && end) {
               const minutes = Math.max(0, Math.round((end - start) / 60000));
               this.overview.sleep = this.formatMinutes(minutes);
+            }
+            const recordDate = latest.item.recordDate || (latest.item.startTime ? latest.item.startTime.slice(0, 10) : "");
+            if (recordDate && recordDate !== todayStr) {
+              this.sleepDeltaMinutes = 0;
             }
           }
         }

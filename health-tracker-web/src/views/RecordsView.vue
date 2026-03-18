@@ -1,98 +1,199 @@
 <template>
   <div class="records">
-    <a-card title="每日记录" class="panel">
-      <a-tabs default-active-key="exercise">
-        <a-tab-pane key="exercise" tab="运动">
-          <a-table :columns="exerciseColumns" :data-source="exerciseData" size="small" />
-        </a-tab-pane>
-        <a-tab-pane key="diet" tab="饮食">
-          <a-table :columns="dietColumns" :data-source="dietData" size="small" />
-        </a-tab-pane>
-        <a-tab-pane key="sleep" tab="睡眠">
-          <a-table :columns="sleepColumns" :data-source="sleepData" size="small" />
-        </a-tab-pane>
-        <a-tab-pane key="weight" tab="体重">
-          <a-table :columns="weightColumns" :data-source="weightData" size="small" />
-        </a-tab-pane>
-        <a-tab-pane key="health" tab="血压">
-          <a-table :columns="healthColumns" :data-source="healthData" size="small" />
-        </a-tab-pane>
-      </a-tabs>
-      <div class="status-row" v-if="loading">加载中...</div>
-      <div class="status-row" v-if="message">{{ message }}</div>
-    </a-card>
+    <h2>健康记录</h2>
+    <div class="tabs">
+      <button 
+        v-for="tab in tabs" 
+        :key="tab.key" 
+        :class="{ active: activeTab === tab.key }"
+        @click="activeTab = tab.key"
+      >
+        {{ tab.name }}
+      </button>
+    </div>
+
+    <div class="table-container">
+      <table v-if="activeTab === 'exercise'">
+        <thead>
+          <tr>
+            <th>类型</th>
+            <th>时长</th>
+            <th>热量</th>
+            <th>日期</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in exerciseData" :key="item.key">
+            <td>{{ item.type }}</td>
+            <td>{{ item.duration }}</td>
+            <td>{{ item.calories }} kcal</td>
+            <td>{{ item.date }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table v-if="activeTab === 'diet'">
+        <thead>
+          <tr>
+            <th>餐次</th>
+            <th>食物</th>
+            <th>热量</th>
+            <th>日期</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in dietData" :key="item.key">
+            <td>{{ item.mealType }}</td>
+            <td>{{ item.foodName }}</td>
+            <td>{{ item.calories }} kcal</td>
+            <td>{{ item.date }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table v-if="activeTab === 'sleep'">
+        <thead>
+          <tr>
+            <th>入睡时间</th>
+            <th>起床时间</th>
+            <th>深睡</th>
+            <th>浅睡</th>
+            <th>日期</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in sleepData" :key="item.key">
+            <td>{{ item.startTime }}</td>
+            <td>{{ item.endTime }}</td>
+            <td>{{ item.deepSleep }}</td>
+            <td>{{ item.lightSleep }}</td>
+            <td>{{ item.date }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table v-if="activeTab === 'weight'">
+        <thead>
+          <tr>
+            <th>体重</th>
+            <th>BMI</th>
+            <th>日期</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in weightData" :key="item.key">
+            <td>{{ item.weight }}</td>
+            <td>{{ item.bmi }}</td>
+            <td>{{ item.date }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table v-if="activeTab === 'health'">
+        <thead>
+          <tr>
+            <th>收缩压</th>
+            <th>舒张压</th>
+            <th>心率</th>
+            <th>日期</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in healthData" :key="item.key">
+            <td>{{ item.systolic }} mmHg</td>
+            <td>{{ item.diastolic }} mmHg</td>
+            <td>{{ item.heartRate }} bpm</td>
+            <td>{{ item.date }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
-import { api } from "../api/http";
+import { ref } from "vue";
+import { mockData } from "../mock/data";
 
-const exerciseColumns = [
-  { title: "类型", dataIndex: "type" },
-  { title: "时长", dataIndex: "duration" },
-  { title: "热量", dataIndex: "calories" },
-  { title: "日期", dataIndex: "date" }
-];
-const dietColumns = [
-  { title: "餐次", dataIndex: "mealType" },
-  { title: "食物", dataIndex: "foodName" },
-  { title: "热量", dataIndex: "calories" },
-  { title: "日期", dataIndex: "date" }
-];
-const sleepColumns = [
-  { title: "开始", dataIndex: "startTime" },
-  { title: "结束", dataIndex: "endTime" },
-  { title: "深睡", dataIndex: "deepSleepMinutes" },
-  { title: "浅睡", dataIndex: "lightSleepMinutes" }
-];
-const weightColumns = [
-  { title: "体重", dataIndex: "weight" },
-  { title: "体脂指数", dataIndex: "bmi" },
-  { title: "日期", dataIndex: "date" }
-];
-const healthColumns = [
-  { title: "收缩压", dataIndex: "systolic" },
-  { title: "舒张压", dataIndex: "diastolic" },
-  { title: "心率", dataIndex: "heartRate" },
-  { title: "日期", dataIndex: "date" }
+const activeTab = ref("exercise");
+
+const tabs = [
+  { key: "exercise", name: "运动" },
+  { key: "diet", name: "饮食" },
+  { key: "sleep", name: "睡眠" },
+  { key: "weight", name: "体重" },
+  { key: "health", name: "血压" }
 ];
 
-const exerciseData = ref([]);
-const dietData = ref([]);
-const sleepData = ref([]);
-const weightData = ref([]);
-const healthData = ref([]);
-const message = ref("");
-const loading = ref(false);
-
-onMounted(async () => {
-  const userId = localStorage.getItem("userId");
-  if (!userId) return;
-  const date = new Date().toISOString().slice(0, 10);
-  loading.value = true;
-  message.value = "";
-  try {
-    exerciseData.value = await api.exerciseList(userId, date);
-    dietData.value = await api.dietList(userId, date);
-    sleepData.value = await api.sleepList(userId, date);
-    weightData.value = await api.weightList(userId, date);
-    healthData.value = await api.healthList(userId, date);
-  } catch (err) {
-    message.value = err.message || "获取记录失败";
-  } finally {
-    loading.value = false;
-  }
-});
+const exerciseData = mockData.exerciseData;
+const dietData = mockData.dietData;
+const sleepData = mockData.sleepData;
+const weightData = mockData.weightData;
+const healthData = mockData.healthData;
 </script>
 
 <style scoped>
-.records {
-  display: grid;
-  gap: 16px;
+.records h2 {
+  margin-bottom: 24px;
+  color: #fff;
 }
 
-.panel {
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.tabs button {
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #aaa;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.tabs button:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.tabs button.active {
+  background: rgba(0, 217, 255, 0.2);
+  color: #00d9ff;
+  border-color: rgba(0, 217, 255, 0.3);
+}
+
+.table-container {
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+th {
+  color: #888;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+td {
+  color: #ddd;
+}
+
+tr:hover td {
+  background: rgba(255, 255, 255, 0.05);
 }
 </style>

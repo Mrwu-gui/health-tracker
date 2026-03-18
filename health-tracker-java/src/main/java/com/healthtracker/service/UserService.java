@@ -30,6 +30,13 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         return getOne(new LambdaQueryWrapper<User>().eq(User::getWxOpenid, openid));
     }
 
+    public User findByWxUnionid(String unionid) {
+        if (unionid == null || unionid.isBlank()) {
+            return null;
+        }
+        return getOne(new LambdaQueryWrapper<User>().eq(User::getWxUnionid, unionid));
+    }
+
     public User registerByPhone(String phone) {
         User user = new User();
         user.setPhone(phone);

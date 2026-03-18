@@ -76,10 +76,26 @@ public class AuthController {
         if (openid == null || openid.isBlank()) {
             throw new IllegalArgumentException("微信登录失败");
         }
-        User user = userService.findByWxOpenid(openid);
+        User user = userService.findByWxUnionid(unionid);
+        if (user == null) {
+            user = userService.findByWxOpenid(openid);
+        }
         if (user == null) {
             user = userService.registerByWeChat(openid, unionid, null, null);
             log.info("Mini login auto-registered userId={} openid={}", user.getId(), mask(openid));
+        } else {
+            boolean updated = false;
+            if (unionid != null && !unionid.isBlank() && (user.getWxUnionid() == null || user.getWxUnionid().isBlank())) {
+                user.setWxUnionid(unionid);
+                updated = true;
+            }
+            if (user.getWxOpenid() == null || user.getWxOpenid().isBlank()) {
+                user.setWxOpenid(openid);
+                updated = true;
+            }
+            if (updated) {
+                userService.updateById(user);
+            }
         }
         log.info("Mini login success userId={} openid={}", user.getId(), mask(openid));
         return buildTokenResponse(user);
@@ -238,9 +254,25 @@ public class AuthController {
         if (openid == null || openid.isBlank()) {
             throw new IllegalArgumentException("微信网页授权失败");
         }
-        User user = userService.findByWxOpenid(openid);
+        User user = userService.findByWxUnionid(unionid);
+        if (user == null) {
+            user = userService.findByWxOpenid(openid);
+        }
         if (user == null) {
             user = userService.registerByWeChat(openid, unionid, null, null);
+        } else {
+            boolean updated = false;
+            if (unionid != null && !unionid.isBlank() && (user.getWxUnionid() == null || user.getWxUnionid().isBlank())) {
+                user.setWxUnionid(unionid);
+                updated = true;
+            }
+            if (user.getWxOpenid() == null || user.getWxOpenid().isBlank()) {
+                user.setWxOpenid(openid);
+                updated = true;
+            }
+            if (updated) {
+                userService.updateById(user);
+            }
         }
         return buildTokenResponse(user);
     }

@@ -113,7 +113,7 @@
               <view class="info-row"><text class="info-label">心率</text><text class="info-value">{{ profile.heartRate ? profile.heartRate + ' 次/分' : '--' }}</text></view>
             </view>
             <button class="modal-sheet-btn secondary" @tap="bodyModalMode = 'edit'">编辑</button>
-          </template>
+</template>
           <template v-else>
             <!-- #ifdef MP-WEIXIN -->
             <view class="field"><text class="field-label">头像</text>
@@ -150,7 +150,7 @@
             <button class="modal-sheet-btn primary" @tap="saveBodyProfile" :disabled="bodySaving">
               {{ bodySaving ? "保存中..." : "保存" }}
             </button>
-          </template>
+</template>
         </view>
       </view>
     </view>
@@ -491,7 +491,7 @@ export default {
   min-height: 100vh;
   background: #f5f1eb;
   padding: 16px 16px 24px;
-  padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
 
 .profile-card {

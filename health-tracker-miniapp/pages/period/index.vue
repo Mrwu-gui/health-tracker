@@ -354,7 +354,7 @@ export default {
   width: 36px;
   height: 36px;
   border-radius: 18px;
-  background: #2563eb;
+  background: #f97316;
   color: #fff;
   font-size: 20px;
   line-height: 1;
@@ -642,7 +642,7 @@ export default {
 }
 
 .pill.active {
-  background: #2563eb;
+  background: #f97316;
   color: #fff;
 }
 
@@ -656,7 +656,7 @@ export default {
 }
 
 .modal-sheet-btn.primary {
-  background: #2563eb;
+  background: #f97316;
   color: #fff;
   border: none;
 }

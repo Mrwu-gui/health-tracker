@@ -255,7 +255,7 @@ export default {
   width: 34px;
   height: 34px;
   border-radius: 17px;
-  background: #2563eb;
+  background: #f97316;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -328,7 +328,7 @@ export default {
 .toggle {
   font-size: 10px;
   background: #dbeafe;
-  color: #2563eb;
+  color: #f97316;
   padding: 4px 8px;
   border-radius: 999px;
 }
@@ -412,11 +412,11 @@ export default {
 
 .bar-fill {
   height: 100%;
-  background: #2563eb;
+  background: #f97316;
 }
 
 .primary {
-  background: #2563eb;
+  background: #f97316;
   color: #ffffff;
   border-radius: 16px;
   font-size: 12px;
@@ -510,7 +510,7 @@ export default {
   width: 100%;
   padding: 14px;
   border-radius: 14px;
-  background: #2563eb;
+  background: #f97316;
   color: #fff;
   font-size: 15px;
   font-weight: 600;
@@ -518,7 +518,7 @@ export default {
 }
 
 .primary {
-  background: #2563eb;
+  background: #f97316;
   color: #ffffff;
   border-radius: 16px;
   font-size: 12px;

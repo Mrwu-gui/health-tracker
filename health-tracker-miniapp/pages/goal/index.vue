@@ -303,7 +303,7 @@ export default {
   width: 34px;
   height: 34px;
   border-radius: 17px;
-  background: #2563eb;
+  background: #f97316;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -395,7 +395,7 @@ export default {
 
 .state {
   font-size: 11px;
-  color: #2563eb;
+  color: #f97316;
 }
 
 .progress-row {
@@ -499,8 +499,8 @@ export default {
 }
 
 .pill.active {
-  color: #2563eb;
-  border-color: #2563eb;
+  color: #f97316;
+  border-color: #f97316;
   background: #eff6ff;
 }
 
@@ -517,7 +517,7 @@ export default {
   width: 100%;
   padding: 14px;
   border-radius: 14px;
-  background: #2563eb;
+  background: #f97316;
   color: #fff;
   font-size: 15px;
   font-weight: 600;
@@ -533,7 +533,7 @@ export default {
 
 .bar-fill {
   height: 100%;
-  background: #2563eb;
+  background: #f97316;
 }
 
 .tip {

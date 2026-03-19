@@ -9,10 +9,15 @@ import java.time.LocalDateTime;
 @TableName("we_run_record")
 public class WeRunRecord {
     @TableId(type = IdType.AUTO)
+    /** 主键 */
     private Long id;
+    /** 用户ID */
     private Long userId;
+    /** 记录日期 */
     private LocalDate recordDate;
+    /** 步数 */
     private Integer steps;
+    /** 创建时间 */
     private LocalDateTime createdAt;
 
     public Long getId() {

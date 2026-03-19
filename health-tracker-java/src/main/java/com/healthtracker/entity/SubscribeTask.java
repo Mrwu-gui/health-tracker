@@ -8,17 +8,27 @@ import java.time.LocalDateTime;
 @TableName("subscribe_task")
 public class SubscribeTask {
     @TableId(type = IdType.AUTO)
+    /** 主键 */
     private Long id;
+    /** 用户ID */
     private Long userId;
+    /** 微信openid */
     private String openid;
+    /** 模板ID */
     private String templateId;
+    /** 跳转页面 */
     private String page;
+    /** 模板数据JSON */
     private String dataJson;
+    /** 发送时间 */
     private LocalDateTime sendTime;
     /** 0=待发送,1=已发送,2=失败 */
     private Integer status;
+    /** 发送响应 */
     private String response;
+    /** 创建时间 */
     private LocalDateTime createdAt;
+    /** 实际发送时间 */
     private LocalDateTime sentAt;
 
     public Long getId() {

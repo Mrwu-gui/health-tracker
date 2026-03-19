@@ -64,6 +64,14 @@ CREATE TABLE IF NOT EXISTS diet_record (
   date DATE NOT NULL COMMENT 'Record date'
 ) COMMENT='Diet records';
 
+CREATE TABLE IF NOT EXISTS water_record (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
+  user_id BIGINT NOT NULL COMMENT 'User id',
+  ml INT NOT NULL COMMENT 'Water intake (ml)',
+  drink_time DATETIME NOT NULL COMMENT 'Drink time',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Created time'
+) COMMENT='Water records';
+
 CREATE TABLE IF NOT EXISTS sleep_record (
   id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
   user_id BIGINT NOT NULL COMMENT 'User id',
@@ -109,7 +117,11 @@ CREATE TABLE IF NOT EXISTS goal (
   goal_type INT NOT NULL COMMENT 'Goal type (int)',
   target_value INT NOT NULL COMMENT 'Target value',
   current_value INT NOT NULL COMMENT 'Current value',
-  period VARCHAR(16) NOT NULL COMMENT 'Period (day/week)'
+  period VARCHAR(16) NOT NULL COMMENT 'Period (day/week)',
+  start_date DATE COMMENT 'Start date',
+  end_date DATE COMMENT 'End date',
+  status TINYINT DEFAULT 1 COMMENT 'Status (1=进行中,2=已达成,3=放弃)',
+  ai_strategy TEXT COMMENT 'AI strategy/notes'
 ) COMMENT='Goals';
 
 CREATE TABLE IF NOT EXISTS medication (
@@ -152,6 +164,10 @@ CREATE TABLE IF NOT EXISTS reminder (
   content VARCHAR(255) COMMENT 'Content',
   remind_time DATETIME COMMENT 'Remind time',
   status TINYINT NOT NULL DEFAULT 0 COMMENT 'Status (0=未提醒,1=已提醒)',
+  source_type TINYINT DEFAULT 0 COMMENT 'Source (0=手动,1=AI生成)',
+  related_record_id BIGINT COMMENT 'Related record id',
+  finish_time DATETIME COMMENT 'Finish time',
+  priority TINYINT DEFAULT 1 COMMENT 'Priority (1=普通,2=重要,3=紧急)',
   created_at DATETIME COMMENT 'Created time'
 ) COMMENT='Reminders';
 

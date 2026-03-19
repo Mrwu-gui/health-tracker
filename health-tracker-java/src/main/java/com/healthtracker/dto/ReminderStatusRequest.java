@@ -14,6 +14,7 @@ public class ReminderStatusRequest {
     private Integer status;
 
     private String remindTime;
+    private String finishTime;
 
     public Long getId() {
         return id;
@@ -37,5 +38,13 @@ public class ReminderStatusRequest {
 
     public void setRemindTime(String remindTime) {
         this.remindTime = remindTime;
+    }
+
+    public String getFinishTime() {
+        return finishTime;
+    }
+
+    public void setFinishTime(String finishTime) {
+        this.finishTime = finishTime;
     }
 }

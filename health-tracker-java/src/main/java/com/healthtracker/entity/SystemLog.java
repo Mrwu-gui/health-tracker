@@ -8,13 +8,21 @@ import java.time.LocalDateTime;
 @TableName("system_log")
 public class SystemLog {
     @TableId(type = IdType.AUTO)
+    /** 主键 */
     private Long id;
+    /** 日志级别 */
     private String level;
+    /** 模块 */
     private String module;
+    /** 请求路径 */
     private String path;
+    /** HTTP方法 */
     private String method;
+    /** 消息 */
     private String message;
+    /** 详情 */
     private String detail;
+    /** 创建时间 */
     private LocalDateTime createdAt;
 
     public Long getId() {

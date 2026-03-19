@@ -62,6 +62,7 @@
 
 <script>
 import { request } from "../../utils/api";
+import { FAMILY_MEMBER_STATUS } from "../../constants/enums";
 
 export default {
   data() {
@@ -137,7 +138,7 @@ export default {
         age: Number(this.form.age),
         conditionText: this.form.conditionText,
         role: "成员",
-        status: 1
+        status: FAMILY_MEMBER_STATUS.ACTIVE
       };
       const url = this.editingId ? "/api/family/update" : "/api/family/add";
       if (this.editingId) {

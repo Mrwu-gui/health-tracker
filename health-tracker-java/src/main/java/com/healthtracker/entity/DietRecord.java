@@ -8,15 +8,25 @@ import java.time.LocalDate;
 @TableName("diet_record")
 public class DietRecord {
     @TableId(type = IdType.AUTO)
+    /** 主键 */
     private Long id;
+    /** 用户ID */
     private Long userId;
+    /** 餐次(早餐/午餐/晚餐/加餐/其他) */
     private String mealType;
+    /** 食物名称 */
     private String foodName;
+    /** 热量(kcal) */
     private Integer calories;
+    /** 蛋白质(g) */
     private Double protein;
+    /** 碳水(g) */
     private Double carbs;
+    /** 脂肪(g) */
     private Double fat;
+    /** 备注 */
     private String note;
+    /** 记录日期 */
     private LocalDate date;
 
     public Long getId() {

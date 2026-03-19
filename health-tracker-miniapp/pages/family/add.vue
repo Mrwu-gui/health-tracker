@@ -24,6 +24,7 @@
 
 <script>
 import { request } from "../../utils/api";
+import { FAMILY_MEMBER_STATUS } from "../../constants/enums";
 
 export default {
   data() {
@@ -43,7 +44,7 @@ export default {
         relation: this.form.relation,
         conditionText: this.form.conditionText,
         role: "成员",
-        status: 1
+        status: FAMILY_MEMBER_STATUS.ACTIVE
       })
         .then(() => {
           uni.showToast({ title: "已添加", icon: "success" });

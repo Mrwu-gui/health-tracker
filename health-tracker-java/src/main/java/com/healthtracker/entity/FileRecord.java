@@ -8,15 +8,25 @@ import java.time.LocalDateTime;
 @TableName("file_record")
 public class FileRecord {
     @TableId(type = IdType.AUTO)
+    /** 主键 */
     private Long id;
+    /** 用户ID */
     private Long userId;
+    /** 文件类型(文本) */
     private String type;
+    /** 原始文件名 */
     private String originalName;
+    /** 存储文件名 */
     private String fileName;
+    /** 本地路径 */
     private String filePath;
+    /** 访问URL */
     private String fileUrl;
+    /** 文件大小(字节) */
     private Long fileSize;
+    /** 内容类型 */
     private String contentType;
+    /** 创建时间 */
     private LocalDateTime createdAt;
 
     public Long getId() {

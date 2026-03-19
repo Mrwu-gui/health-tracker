@@ -227,6 +227,7 @@
 
 <script>
 import { request } from "../../utils/api";
+import { REMINDER_TYPE } from "../../constants/enums";
 export default {
   data() {
     return {
@@ -699,9 +700,9 @@ export default {
     },
     reminderTagLabel(type) {
       switch (Number(type)) {
-        case 1: return "运动";
-        case 2: return "饮食";
-        case 3: return "睡眠";
+        case REMINDER_TYPE.EXERCISE: return "运动";
+        case REMINDER_TYPE.DIET: return "饮食";
+        case REMINDER_TYPE.SLEEP: return "睡眠";
         default: return "提醒";
       }
     },

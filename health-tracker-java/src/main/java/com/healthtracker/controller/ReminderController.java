@@ -62,6 +62,10 @@ public class ReminderController {
         reminder.setContent(request.getContent());
         reminder.setRemindTime(parseTime(request.getRemindTime()));
         reminder.setStatus(0);
+        reminder.setSourceType(request.getSourceType() == null ? 0 : request.getSourceType());
+        reminder.setRelatedRecordId(request.getRelatedRecordId());
+        reminder.setFinishTime(parseTime(request.getFinishTime()));
+        reminder.setPriority(request.getPriority() == null ? 1 : request.getPriority());
         reminder.setCreatedAt(LocalDateTime.now());
         reminderService.save(reminder);
 
@@ -89,6 +93,18 @@ public class ReminderController {
         reminder.setType(request.getType());
         reminder.setContent(request.getContent());
         reminder.setRemindTime(parseTime(request.getRemindTime()));
+        if (request.getSourceType() != null) {
+            reminder.setSourceType(request.getSourceType());
+        }
+        if (request.getRelatedRecordId() != null) {
+            reminder.setRelatedRecordId(request.getRelatedRecordId());
+        }
+        if (request.getFinishTime() != null) {
+            reminder.setFinishTime(parseTime(request.getFinishTime()));
+        }
+        if (request.getPriority() != null) {
+            reminder.setPriority(request.getPriority());
+        }
         reminderService.updateById(reminder);
         return reminder;
     }
@@ -104,6 +120,11 @@ public class ReminderController {
             throw new IllegalArgumentException("无权限操作该提醒");
         }
         reminder.setStatus(request.getStatus());
+        if (request.getFinishTime() != null && !request.getFinishTime().isBlank()) {
+            reminder.setFinishTime(parseTime(request.getFinishTime()));
+        } else if (request.getStatus() != null && request.getStatus() == 1) {
+            reminder.setFinishTime(LocalDateTime.now());
+        }
         if (request.getRemindTime() != null && !request.getRemindTime().isBlank()) {
             reminder.setRemindTime(parseTime(request.getRemindTime()));
         }

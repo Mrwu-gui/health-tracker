@@ -30,6 +30,10 @@ public class GoalController {
         goal.setTargetValue(request.getTargetValue());
         goal.setCurrentValue(0);
         goal.setPeriod(request.getPeriod());
+        goal.setStartDate(request.getStartDate());
+        goal.setEndDate(request.getEndDate());
+        goal.setStatus(request.getStatus() == null ? 1 : request.getStatus());
+        goal.setAiStrategy(request.getAiStrategy());
         goalService.save(goal);
         return goal;
     }
@@ -50,6 +54,18 @@ public class GoalController {
         goal.setTargetValue(request.getTargetValue());
         goal.setCurrentValue(request.getCurrentValue());
         goal.setPeriod(request.getPeriod());
+        if (request.getStartDate() != null) {
+            goal.setStartDate(request.getStartDate());
+        }
+        if (request.getEndDate() != null) {
+            goal.setEndDate(request.getEndDate());
+        }
+        if (request.getStatus() != null) {
+            goal.setStatus(request.getStatus());
+        }
+        if (request.getAiStrategy() != null) {
+            goal.setAiStrategy(request.getAiStrategy());
+        }
         goalService.updateById(goal);
         return goal;
     }

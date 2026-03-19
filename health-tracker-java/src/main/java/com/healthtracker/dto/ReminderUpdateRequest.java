@@ -19,6 +19,10 @@ public class ReminderUpdateRequest {
 
     private String content;
     private String remindTime;
+    private Integer sourceType;
+    private Long relatedRecordId;
+    private String finishTime;
+    private Integer priority;
 
     public Long getId() {
         return id;
@@ -58,5 +62,37 @@ public class ReminderUpdateRequest {
 
     public void setRemindTime(String remindTime) {
         this.remindTime = remindTime;
+    }
+
+    public Integer getSourceType() {
+        return sourceType;
+    }
+
+    public void setSourceType(Integer sourceType) {
+        this.sourceType = sourceType;
+    }
+
+    public Long getRelatedRecordId() {
+        return relatedRecordId;
+    }
+
+    public void setRelatedRecordId(Long relatedRecordId) {
+        this.relatedRecordId = relatedRecordId;
+    }
+
+    public String getFinishTime() {
+        return finishTime;
+    }
+
+    public void setFinishTime(String finishTime) {
+        this.finishTime = finishTime;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
     }
 }

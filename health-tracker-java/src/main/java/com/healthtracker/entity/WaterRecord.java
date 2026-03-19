@@ -5,19 +5,17 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
 
-@TableName("ai_chat_message")
-public class AiChatMessage {
+@TableName("water_record")
+public class WaterRecord {
     @TableId(type = IdType.AUTO)
     /** 主键 */
     private Long id;
     /** 用户ID */
     private Long userId;
-    /** 角色(user/assistant) */
-    private String role;
-    /** 文本内容 */
-    private String contentText;
-    /** 原始JSON */
-    private String contentJson;
+    /** 饮水量(ml) */
+    private Integer ml;
+    /** 喝水时间 */
+    private LocalDateTime drinkTime;
     /** 创建时间 */
     private LocalDateTime createdAt;
 
@@ -37,28 +35,20 @@ public class AiChatMessage {
         this.userId = userId;
     }
 
-    public String getRole() {
-        return role;
+    public Integer getMl() {
+        return ml;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public void setMl(Integer ml) {
+        this.ml = ml;
     }
 
-    public String getContentText() {
-        return contentText;
+    public LocalDateTime getDrinkTime() {
+        return drinkTime;
     }
 
-    public void setContentText(String contentText) {
-        this.contentText = contentText;
-    }
-
-    public String getContentJson() {
-        return contentJson;
-    }
-
-    public void setContentJson(String contentJson) {
-        this.contentJson = contentJson;
+    public void setDrinkTime(LocalDateTime drinkTime) {
+        this.drinkTime = drinkTime;
     }
 
     public LocalDateTime getCreatedAt() {

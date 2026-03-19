@@ -9,10 +9,15 @@ import java.time.LocalTime;
 @TableName("medication_record")
 public class MedicationRecord {
     @TableId(type = IdType.AUTO)
+    /** 主键 */
     private Long id;
+    /** 用户ID */
     private Long userId;
+    /** 用药ID */
     private Long medicationId;
+    /** 记录日期 */
     private LocalDate date;
+    /** 记录时间 */
     private LocalTime time;
     /** Status (0=未服,1=已服,2=漏服) */
     private Integer status;

@@ -5,12 +5,19 @@ import java.time.LocalDateTime;
 
 @TableName("privacy_settings")
 public class PrivacySetting {
+    /** 主键 */
     private Long id;
+    /** 用户ID */
     private Long userId;
+    /** 允许订阅(0=关闭,1=开启) */
     private Integer allowSubscribe;
+    /** 允许云同步(0=关闭,1=开启) */
     private Integer allowCloudSync;
+    /** 允许家庭共享(0=关闭,1=开启) */
     private Integer allowFamilyShare;
+    /** 创建时间 */
     private LocalDateTime createdAt;
+    /** 更新时间 */
     private LocalDateTime updatedAt;
 
     public Long getId() {

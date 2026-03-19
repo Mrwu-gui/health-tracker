@@ -5,16 +5,25 @@ import java.time.LocalDateTime;
 
 @TableName("family_member")
 public class FamilyMember {
+    /** 主键 */
     private Long id;
+    /** 用户ID */
     private Long userId;
+    /** 姓名 */
     private String name;
+    /** 关系 */
     private String relation;
+    /** 年龄 */
     private Integer age;
+    /** 病史/备注 */
     private String conditionText;
+    /** 角色 */
     private String role;
     /** Status (0=未授权,1=已授权) */
     private Integer status;
+    /** 头像URL */
     private String avatar;
+    /** 创建时间 */
     private LocalDateTime createdAt;
 
     public Long getId() {

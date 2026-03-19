@@ -9,12 +9,19 @@ import java.time.LocalDateTime;
 @TableName("period_record")
 public class PeriodRecord {
     @TableId(type = IdType.AUTO)
+    /** 主键 */
     private Long id;
+    /** 用户ID */
     private Long userId;
+    /** 开始日期 */
     private LocalDate startDate;
+    /** 结束日期 */
     private LocalDate endDate;
+    /** 经量(1=少,2=中,3=多) */
     private Integer flow;
+    /** 备注 */
     private String note;
+    /** 创建时间 */
     private LocalDateTime createdAt;
 
     public Long getId() {

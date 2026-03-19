@@ -8,12 +8,19 @@ import java.time.LocalDate;
 @TableName("exercise_record")
 public class ExerciseRecord {
     @TableId(type = IdType.AUTO)
+    /** 主键 */
     private Long id;
+    /** 用户ID */
     private Long userId;
+    /** 运动类型(文本) */
     private String type;
+    /** 步数 */
     private Integer steps;
+    /** 时长(分钟) */
     private Integer duration;
+    /** 消耗(千卡) */
     private Integer calories;
+    /** 记录日期 */
     private LocalDate date;
 
     public Long getId() {

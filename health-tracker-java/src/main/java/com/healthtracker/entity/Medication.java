@@ -8,16 +8,27 @@ import java.time.LocalDate;
 @TableName("medication")
 public class Medication {
     @TableId(type = IdType.AUTO)
+    /** 主键 */
     private Long id;
+    /** 用户ID */
     private Long userId;
+    /** 药品名称 */
     private String drugName;
+    /** 剂量 */
     private String dosage;
+    /** 频次 */
     private String frequency;
+    /** 提醒时间(yyyy-MM-dd HH:mm) */
     private String remindTime;
+    /** 库存 */
     private Integer stock;
+    /** 库存阈值 */
     private Integer stockThreshold;
+    /** 开始日期 */
     private LocalDate startDate;
+    /** 结束日期 */
     private LocalDate endDate;
+    /** 备注 */
     private String notes;
 
     public Long getId() {

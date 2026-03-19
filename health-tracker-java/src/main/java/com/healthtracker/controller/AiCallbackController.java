@@ -131,6 +131,12 @@ public class AiCallbackController {
         reminder.setRemindTime(dateTime(payload, "remind_time"));
         Integer status = intVal(payload, "status");
         reminder.setStatus(status == null ? 0 : status);
+        Integer sourceType = intVal(payload, "source_type");
+        reminder.setSourceType(sourceType == null ? 1 : sourceType);
+        reminder.setRelatedRecordId(longVal(payload, "related_record_id"));
+        reminder.setFinishTime(dateTime(payload, "finish_time"));
+        Integer priority = intVal(payload, "priority");
+        reminder.setPriority(priority == null ? 1 : priority);
         reminder.setCreatedAt(LocalDateTime.now());
         reminderService.save(reminder);
         return HandleResult.success(reminder.getId());
@@ -281,6 +287,11 @@ public class AiCallbackController {
         goal.setTargetValue(targetValue);
         goal.setCurrentValue(0);
         goal.setPeriod(period);
+        goal.setStartDate(date(payload, "start_date"));
+        goal.setEndDate(date(payload, "end_date"));
+        Integer status = intVal(payload, "status");
+        goal.setStatus(status == null ? 1 : status);
+        goal.setAiStrategy(text(payload, "ai_strategy"));
         goalService.save(goal);
         return HandleResult.success(goal.getId());
     }

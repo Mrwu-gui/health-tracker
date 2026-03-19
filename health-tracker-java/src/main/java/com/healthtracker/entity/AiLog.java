@@ -8,13 +8,21 @@ import java.time.LocalDateTime;
 @TableName("ai_log")
 public class AiLog {
     @TableId(type = IdType.AUTO)
+    /** 主键 */
     private Long id;
+    /** 用户ID */
     private Long userId;
+    /** 微信openid */
     private String wxOpenid;
+    /** 请求文本 */
     private String requestText;
+    /** 响应文本 */
     private String responseText;
+    /** 状态(0=成功,1=失败) */
     private Integer status;
+    /** 错误信息 */
     private String error;
+    /** 创建时间 */
     private LocalDateTime createdAt;
 
     public Long getId() {

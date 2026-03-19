@@ -8,11 +8,17 @@ import java.time.LocalDateTime;
 @TableName("sms_code")
 public class SmsCode {
     @TableId(type = IdType.AUTO)
+    /** 主键 */
     private Long id;
+    /** 手机号 */
     private String phone;
+    /** 验证码 */
     private String code;
+    /** 创建时间 */
     private LocalDateTime createdAt;
+    /** 过期时间 */
     private LocalDateTime expiresAt;
+    /** 使用状态(0=未使用,1=已使用) */
     private Integer used;
 
     public Long getId() {

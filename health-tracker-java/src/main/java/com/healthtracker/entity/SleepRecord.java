@@ -9,14 +9,23 @@ import java.time.LocalDateTime;
 @TableName("sleep_record")
 public class SleepRecord {
     @TableId(type = IdType.AUTO)
+    /** 主键 */
     private Long id;
+    /** 用户ID */
     private Long userId;
+    /** 入睡时间 */
     private LocalDateTime startTime;
+    /** 起床时间 */
     private LocalDateTime endTime;
+    /** 记录日期 */
     private LocalDate recordDate;
+    /** 深睡分钟 */
     private Integer deepSleepMinutes;
+    /** 浅睡分钟 */
     private Integer lightSleepMinutes;
+    /** 睡眠质量(文本) */
     private String quality;
+    /** 作息标签 */
     private String routine;
 
     public Long getId() {

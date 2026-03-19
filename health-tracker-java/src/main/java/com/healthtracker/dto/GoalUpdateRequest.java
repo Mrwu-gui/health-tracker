@@ -1,6 +1,7 @@
 package com.healthtracker.dto;
 
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 
 public class GoalUpdateRequest {
     @NotNull
@@ -17,6 +18,10 @@ public class GoalUpdateRequest {
 
     @NotNull
     private String period;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private Integer status;
+    private String aiStrategy;
 
     public Long getId() {
         return id;
@@ -56,5 +61,37 @@ public class GoalUpdateRequest {
 
     public void setPeriod(String period) {
         this.period = period;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public String getAiStrategy() {
+        return aiStrategy;
+    }
+
+    public void setAiStrategy(String aiStrategy) {
+        this.aiStrategy = aiStrategy;
     }
 }

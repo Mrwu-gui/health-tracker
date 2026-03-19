@@ -43,6 +43,7 @@ public class SecurityConfig {
                         "/api/health",
                         "/api/ai/**",
                         "/api/ai/callback",
+                        "/api/water/**",
                         "/api/user/register",
                         "/api/user/login",
                         "/api/auth/**",

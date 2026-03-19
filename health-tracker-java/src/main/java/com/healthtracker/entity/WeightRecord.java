@@ -8,10 +8,15 @@ import java.time.LocalDate;
 @TableName("weight_record")
 public class WeightRecord {
     @TableId(type = IdType.AUTO)
+    /** 主键 */
     private Long id;
+    /** 用户ID */
     private Long userId;
+    /** 体重(kg) */
     private Double weight;
+    /** BMI */
     private Double bmi;
+    /** 记录日期 */
     private LocalDate date;
 
     public Long getId() {

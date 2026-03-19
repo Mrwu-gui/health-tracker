@@ -25,17 +25,18 @@
 <script>
 import { request } from "../../utils/api";
 import { requestSubscribeByKey } from "../../utils/subscribe";
+import { REMINDER_TYPE } from "../../constants/enums";
 
 export default {
   data() {
     return {
       titleOptions: [
-        { label: "运动提醒", type: 1 },
-        { label: "饮食提醒", type: 2 },
-        { label: "睡眠提醒", type: 3 },
-        { label: "用药提醒", type: 4 }
+        { label: "运动提醒", type: REMINDER_TYPE.EXERCISE },
+        { label: "饮食提醒", type: REMINDER_TYPE.DIET },
+        { label: "睡眠提醒", type: REMINDER_TYPE.SLEEP },
+        { label: "用药提醒", type: REMINDER_TYPE.MEDICATION }
       ],
-      form: { title: "", type: 1, content: "", remindTime: "" }
+      form: { title: "", type: REMINDER_TYPE.EXERCISE, content: "", remindTime: "" }
     };
   },
   computed: {
@@ -82,9 +83,9 @@ export default {
       }
       const userId = uni.getStorageSync("userId") || 1;
       const remindTime = `${this.todayDate()} ${this.form.remindTime}`;
-      if (this.form.type === 3) {
+      if (this.form.type === REMINDER_TYPE.SLEEP) {
         await requestSubscribeByKey("sleep");
-      } else if (this.form.type === 1) {
+      } else if (this.form.type === REMINDER_TYPE.EXERCISE) {
         await requestSubscribeByKey("exercise");
       }
       request("/api/reminder/add", "POST", {

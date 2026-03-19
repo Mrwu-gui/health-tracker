@@ -8,11 +8,17 @@ import java.time.LocalDate;
 @TableName("health_record")
 public class HealthRecord {
     @TableId(type = IdType.AUTO)
+    /** 主键 */
     private Long id;
+    /** 用户ID */
     private Long userId;
+    /** 收缩压 */
     private Integer systolic;
+    /** 舒张压 */
     private Integer diastolic;
+    /** 心率 */
     private Integer heartRate;
+    /** 记录日期 */
     private LocalDate date;
 
     public Long getId() {

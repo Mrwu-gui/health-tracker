@@ -8,22 +8,39 @@ import java.time.LocalDateTime;
 @TableName("user")
 public class User {
     @TableId(type = IdType.AUTO)
+    /** 主键 */
     private Long id;
+    /** 用户名 */
     private String username;
+    /** 密码 */
     private String password;
+    /** 手机号 */
     private String phone;
+    /** 微信openid */
     private String wxOpenid;
+    /** 微信unionid */
     private String wxUnionid;
+    /** 微信手机号 */
     private String wxPhone;
+    /** 微信昵称 */
     private String wxNickname;
+    /** 微信头像 */
     private String wxAvatar;
+    /** 性别(男/女) */
     private String sex;
+    /** 年龄 */
     private Integer age;
+    /** 身高(cm) */
     private Integer height;
+    /** 体重(kg) */
     private Double weight;
+    /** 收缩压 */
     private Integer systolic;
+    /** 舒张压 */
     private Integer diastolic;
+    /** 心率 */
     private Integer heartRate;
+    /** 创建时间 */
     private LocalDateTime createdAt;
 
     public Long getId() {

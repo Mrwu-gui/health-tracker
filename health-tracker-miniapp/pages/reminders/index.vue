@@ -109,6 +109,7 @@
 
 <script>
 import { request } from "../../utils/api";
+import { REMINDER_TYPE, REMINDER_STATUS } from "../../constants/enums";
 
 export default {
   data() {
@@ -119,13 +120,13 @@ export default {
       saving: false,
       editingId: null,
       titleOptions: [
-        { label: "运动提醒", type: 1 },
-        { label: "饮食提醒", type: 2 },
-        { label: "睡眠提醒", type: 3 }
+        { label: "运动提醒", type: REMINDER_TYPE.EXERCISE },
+        { label: "饮食提醒", type: REMINDER_TYPE.DIET },
+        { label: "睡眠提醒", type: REMINDER_TYPE.SLEEP }
       ],
       form: {
         title: "",
-        type: 1,
+        type: REMINDER_TYPE.EXERCISE,
         content: "",
         remindDate: "",
         remindTime: ""
@@ -174,7 +175,7 @@ export default {
         .then((data) => {
           const raw = Array.isArray(data) ? data : (data?.list || data?.records || []);
           const mapped = raw
-            .filter((item) => Number(item.type) !== 4)
+            .filter((item) => Number(item.type) !== REMINDER_TYPE.MEDICATION)
             .map((item) => ({
               id: item.id,
               title: item.title,
@@ -195,7 +196,7 @@ export default {
     openAdd() {
       this.showModal = true;
       this.editingId = null;
-      this.form = { title: "", type: 1, content: "", remindDate: "", remindTime: "" };
+      this.form = { title: "", type: REMINDER_TYPE.EXERCISE, content: "", remindDate: "", remindTime: "" };
     },
     openEdit(item) {
       if (!item) return;
@@ -204,7 +205,7 @@ export default {
       this.showModal = true;
       this.form = {
         title: item.title || "",
-        type: Number(item.type || 1),
+        type: Number(item.type || REMINDER_TYPE.EXERCISE),
         content: item.content || "",
         remindDate: parts.date,
         remindTime: parts.time
@@ -282,24 +283,24 @@ export default {
       return list.map((item) => {
         const timeLabel = this.formatTime(item.time);
         const tagLabel = this.tagLabel(item.type);
-        const countdown = item.type === 4 ? this.timeLeft(item.time) : "";
+        const countdown = item.type === REMINDER_TYPE.MEDICATION ? this.timeLeft(item.time) : "";
         const statusTag = this.statusTagLabel(item.status);
         return { ...item, timeLabel, tagLabel, countdown, statusTag };
       });
     },
     statusTagLabel(status) {
       const s = Number(status);
-      if (s === 1) return "已完成";
-      if (s === 2) return "已忽略";
+      if (s === REMINDER_STATUS.DONE) return "已完成";
+      if (s === REMINDER_STATUS.IGNORED) return "已忽略";
       return "";
     },
     tagLabel(type) {
       switch (Number(type)) {
-        case 1:
+        case REMINDER_TYPE.EXERCISE:
           return "运动";
-        case 2:
+        case REMINDER_TYPE.DIET:
           return "饮食";
-        case 3:
+        case REMINDER_TYPE.SLEEP:
           return "睡眠";
         default:
           return "提醒";
@@ -363,8 +364,8 @@ export default {
         success: (res) => {
           const it = this.actionItem;
           this.actionItem = null;
-          if (res.tapIndex === 0) this.setStatus(it, 1);
-          else if (res.tapIndex === 1) this.setStatus(it, 2);
+          if (res.tapIndex === 0) this.setStatus(it, REMINDER_STATUS.DONE);
+          else if (res.tapIndex === 1) this.setStatus(it, REMINDER_STATUS.IGNORED);
           else if (res.tapIndex === 2) this.openPostpone(it);
         },
         fail: () => {
@@ -376,7 +377,10 @@ export default {
       if (!item || !item.id) return;
       request("/api/reminder/status", "POST", { id: item.id, status })
         .then(() => {
-          uni.showToast({ title: status === 1 ? "已标记完成" : "已忽略", icon: "success" });
+          uni.showToast({
+            title: status === REMINDER_STATUS.DONE ? "已标记完成" : "已忽略",
+            icon: "success"
+          });
           this.fetchReminders();
         })
         .catch((err) => {

@@ -43,6 +43,16 @@ public class FileController {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("文件为空");
         }
+        Long ownerId = resolveUserId(userId);
+        if (ownerId == null) {
+            throw new IllegalArgumentException("缺少用户信息");
+        }
+        if (!isAllowedFile(file)) {
+            throw new IllegalArgumentException("不支持的文件类型");
+        }
+        if (file.getSize() > 10 * 1024 * 1024L) {
+            throw new IllegalArgumentException("文件过大");
+        }
         String bucket = (type == null || type.isBlank()) ? "common" : type.trim();
         String ext = StringUtils.getFilenameExtension(file.getOriginalFilename());
         String name = UUID.randomUUID().toString().replace("-", "");
@@ -56,7 +66,6 @@ public class FileController {
         Path target = dirPath.resolve(filename);
         file.transferTo(target.toFile());
 
-        Long ownerId = resolveUserId(userId);
         String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
         String url = baseUrl + "/uploads/" + bucket + "/" + filename;
 
@@ -91,5 +100,19 @@ public class FileController {
             return fallbackUserId;
         }
         return null;
+    }
+
+    private boolean isAllowedFile(MultipartFile file) {
+        String contentType = file.getContentType();
+        if (contentType != null) {
+            String type = contentType.toLowerCase();
+            if (type.startsWith("image/") || type.startsWith("audio/") || type.startsWith("video/")) {
+                return true;
+            }
+        }
+        String ext = StringUtils.getFilenameExtension(file.getOriginalFilename());
+        if (ext == null) return false;
+        String lower = ext.toLowerCase();
+        return lower.matches("^(png|jpg|jpeg|gif|webp|mp3|wav|m4a|aac|mp4)$");
     }
 }

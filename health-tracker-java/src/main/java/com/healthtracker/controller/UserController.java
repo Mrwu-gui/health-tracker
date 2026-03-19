@@ -123,6 +123,16 @@ public class UserController {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("文件为空");
         }
+        Long ownerId = resolveUserId(null);
+        if (ownerId == null) {
+            throw new IllegalArgumentException("缺少用户信息");
+        }
+        if (!isAllowedImage(file)) {
+            throw new IllegalArgumentException("不支持的图片类型");
+        }
+        if (file.getSize() > 5 * 1024 * 1024L) {
+            throw new IllegalArgumentException("图片过大");
+        }
         String ext = StringUtils.getFilenameExtension(file.getOriginalFilename());
         String name = UUID.randomUUID().toString().replace("-", "");
         String filename = ext == null || ext.isBlank() ? name : name + "." + ext;
@@ -137,7 +147,7 @@ public class UserController {
         String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
         String url = baseUrl + "/uploads/avatar/" + filename;
         FileRecord record = new FileRecord();
-        record.setUserId(resolveUserId(null));
+        record.setUserId(ownerId);
         record.setType("avatar");
         record.setOriginalName(file.getOriginalFilename());
         record.setFileName(filename);
@@ -151,6 +161,17 @@ public class UserController {
         body.put("url", url);
         body.put("id", record.getId());
         return body;
+    }
+
+    private boolean isAllowedImage(MultipartFile file) {
+        String contentType = file.getContentType();
+        if (contentType != null && contentType.toLowerCase().startsWith("image/")) {
+            return true;
+        }
+        String ext = StringUtils.getFilenameExtension(file.getOriginalFilename());
+        if (ext == null) return false;
+        String lower = ext.toLowerCase();
+        return lower.matches("^(png|jpg|jpeg|gif|webp)$");
     }
 
     private User sanitize(User user) {

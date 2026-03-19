@@ -13,22 +13,6 @@
         </navigator>
       </view>
 
-      <!-- 健康评分卡 - 紧凑型 -->
-      <view class="score-card" @tap="openScoreRule">
-        <view class="score-card-content">
-          <view class="score-info">
-            <text class="score-label">今日评分</text>
-            <view class="score-main-row">
-              <text class="score-num">{{ healthScore }}</text>
-              <view class="score-badge" :class="scoreBadgeClass">{{ scoreStatus }}</view>
-            </view>
-          </view>
-          <view class="score-rule-btn">
-            <text class="score-rule-text">评分规则</text>
-            <text class="score-rule-arrow">›</text>
-          </view>
-        </view>
-      </view>
 
       <!-- 核心指标 一行4个 -->
       <view class="metrics-row">
@@ -202,32 +186,6 @@
     <!-- 遮罩（+记录展开时） -->
     <view v-if="fabOpen" class="fab-mask" @tap="fabOpen = false"></view>
 
-    <!-- 评分规则弹窗 -->
-    <view v-if="scoreRuleOpen" class="rule-mask" @tap="scoreRuleOpen = false"></view>
-    <view v-if="scoreRuleOpen" class="rule-sheet">
-      <view class="rule-head">
-        <text class="rule-title">健康评分说明</text>
-        <view class="rule-close-btn" @tap="scoreRuleOpen = false">
-          <text class="rule-close">✕</text>
-        </view>
-      </view>
-      <view class="rule-body">
-        <text class="rule-summary">{{ scoreRule.summary || "评分由步数、睡眠、饮食、体重四项综合计算得出，满分100分" }}</text>
-        <view class="rule-items-grid">
-          <view v-for="(item, idx) in scoreRule.items" :key="idx" class="rule-grid-item">
-            <view class="rule-grid-icon" :style="{ background: ruleItemColor(idx) }">
-              <image class="rule-grid-icon-img" :src="ruleItemIcon(idx)" mode="aspectFit" />
-            </view>
-            <text class="rule-grid-title">{{ item.label }}</text>
-            <text class="rule-grid-desc">{{ item.desc }}</text>
-          </view>
-        </view>
-        <view v-if="showScoreTips" class="rule-tips">
-          <text class="rule-tips-title">加分项</text>
-          <text v-for="(tip, idx) in scoreRule.tips" :key="idx" class="rule-tip">• {{ tip }}</text>
-        </view>
-      </view>
-    </view>
 
     <!-- +记录 固定按钮 + 展开菜单 -->
     <view
@@ -302,15 +260,6 @@ export default {
       weightGoal: 0,
       streakDays: 0,
       weekDays: [],
-      healthScore: 0,
-      scoreDiffText: "",
-      scoreRuleOpen: false,
-      scoreRule: {
-        summary: "",
-        items: [],
-        tips: []
-      },
-      scoreBreakdown: {},
       fabOpen: false,
       fabPos: { x: 0, y: 0 },
       fabDragging: false,
@@ -371,41 +320,6 @@ export default {
     dietDisplay() {
       if (this.dietCaloriesToday > 0) return `${this.dietCaloriesToday} kcal`;
       return "未记录";
-    },
-    scoreStatus() {
-      if (this.healthScore >= 90) return "优秀";
-      if (this.healthScore >= 75) return "良好";
-      if (this.healthScore >= 60) return "一般";
-      return "较差";
-    },
-    scoreBadgeClass() {
-      if (this.healthScore >= 75) return "badge-green";
-      if (this.healthScore >= 60) return "badge-amber";
-      return "badge-red";
-    },
-    scoreDiff() {
-      return this.scoreDiffText || `综合评估 · 状态${this.scoreStatus}`;
-    },
-    scoreArcStyle() {
-      const deg = Math.round(this.healthScore * 3.6);
-      return {
-        background: `conic-gradient(#f97316 ${deg}deg, transparent ${deg}deg)`
-      };
-    },
-    scoreBreakdownItems() {
-      const bd = this.scoreBreakdown || {};
-      const items = [
-        { label: "步数", value: bd.steps || 0, max: 30, color: "#f97316" },
-        { label: "睡眠", value: bd.sleep || 0, max: 25, color: "#6366f1" },
-        { label: "饮食", value: bd.diet || 0, max: 25, color: "#10b981" },
-        { label: "体重", value: bd.weight || 0, max: 20, color: "#f59e0b" }
-      ];
-      return items.map(i => ({ ...i, pct: i.max > 0 ? Math.min(100, Math.round((i.value / i.max) * 100)) : 0 }));
-    },
-    showScoreTips() {
-      if (!this.scoreRule || !Array.isArray(this.scoreRule.tips)) return false;
-      const cleaned = this.scoreRule.tips.filter(t => t && !/打卡|连续/i.test(t));
-      return cleaned.length > 0;
     },
     needsSteps() {
       const num = parseInt(String(this.overview.steps || "0").replace(/[^\d]/g, ""), 10);
@@ -486,21 +400,6 @@ export default {
         return;
       }
       this.fabOpen = !this.fabOpen;
-    },
-    openScoreRule() {
-      this.scoreRuleOpen = true;
-      if (!this.scoreRule.items.length) this.fetchScoreRule();
-    },
-    ruleItemIcon(idx) {
-      return [
-        "/static/tabbar/sport.png",
-        "/static/tabbar/sleep.png",
-        "/static/tabbar/food.png",
-        "/static/tabbar/weight.png"
-      ][idx] || "/static/tabbar/all.png";
-    },
-    ruleItemColor(idx) {
-      return ["#fff7ed", "#eff6ff", "#f0fdf4", "#fefce8"][idx] || "#f5f1eb";
     },
     async fetchOverview() {
       this.loading = true;
@@ -625,41 +524,8 @@ export default {
         this.overview.goalSummary = "--";
       } finally {
         this.loading = false;
-        await this.fetchHealthScore();
         this.fetchDailyAi();
       }
-    },
-    async fetchScoreRule() {
-      try {
-        const data = await request("/api/score/rule", "GET", {});
-        if (data) {
-          const rawTips = Array.isArray(data.tips) ? data.tips : [];
-          const tips = rawTips.filter(t => t && !/打卡|连续/i.test(t));
-          this.scoreRule = { ...data, tips };
-        }
-      } catch (err) {
-        this.scoreRule = {
-          summary: "评分由步数、睡眠、饮食、体重四项综合计算，满分100分",
-          items: [
-            { label: "步数/运动", desc: "按目标完成度，最高30分" },
-            { label: "睡眠质量", desc: "7~9小时最佳，最高25分" },
-            { label: "饮食记录", desc: "规律进餐得分更高，最高25分" },
-            { label: "体重管理", desc: "稳定或接近目标，最高20分" }
-          ],
-          tips: []
-        };
-      }
-    },
-    async fetchHealthScore() {
-      const userId = uni.getStorageSync("userId") || 1;
-      try {
-        const data = await request("/api/score/today", "GET", { userId });
-        if (data) {
-          this.healthScore = data.score || this.healthScore;
-          this.scoreDiffText = data.diffText || this.scoreDiffText;
-          this.scoreBreakdown = data.breakdown || {};
-        }
-      } catch (err) { this.scoreDiffText = ""; }
     },
     async fetchDailyAi(forceRefresh) {
       if (this.dailyAiLoading) return;
@@ -938,76 +804,6 @@ export default {
   height: 20px;
 }
 
-/* 健康评分卡 - 紧凑型 */
-.score-card {
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid #e8e2db;
-  overflow: hidden;
-}
-
-.score-card-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-}
-
-.score-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.score-label {
-  font-size: 13px;
-  color: #64748b;
-  font-weight: 500;
-}
-
-.score-main-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.score-num {
-  font-size: 32px;
-  font-weight: 800;
-  color: #f97316;
-  line-height: 1;
-}
-
-.score-badge {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 999px;
-}
-
-.badge-green { background: #d1fae5; color: #059669; }
-.badge-amber { background: #fef3c7; color: #d97706; }
-.badge-red { background: #fee2e2; color: #dc2626; }
-
-.score-rule-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  background: #fff7ed;
-  border-radius: 999px;
-}
-
-.score-rule-text {
-  font-size: 12px;
-  color: #f97316;
-  font-weight: 500;
-}
-
-.score-rule-arrow {
-  font-size: 14px;
-  color: #f97316;
-}
 
 /* 指标卡 一行4个 */
 .metrics-row {
@@ -1580,133 +1376,6 @@ export default {
   z-index: 99;
 }
 
-/* 评分规则弹窗 */
-.rule-mask {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.4);
-  z-index: 98;
-}
-
-.rule-sheet {
-  position: fixed;
-  left: 16px;
-  right: 16px;
-  bottom: 20px;
-  background: #fff;
-  border-radius: 20px;
-  z-index: 99;
-  overflow: hidden;
-  border: 1px solid #e8e2db;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.14);
-}
-
-.rule-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 15px 16px;
-  border-bottom: 1px solid #f5f1eb;
-}
-
-.rule-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.rule-close-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #f5f1eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.rule-close {
-  font-size: 12px;
-  color: #64748b;
-}
-
-.rule-body {
-  padding: 14px 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.rule-summary {
-  font-size: 12px;
-  color: #64748b;
-  line-height: 1.6;
-}
-
-.rule-items-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.rule-grid-item {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 12px 12px;
-  background: #fefcf9;
-  border-radius: 14px;
-  border: 1px solid #f0ece6;
-}
-
-.rule-grid-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.rule-grid-icon-img {
-  width: 18px;
-  height: 18px;
-  display: block;
-}
-
-.rule-grid-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.rule-grid-desc {
-  font-size: 11px;
-  color: #64748b;
-  line-height: 1.4;
-}
-
-.rule-tips {
-  background: #fff7ed;
-  border-radius: 12px;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.rule-tips-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: #b45309;
-  margin-bottom: 2px;
-}
-
-.rule-tip {
-  font-size: 11px;
-  color: #b45309;
-  line-height: 1.5;
-}
 
 /* +记录 固定按钮 */
 .add-record-wrap {

@@ -276,8 +276,8 @@ export default {
   padding: 18px;
   padding-bottom: calc(56px + env(safe-area-inset-bottom));
   min-height: 100vh;
-  background: #faf8f5;
-  color: #0f172a;
+  background: #FAF8F5;
+  color: #1a1c1a;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -285,7 +285,7 @@ export default {
 
 .page-root {
   min-height: 100vh;
-  background: #faf8f5;
+  background: #FAF8F5;
 }
 
 .header {
@@ -296,26 +296,28 @@ export default {
 
 .title {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
+  color: #1a1c1a;
 }
 
 .add-btn {
   width: 34px;
   height: 34px;
-  border-radius: 17px;
-  background: #f97316;
+  border-radius: 24rpx;
+  background: #A23F00;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   font-weight: 300;
+  box-shadow: 0 6rpx 16rpx rgba(162, 63, 0, 0.4);
 }
 
 .tabs {
   display: inline-flex;
-  background: #e8e2db;
-  border-radius: 999px;
+  background: #E9E1D8;
+  border-radius: 999rpx;
   padding: 2px;
   gap: 4px;
 }
@@ -323,14 +325,14 @@ export default {
 .tab {
   font-size: 11px;
   padding: 4px 10px;
-  border-radius: 999px;
-  color: #64748b;
+  border-radius: 999rpx;
+  color: #564337;
 }
 
 .tab.active {
   background: #ffffff;
-  color: #0f172a;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  color: #1a1c1a;
+  box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.08);
 }
 
 .list {
@@ -340,8 +342,8 @@ export default {
 
 .empty-state {
   grid-column: 1 / -1;
-  background: #fefcf9;
-  border-radius: 16px;
+  background: #FAF8F5;
+  border-radius: 24rpx;
   padding: 32px 20px;
   display: flex;
   flex-direction: column;
@@ -366,14 +368,20 @@ export default {
 
 .empty-state-desc {
   font-size: 12px;
-  color: #94a3b8;
+  color: #564337;
 }
 
 .card {
   background: #ffffff;
-  border-radius: 16px;
+  border-radius: 24rpx;
   padding: 14px;
-  border: 1px solid #e8e2db;
+  border: 1px solid #E9E1D8;
+  box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.04);
+  transition: transform 120ms ease;
+}
+
+.card:active {
+  transform: scale(0.98);
 }
 
 .row {
@@ -384,31 +392,31 @@ export default {
 
 .info .name {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   display: block;
 }
 
 .info .desc {
   font-size: 10px;
-  color: #94a3b8;
+  color: #564337;
 }
 
 .state {
   font-size: 11px;
-  color: #f97316;
+  color: #A23F00;
 }
 
 .progress-row {
   display: flex;
   justify-content: space-between;
   font-size: 10px;
-  color: #64748b;
+  color: #564337;
   margin: 6px 0;
 }
 
 .countdown {
   font-size: 10px;
-  color: #f59e0b;
+  color: #A23F00;
   margin-bottom: 6px;
   display: block;
 }
@@ -428,7 +436,7 @@ export default {
   max-width: 400px;
   max-height: 85vh;
   background: #fff;
-  border-radius: 20px 20px 0 0;
+  border-radius: 24rpx 24rpx 0 0;
   padding-bottom: env(safe-area-inset-bottom);
   display: flex;
   flex-direction: column;
@@ -438,8 +446,8 @@ export default {
 .modal-sheet-bar {
   width: 36px;
   height: 4px;
-  border-radius: 2px;
-  background: #e8e2db;
+  border-radius: 999rpx;
+  background: #E9E1D8;
   margin: 10px auto 0;
 }
 
@@ -448,18 +456,18 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px 16px;
-  border-bottom: 1px solid #f2ede8;
+  border-bottom: 1px solid #faf9f6;
 }
 
 .modal-sheet-title {
   font-size: 17px;
-  font-weight: 600;
-  color: #0f172a;
+  font-weight: 700;
+  color: #1a1c1a;
 }
 
 .modal-sheet-close {
   font-size: 24px;
-  color: #94a3b8;
+  color: #564337;
   padding: 4px;
   line-height: 1;
 }
@@ -480,7 +488,7 @@ export default {
 
 .field-label {
   font-size: 13px;
-  color: #64748b;
+  color: #564337;
 }
 
 .pill-group {
@@ -491,33 +499,33 @@ export default {
 
 .pill {
   padding: 10px 14px;
-  border-radius: 999px;
-  border: 1px solid #e8e2db;
+  border-radius: 24rpx;
+  border: 1px solid #E9E1D8;
   font-size: 13px;
-  color: #64748b;
+  color: #564337;
   background: #fff;
 }
 
 .pill.active {
-  color: #f97316;
-  border-color: #f97316;
-  background: #eff6ff;
+  color: #A23F00;
+  border-color: #A23F00;
+  background: #FAF8F5;
 }
 
 .input {
-  border: 1px solid #e8e2db;
-  border-radius: 12px;
+  border: 1px solid #E9E1D8;
+  border-radius: 24rpx;
   padding: 12px 14px;
   font-size: 14px;
-  color: #0f172a;
+  color: #1a1c1a;
   background: #fff;
 }
 
 .modal-sheet-btn.primary {
   width: 100%;
   padding: 14px;
-  border-radius: 14px;
-  background: #f97316;
+  border-radius: 24rpx;
+  background: #A23F00;
   color: #fff;
   font-size: 15px;
   font-weight: 600;
@@ -527,18 +535,18 @@ export default {
 .bar {
   height: 6px;
   background: #e8e2db;
-  border-radius: 999px;
+  border-radius: 24rpx;
   overflow: hidden;
 }
 
 .bar-fill {
   height: 100%;
-  background: #f97316;
+  background: #A23F00;
 }
 
 .tip {
   background: #e8e2db;
-  border-radius: 16px;
+  border-radius: 24rpx;
   padding: 10px 12px;
   font-size: 11px;
   color: #475569;

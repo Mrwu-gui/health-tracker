@@ -167,7 +167,7 @@ export default {
 .bg-circle-1 {
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle, #fed7aa 0%, transparent 70%);
+  background: radial-gradient(circle, #E9E1D8 0%, transparent 70%);
   top: -100px;
   right: -80px;
 }
@@ -209,7 +209,7 @@ export default {
   width: 72px;
   height: 72px;
   border-radius: 22px;
-  background: linear-gradient(145deg, #f97316 0%, #ea580c 100%);
+  background: linear-gradient(145deg, #A23F00 0%, #8B3500 100%);
   color: #fff;
   font-size: 22px;
   font-weight: 700;
@@ -284,8 +284,8 @@ export default {
 }
 
 .checkbox.checked {
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  border-color: #f97316;
+  background: linear-gradient(135deg, #A23F00 0%, #8B3500 100%);
+  border-color: #A23F00;
 }
 
 .check-icon {
@@ -302,7 +302,7 @@ export default {
 
 .agreement-link {
   font-size: 12px;
-  color: #f97316;
+  color: #A23F00;
   font-weight: 500;
 }
 
@@ -367,7 +367,7 @@ export default {
 
 .policy-link {
   font-size: 11px;
-  color: #f97316;
+  color: #A23F00;
   font-weight: 500;
   text-decoration: underline;
 }

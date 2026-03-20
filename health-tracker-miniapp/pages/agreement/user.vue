@@ -107,6 +107,6 @@ export default {
 .body.end {
   margin-top: 8px;
   text-align: center;
-  color: #f97316;
+  color: #A23F00;
 }
 </style>

@@ -338,8 +338,8 @@ export default {
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #faf8f5;
-  color: #0f172a;
+  background: #FAF8F5;
+  color: #1a1c1a;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -353,8 +353,8 @@ export default {
 .add-btn {
   width: 36px;
   height: 36px;
-  border-radius: 18px;
-  background: #f97316;
+  border-radius: 24rpx;
+  background: #A23F00;
   color: #fff;
   font-size: 20px;
   line-height: 1;
@@ -369,45 +369,46 @@ export default {
 }
 
 .estimate-card {
-  background: #fefcf9;
-  border-radius: 14px;
+  background: #FAF8F5;
+  border-radius: 24rpx;
   margin: 0 16px 16px;
   padding: 14px 16px;
-  border: 1px solid #e8e2db;
+  border: 1px solid #E9E1D8;
+  box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.04);
 }
 
 .estimate-label {
   font-size: 12px;
-  color: #64748b;
+  color: #564337;
   display: block;
   margin-bottom: 4px;
 }
 
 .estimate-value {
   font-size: 16px;
-  font-weight: 600;
-  color: #1e293b;
+  font-weight: 700;
+  color: #1a1c1a;
 }
 
 .ai-tip-bar {
   margin: 0 16px 12px;
   padding: 10px 14px;
-  background: #f8fafc;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  background: #FAF8F5;
+  border-radius: 24rpx;
+  border: 1px solid #E9E1D8;
 }
 
 .ai-tip-text {
   font-size: 12px;
-  color: #64748b;
+  color: #564337;
 }
 
 .ai-suggestion-card {
   margin: 0 16px 16px;
   padding: 12px 16px;
-  background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%);
-  border-radius: 14px;
-  border: 1px solid #fde68a;
+  background: #FAF8F5;
+  border-radius: 24rpx;
+  border: 1px solid #E9E1D8;
 }
 
 .ai-suggestion-head {
@@ -425,7 +426,7 @@ export default {
 
 .ai-suggestion-arrow {
   font-size: 12px;
-  color: #64748b;
+  color: #564337;
 }
 
 .ai-suggestion-text {
@@ -451,7 +452,7 @@ export default {
 
 .ai-suggestion-close {
   font-size: 12px;
-  color: #94a3b8;
+  color: #564337;
 }
 
 .list {
@@ -482,15 +483,15 @@ export default {
 
 .empty-state-desc {
   font-size: 13px;
-  color: #94a3b8;
+  color: #564337;
 }
 
 .card {
   background: #fff;
-  border-radius: 14px;
+  border-radius: 24rpx;
   padding: 14px 16px;
   margin-bottom: 12px;
-  border: 1px solid #e8e2db;
+  border: 1px solid #E9E1D8;
 }
 
 .card-hover {
@@ -516,18 +517,18 @@ export default {
   color: #6366f1;
   background: #e0e7ff;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: 24rpx;
 }
 
 .card-desc {
   font-size: 13px;
-  color: #64748b;
+  color: #564337;
   display: block;
 }
 
 .card-note {
   font-size: 12px;
-  color: #94a3b8;
+  color: #564337;
   display: block;
   margin-top: 6px;
 }
@@ -546,7 +547,7 @@ export default {
   width: 100%;
   max-height: 80vh;
   background: #fff;
-  border-radius: 20px 20px 0 0;
+  border-radius: 24rpx 20px 0 0;
   padding-bottom: env(safe-area-inset-bottom);
   overflow-y: auto;
 }
@@ -554,8 +555,8 @@ export default {
 .modal-sheet-bar {
   width: 36px;
   height: 4px;
-  background: #e2e8f0;
-  border-radius: 2px;
+  background: #E9E1D8;
+  border-radius: 24rpx;
   margin: 10px auto;
 }
 
@@ -569,12 +570,12 @@ export default {
 .modal-sheet-title {
   font-size: 17px;
   font-weight: 600;
-  color: #0f172a;
+  color: #1a1c1a;
 }
 
 .modal-sheet-close {
   font-size: 24px;
-  color: #94a3b8;
+  color: #564337;
   padding: 4px;
 }
 
@@ -589,23 +590,23 @@ export default {
 
 .field-label {
   font-size: 13px;
-  color: #64748b;
+  color: #564337;
   display: block;
   margin-bottom: 8px;
 }
 
 .picker {
-  border: 1px solid #e8e2db;
-  border-radius: 10px;
+  border: 1px solid #E9E1D8;
+  border-radius: 24rpx;
   padding: 12px 14px;
   font-size: 14px;
-  color: #0f172a;
+  color: #1a1c1a;
   background: #fff;
 }
 
 .input {
-  border: 1px solid #e8e2db;
-  border-radius: 10px;
+  border: 1px solid #E9E1D8;
+  border-radius: 24rpx;
   padding: 12px 14px;
   font-size: 14px;
   width: 100%;
@@ -620,12 +621,12 @@ export default {
   width: 100%;
   min-height: 80px;
   box-sizing: border-box;
-  border: 1px solid #e8e2db;
-  border-radius: 10px;
+  border: 1px solid #E9E1D8;
+  border-radius: 24rpx;
   padding: 12px 14px;
   font-size: 14px;
   line-height: 1.5;
-  color: #0f172a;
+  color: #1a1c1a;
 }
 
 .pill-wrap {
@@ -635,28 +636,28 @@ export default {
 
 .pill {
   padding: 8px 16px;
-  border-radius: 20px;
+  border-radius: 24rpx;
   background: #f5f1eb;
-  color: #64748b;
+  color: #564337;
   font-size: 13px;
 }
 
 .pill.active {
-  background: #f97316;
+  background: #A23F00;
   color: #fff;
 }
 
 .modal-sheet-btn {
   width: 100%;
   height: 48px;
-  border-radius: 14px;
+  border-radius: 24rpx;
   font-size: 16px;
   font-weight: 600;
   margin-top: 8px;
 }
 
 .modal-sheet-btn.primary {
-  background: #f97316;
+  background: #A23F00;
   color: #fff;
   border: none;
 }

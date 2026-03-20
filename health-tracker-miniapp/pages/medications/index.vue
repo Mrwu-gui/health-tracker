@@ -233,8 +233,8 @@ export default {
 .page {
   padding: 18px;
   min-height: 100vh;
-  background: #faf8f5;
-  color: #0f172a;
+  background: #FAF8F5;
+  color: #1a1c1a;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -248,20 +248,22 @@ export default {
 
 .title {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
+  color: #1a1c1a;
 }
 
 .add-btn {
   width: 34px;
   height: 34px;
-  border-radius: 17px;
-  background: #f97316;
+  border-radius: 24rpx;
+  background: #A23F00;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   font-weight: 300;
+  box-shadow: 0 6rpx 16rpx rgba(162, 63, 0, 0.4);
 }
 
 .list {
@@ -270,14 +272,14 @@ export default {
 }
 
 .empty-state {
-  background: #fefcf9;
-  border-radius: 16px;
+  background: #FAF8F5;
+  border-radius: 24rpx;
   padding: 32px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  border: 1px dashed #e8e2db;
+  border: 1px dashed #E9E1D8;
 }
 
 .empty-state-icon {
@@ -290,20 +292,26 @@ export default {
 .empty-state-title {
   font-size: 15px;
   font-weight: 600;
-  color: #475569;
+  color: #1a1c1a;
   margin-bottom: 6px;
 }
 
 .empty-state-desc {
   font-size: 12px;
-  color: #94a3b8;
+  color: #564337;
 }
 
 .card {
   background: #ffffff;
-  border-radius: 16px;
+  border-radius: 24rpx;
   padding: 14px;
-  border: 1px solid #e8e2db;
+  border: 1px solid #E9E1D8;
+  box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.04);
+  transition: transform 120ms ease;
+}
+
+.card:active {
+  transform: scale(0.98);
 }
 
 .row {
@@ -314,41 +322,41 @@ export default {
 
 .name {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   display: block;
 }
 
 .desc {
   font-size: 10px;
-  color: #94a3b8;
+  color: #564337;
   margin-top: 4px;
   display: block;
 }
 
 .toggle {
   font-size: 10px;
-  background: #dbeafe;
-  color: #f97316;
+  background: #FAF8F5;
+  color: #A23F00;
   padding: 4px 8px;
-  border-radius: 999px;
+  border-radius: 24rpx;
 }
 
 .ai-tip-bar {
   padding: 10px 14px;
   background: #f8fafc;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border-radius: 24rpx;
+  border: 1px solid #E9E1D8;
 }
 
 .ai-tip-text {
   font-size: 12px;
-  color: #64748b;
+  color: #564337;
 }
 
 .ai-suggestion-card {
   padding: 12px 16px;
   background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%);
-  border-radius: 14px;
+  border-radius: 24rpx;
   border: 1px solid #fde68a;
   margin-bottom: 12px;
 }
@@ -368,7 +376,7 @@ export default {
 
 .ai-suggestion-arrow {
   font-size: 12px;
-  color: #64748b;
+  color: #564337;
 }
 
 .ai-suggestion-text {
@@ -394,7 +402,7 @@ export default {
 
 .ai-suggestion-close {
   font-size: 12px;
-  color: #94a3b8;
+  color: #564337;
 }
 
 .rate {
@@ -405,20 +413,20 @@ export default {
 .bar {
   height: 6px;
   background: #e8e2db;
-  border-radius: 999px;
+  border-radius: 24rpx;
   overflow: hidden;
   margin-top: 8px;
 }
 
 .bar-fill {
   height: 100%;
-  background: #f97316;
+  background: #A23F00;
 }
 
 .primary {
-  background: #f97316;
+  background: #A23F00;
   color: #ffffff;
-  border-radius: 16px;
+  border-radius: 24rpx;
   font-size: 12px;
   padding: 12px 0;
 }
@@ -442,7 +450,7 @@ export default {
   max-width: 400px;
   max-height: 85vh;
   background: #fff;
-  border-radius: 20px 20px 0 0;
+  border-radius: 24rpx 20px 0 0;
   padding-bottom: env(safe-area-inset-bottom);
   display: flex;
   flex-direction: column;
@@ -452,7 +460,7 @@ export default {
 .modal-sheet-bar {
   width: 36px;
   height: 4px;
-  border-radius: 2px;
+  border-radius: 24rpx;
   background: #e8e2db;
   margin: 10px auto 0;
 }
@@ -468,12 +476,12 @@ export default {
 .modal-sheet-title {
   font-size: 17px;
   font-weight: 600;
-  color: #0f172a;
+  color: #1a1c1a;
 }
 
 .modal-sheet-close {
   font-size: 24px;
-  color: #94a3b8;
+  color: #564337;
   padding: 4px;
   line-height: 1;
 }
@@ -494,23 +502,23 @@ export default {
 
 .field-label {
   font-size: 13px;
-  color: #64748b;
+  color: #564337;
 }
 
 .input {
-  border: 1px solid #e8e2db;
-  border-radius: 12px;
+  border: 1px solid #E9E1D8;
+  border-radius: 24rpx;
   padding: 12px 14px;
   font-size: 14px;
-  color: #0f172a;
+  color: #1a1c1a;
   background: #fff;
 }
 
 .modal-sheet-btn.primary {
   width: 100%;
   padding: 14px;
-  border-radius: 14px;
-  background: #f97316;
+  border-radius: 24rpx;
+  background: #A23F00;
   color: #fff;
   font-size: 15px;
   font-weight: 600;
@@ -518,9 +526,9 @@ export default {
 }
 
 .primary {
-  background: #f97316;
+  background: #A23F00;
   color: #ffffff;
-  border-radius: 16px;
+  border-radius: 24rpx;
   font-size: 12px;
   padding: 12px 0;
 }

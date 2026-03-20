@@ -489,28 +489,28 @@ export default {
 <style>
 .page {
   min-height: 100vh;
-  background: #f5f1eb;
+  background: #FAF8F5;
   padding: 16px 16px 24px;
   padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
 
 .profile-card {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 24rpx;
   padding: 16px;
   margin-bottom: 16px;
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1px solid #e8e2db;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  border: 1px solid #E9E1D8;
+  box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.04);
 }
 
 .avatar-wrap {
   width: 48px;
   height: 48px;
-  border-radius: 24px;
-  background: #e8e2db;
+  border-radius: 24rpx;
+  background: #E9E1D8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -524,13 +524,13 @@ export default {
 }
 
 .avatar-wrap.avatar-default {
-  background: #e2e8f0;
+  background: #E9E1D8;
 }
 
 .avatar-letter {
   font-size: 18px;
   font-weight: 600;
-  color: #64748b;
+  color: #564337;
 }
 
 .profile-info {
@@ -540,25 +540,25 @@ export default {
 
 .name {
   font-size: 15px;
-  font-weight: 600;
-  color: #0f172a;
+  font-weight: 700;
+  color: #1a1c1a;
   display: block;
 }
 
 .desc {
   font-size: 12px;
-  color: #64748b;
+  color: #564337;
   margin-top: 4px;
   display: block;
 }
 
 .menu-card {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 24rpx;
   margin-bottom: 16px;
-  border: 1px solid #e8e2db;
+  border: 1px solid #E9E1D8;
   overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.04);
 }
 
 .menu-item {
@@ -569,7 +569,7 @@ export default {
   text-align: left;
   background: none;
   border: none;
-  border-bottom: 1px solid #f2ede8;
+  border-bottom: 1px solid #E9E1D8;
 }
 
 .menu-item:last-child {
@@ -579,7 +579,7 @@ export default {
 .menu-icon {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 24rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -588,49 +588,49 @@ export default {
 
 /* 用药管理（icon-y）：医疗/健康属性 → 橙色系 */
 .menu-icon.icon-y {
-	border-radius: 18px;
+	border-radius: 24rpx;
 	background: #fff7ed;
-	color: #ea580c;
+	color: #8B3500;
 }
 
 /* 目标管理（icon-g）：目标/进度属性 → 橙色系 */
 .menu-icon.icon-g {
-	border-radius: 18px;
+	border-radius: 24rpx;
 	background: #fff7ed;
-	color: #f97316;
+	color: #A23F00;
 }
 
 /* 提醒设置（icon-t）：通知/提醒属性 → 橙色系 */
 .menu-icon.icon-t {
-	border-radius: 18px;
+	border-radius: 24rpx;
 	background: #fff7ed;
-	color: #f59e0b;
+	color: #A23F00;
 }
 
 /* 家庭（icon-f）：亲情/温暖属性 → 治愈的浅绿+深绿背景 */
 .menu-icon.icon-f {
-	border-radius: 18px;
+	border-radius: 24rpx;
 	background: #ecfdf5; /* 浅绿背景，体现温暖/健康 */
 	color: #059669;      /* 深绿文字/图标，符合家庭健康的视觉认知 */
 }
 
 /* 经期记录（icon-p）：经期/女性健康 → 柔和粉紫 */
 .menu-icon.icon-p {
-	border-radius: 18px;
+	border-radius: 24rpx;
 	background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
 }
 
 /* 报表（icon-r）：数据/统计属性 → 专业的浅橙+深橙背景 */
 .menu-icon.icon-r {
-	border-radius: 18px;
+	border-radius: 24rpx;
 	background: #fff7ed; /* 浅橙背景，适配数据图表的视觉风格 */
-	color: #ea580c;      /* 深橙文字/图标，突出数据可视化 */
+	color: #8B3500;      /* 深橙文字/图标，突出数据可视化 */
 }
 
 /* 授权（icon-s）：安全/隐私属性 → 稳重的浅灰+深灰背景 */
 .menu-icon.icon-s {
-	border-radius: 18px;
-	background: #fefcf9; /* 浅灰背景，体现安全/中立 */
+	border-radius: 24rpx;
+	background: #FAF8F5; /* 浅灰背景，体现安全/中立 */
 	color: #334155;      /* 深灰文字/图标，符合隐私授权的视觉调性 */
 }
 
@@ -648,13 +648,13 @@ export default {
 .menu-title {
   font-size: 14px;
   font-weight: 600;
-  color: #0f172a;
+  color: #1a1c1a;
   display: block;
 }
 
 .menu-desc {
   font-size: 11px;
-  color: #64748b;
+  color: #564337;
   margin-top: 2px;
   display: block;
 }
@@ -674,10 +674,10 @@ export default {
   width: 100%;
   padding: 14px;
   font-size: 15px;
-  color: #64748b;
-  background: #fefcf9;
-  border: 1px solid #e8e2db;
-  border-radius: 14px;
+  color: #564337;
+  background: #FAF8F5;
+  border: 1px solid #E9E1D8;
+  border-radius: 24rpx;
 }
 
 .modal-mask {
@@ -695,7 +695,7 @@ export default {
   max-width: 400px;
   max-height: 85vh;
   background: #fff;
-  border-radius: 20px 20px 0 0;
+  border-radius: 24rpx 20px 0 0;
   padding-bottom: env(safe-area-inset-bottom);
   display: flex;
   flex-direction: column;
@@ -705,7 +705,7 @@ export default {
 .modal-sheet-bar {
   width: 36px;
   height: 4px;
-  border-radius: 2px;
+  border-radius: 24rpx;
   background: #e8e2db;
   margin: 10px auto 0;
 }
@@ -721,12 +721,12 @@ export default {
 .modal-sheet-title {
   font-size: 17px;
   font-weight: 600;
-  color: #0f172a;
+  color: #1a1c1a;
 }
 
 .modal-sheet-close {
   font-size: 24px;
-  color: #94a3b8;
+  color: #564337;
   padding: 4px;
   line-height: 1;
 }
@@ -752,7 +752,7 @@ export default {
 .info-avatar-wrap {
   width: 64px;
   height: 64px;
-  border-radius: 32px;
+  border-radius: 24rpx;
   background: #e8e2db;
   overflow: hidden;
   display: flex;
@@ -766,19 +766,19 @@ export default {
 }
 
 .info-avatar-wrap.avatar-default {
-  background: #e2e8f0;
+  background: #E9E1D8;
 }
 
 .info-avatar-letter {
   font-size: 24px;
   font-weight: 600;
-  color: #64748b;
+  color: #564337;
 }
 
 .info-name {
   font-size: 18px;
   font-weight: 600;
-  color: #0f172a;
+  color: #1a1c1a;
 }
 
 .info-rows {
@@ -797,13 +797,13 @@ export default {
 
 .info-label {
   font-size: 14px;
-  color: #64748b;
+  color: #564337;
 }
 
 .info-value {
   font-size: 14px;
   font-weight: 500;
-  color: #0f172a;
+  color: #1a1c1a;
 }
 
 .modal-sheet-btn {
@@ -811,13 +811,13 @@ export default {
   padding: 14px;
   font-size: 15px;
   font-weight: 600;
-  border-radius: 14px;
+  border-radius: 24rpx;
   border: none;
   width: 100%;
 }
 
 .modal-sheet-btn.primary {
-  background: #f97316;
+  background: #A23F00;
   color: #fff;
 }
 
@@ -834,15 +834,15 @@ export default {
 
 .field-label {
   font-size: 13px;
-  color: #64748b;
+  color: #564337;
 }
 
 .input {
-  border: 1px solid #e8e2db;
-  border-radius: 12px;
+  border: 1px solid #E9E1D8;
+  border-radius: 24rpx;
   padding: 12px 14px;
   font-size: 14px;
-  color: #0f172a;
+  color: #1a1c1a;
   background: #fff;
 }
 
@@ -864,16 +864,16 @@ export default {
   flex: 1;
   text-align: center;
   padding: 12px 0;
-  border-radius: 12px;
-  border: 1px solid #e8e2db;
-  color: #64748b;
+  border-radius: 24rpx;
+  border: 1px solid #E9E1D8;
+  color: #564337;
   font-size: 14px;
   background: #fff;
 }
 
 .radio-item.active {
-  border-color: #f97316;
-  color: #f97316;
+  border-color: #A23F00;
+  color: #A23F00;
   background: #fff7ed;
 }
 
@@ -881,15 +881,15 @@ export default {
   padding: 12px 14px;
   font-size: 13px;
   color: #475569;
-  background: #fefcf9;
-  border: 1px solid #e8e2db;
-  border-radius: 12px;
+  background: #FAF8F5;
+  border: 1px solid #E9E1D8;
+  border-radius: 24rpx;
   width: 100%;
 }
 
 .status {
   font-size: 12px;
-  color: #64748b;
+  color: #564337;
   margin-top: 8px;
 }
 

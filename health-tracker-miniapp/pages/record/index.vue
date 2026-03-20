@@ -395,7 +395,7 @@ export default {
 </script>
 
 <style scoped>
-.page { padding: 20px; min-height: 100vh; background: #faf8f5; padding-top: 12px; }
+.page { padding: 20px; min-height: 100vh; background: #FAF8F5; padding-top: 12px; }
 .quick-entry-bar { display: flex; gap: 10px; margin-bottom: 16px; }
 .quick-entry-item { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; background: #fff; border-radius: 12px; border: 1px solid #e8e2db; }
 .quick-entry-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
@@ -411,6 +411,6 @@ export default {
 .picker { border: 1px solid #e8e2db; border-radius: 10px; padding: 10px 12px; font-size: 14px; color: #0f172a; background: #fff; }
 .pill-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
 .pill { padding: 8px 14px; border-radius: 20px; background: #f5f1eb; color: #64748b; font-size: 13px; }
-.pill.active { background: #f97316; color: #fff; }
-.save-btn-view { background: #f97316; color: #fff; text-align: center; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; }
+.pill.active { background: #A23F00; color: #fff; }
+.save-btn-view { background: #A23F00; color: #fff; text-align: center; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; }
 </style>

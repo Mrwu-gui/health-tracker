@@ -72,7 +72,7 @@ export default {
 </script>
 
 <style scoped>
-.page { padding: 20px; min-height: 100vh; background: #faf8f5; }
+.page { padding: 20px; min-height: 100vh; background: #FAF8F5; }
 .card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 20px; }
 .field { margin-bottom: 14px; }
 .label { font-size: 12px; color: #64748b; display: block; margin-bottom: 6px; }

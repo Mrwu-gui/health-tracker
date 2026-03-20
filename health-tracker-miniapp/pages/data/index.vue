@@ -710,7 +710,7 @@ export default {
 <style>
 /* 页面背景 - 米白底 */
 page {
-  background: #faf8f5;
+  background: #FAF8F5;
 }
 
 .page {
@@ -732,12 +732,12 @@ page {
   justify-content: center;
   border-radius: 28rpx;
   background: #fff;
-  border: 1rpx solid #e5e5e5;
+  border: 1rpx solid #E9E1D8;
 }
 
 .period-tab.active {
-  background: #f97316;
-  border-color: #f97316;
+  background: #A23F00;
+  border-color: #A23F00;
 }
 
 .period-tab-text {
@@ -768,11 +768,11 @@ page {
   padding: 10rpx 24rpx;
   border-radius: 24rpx;
   background: #fff;
-  border: 1rpx solid #e5e5e5;
+  border: 1rpx solid #E9E1D8;
 }
 
 .dim-tab.active {
-  border-color: #f97316;
+  border-color: #A23F00;
   background: #fff;
 }
 
@@ -784,7 +784,7 @@ page {
 }
 
 .dim-tab.active .dim-label {
-  color: #f97316;
+  color: #A23F00;
   font-weight: 600;
 }
 
@@ -793,8 +793,8 @@ page {
   background: #fff;
   border-radius: 24rpx;
   padding: 20rpx;
-  border: 1rpx solid #f1e5d7;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid #E9E1D8;
+  box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.04);
   margin-bottom: 16rpx;
 }
 
@@ -849,11 +849,11 @@ page {
 
 /* 图例颜色 - 暖色系 */
 .legend-deep { background: #c2410c; }
-.legend-light { background: #fdba74; }
+.legend-light { background: #E9E1D8; }
 .legend-breakfast { background: #fcd34d; }
-.legend-lunch { background: #fb923c; }
-.legend-dinner { background: #f97316; }
-.legend-snack { background: #ea580c; }
+.legend-lunch { background: #C25E00; }
+.legend-dinner { background: #A23F00; }
+.legend-snack { background: #8B3500; }
 
 /* 图表区域 */
 .chart-body {
@@ -895,7 +895,7 @@ page {
   left: 0;
   right: 0;
   height: 1rpx;
-  background: #f97316;
+  background: #A23F00;
   z-index: 10;
   display: flex;
   align-items: center;
@@ -906,7 +906,7 @@ page {
   position: absolute;
   left: 0;
   right: 0;
-  border-top: 2rpx dashed #f97316;
+  border-top: 2rpx dashed #A23F00;
 }
 
 .target-label {
@@ -914,7 +914,7 @@ page {
   right: 0;
   top: -24rpx;
   font-size: 16rpx;
-  color: #f97316;
+  color: #A23F00;
   background: #fff;
   padding: 0 4rpx;
   white-space: nowrap;
@@ -951,7 +951,7 @@ page {
   left: 0;
   right: 0;
   border-radius: 4rpx;
-  background: linear-gradient(180deg, #fb923c 0%, #f97316 100%);
+  background: linear-gradient(180deg, #C25E00 0%, #A23F00 100%);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -960,16 +960,16 @@ page {
 
 /* 达标柱子 */
 .bar-exceed {
-  background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+  background: linear-gradient(180deg, #A23F00 0%, #8B3500 100%);
 }
 
 /* 睡眠柱子 */
 .bar-sleep {
-  background: linear-gradient(180deg, #fb923c 0%, #f97316 100%);
+  background: linear-gradient(180deg, #C25E00 0%, #A23F00 100%);
 }
 
 .bar-sleep.bar-exceed {
-  background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+  background: linear-gradient(180deg, #A23F00 0%, #8B3500 100%);
 }
 
 .bar-value {
@@ -1023,11 +1023,11 @@ page {
 
 .diet-normal {
   background: #fff7ed;
-  border: 1rpx solid #fed7aa;
+  border: 1rpx solid #E9E1D8;
 }
 
 .diet-normal .diet-status-text {
-  color: #ea580c;
+  color: #8B3500;
 }
 
 .diet-low {
@@ -1062,12 +1062,12 @@ page {
 }
 
 /* 堆叠颜色 - 暖色系 */
-.stack-light { background: #fdba74; }
+.stack-light { background: #E9E1D8; }
 .stack-deep { background: #c2410c; }
 .stack-breakfast { background: #fcd34d; }
-.stack-lunch { background: #fb923c; }
-.stack-dinner { background: #f97316; }
-.stack-snack { background: #ea580c; }
+.stack-lunch { background: #C25E00; }
+.stack-dinner { background: #A23F00; }
+.stack-snack { background: #8B3500; }
 
 /* 折线图 */
 .line-chart {
@@ -1127,7 +1127,7 @@ page {
   height: 16rpx;
   border-radius: 50%;
   background: #fff;
-  border: 3rpx solid #f97316;
+  border: 3rpx solid #A23F00;
 }
 
 .point-line {
@@ -1135,7 +1135,7 @@ page {
   right: 8rpx;
   bottom: 8rpx;
   height: 3rpx;
-  background: #f97316;
+  background: #A23F00;
   transform-origin: right center;
 }
 
@@ -1153,7 +1153,7 @@ page {
 
 /* 体重柱状图 */
 .bar-weight {
-  background: linear-gradient(180deg, #fb923c 0%, #f97316 100%);
+  background: linear-gradient(180deg, #C25E00 0%, #A23F00 100%);
 }
 
 /* 经期热力图 */
@@ -1264,7 +1264,7 @@ page {
 
 .stat-highlight {
   background: #fff7ed;
-  border: 1rpx solid #fed7aa;
+  border: 1rpx solid #E9E1D8;
 }
 
 .stat-label {
@@ -1285,7 +1285,7 @@ page {
 }
 
 .stat-value-theme {
-  color: #f97316;
+  color: #A23F00;
 }
 
 .stat-unit {
@@ -1295,7 +1295,7 @@ page {
 
 .stat-desc {
   font-size: 18rpx;
-  color: #f97316;
+  color: #A23F00;
   margin-top: 2rpx;
 }
 
@@ -1304,8 +1304,8 @@ page {
   background: #fff;
   border-radius: 24rpx;
   padding: 24rpx;
-  border: 1rpx solid #f1e5d7;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid #E9E1D8;
+  box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.04);
 }
 
 .ai-header {
@@ -1331,7 +1331,7 @@ page {
   width: 44rpx;
   height: 44rpx;
   border-radius: 50%;
-  background: #f97316;
+  background: #A23F00;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1360,12 +1360,12 @@ page {
   padding: 8rpx 20rpx;
   border-radius: 20rpx;
   background: #fff;
-  border: 1rpx solid #fdba74;
+  border: 1rpx solid #E9E1D8;
 }
 
 .ai-refresh-text {
   font-size: 22rpx;
-  color: #f97316;
+  color: #A23F00;
   font-weight: 500;
 }
 
@@ -1382,7 +1382,7 @@ page {
   width: 40rpx;
   height: 40rpx;
   border: 3rpx solid #f0f0f0;
-  border-top-color: #f97316;
+  border-top-color: #A23F00;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -1439,7 +1439,7 @@ page {
   padding: 20rpx 24rpx;
   border-radius: 14rpx;
   background: #faf5ef;
-  border-left: 4rpx solid #f97316;
+  border-left: 4rpx solid #A23F00;
 }
 
 .ai-summary-text {
@@ -1478,7 +1478,7 @@ page {
   width: 36rpx;
   height: 36rpx;
   border-radius: 50%;
-  background: #f97316;
+  background: #A23F00;
   color: #fff;
   font-size: 22rpx;
   font-weight: 600;

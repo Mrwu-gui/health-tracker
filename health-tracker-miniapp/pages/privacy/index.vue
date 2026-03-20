@@ -108,7 +108,7 @@ export default {
 .page {
   padding: 18px;
   min-height: 100vh;
-  background: #faf8f5;
+  background: #FAF8F5;
   color: #0f172a;
   display: flex;
   flex-direction: column;
@@ -171,7 +171,7 @@ export default {
 }
 
 .btn-dark {
-  background: #f97316;
+  background: #A23F00;
   color: #ffffff;
   border-radius: 12px;
   font-size: 11px;
@@ -179,7 +179,7 @@ export default {
 }
 
 .primary {
-  background: #f97316;
+  background: #A23F00;
   color: #ffffff;
   border-radius: 16px;
   font-size: 12px;

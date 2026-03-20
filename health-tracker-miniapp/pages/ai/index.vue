@@ -442,7 +442,7 @@ export default {
       uni.showModal({
         title: "清空对话",
         content: "确认清空所有对话记录？",
-        confirmColor: "#f97316",
+        confirmColor: "#A23F00",
         success: (res) => {
           if (res.confirm) {
             this.messages = [];
@@ -473,7 +473,7 @@ export default {
   height: 100vh;
   width: 100%;
   box-sizing: border-box;
-  background: #faf8f5;
+  background: #FAF8F5;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -484,7 +484,7 @@ export default {
   flex: 1;
   width: 100%;
   box-sizing: border-box;
-  background: #faf8f5;
+  background: #FAF8F5;
   overflow: hidden;
 }
 
@@ -511,8 +511,8 @@ export default {
 .recommend-logo {
   width: 56px;
   height: 56px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, #A23F00 0%, #8B3500 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -527,18 +527,18 @@ export default {
 .recommend-hello {
   font-size: 18px;
   font-weight: 700;
-  color: #0f172a;
+  color: #1a1c1a;
 }
 
 .recommend-sub {
   font-size: 13px;
-  color: #64748b;
+  color: #564337;
   text-align: center;
 }
 
 .recommend-title {
   font-size: 12px;
-  color: #94a3b8;
+  color: #564337;
   font-weight: 500;
   display: block;
   margin-bottom: 10px;
@@ -556,8 +556,8 @@ export default {
   gap: 10px;
   padding: 13px 14px;
   background: #fff;
-  border-radius: 14px;
-  border: 1px solid #e8e2db;
+  border-radius: 24rpx;
+  border: 1px solid #E9E1D8;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
@@ -565,8 +565,8 @@ export default {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #fff7ed;
-  color: #f97316;
+  background: #FAF8F5;
+  color: #A23F00;
   font-size: 11px;
   font-weight: 700;
   display: flex;
@@ -603,7 +603,7 @@ export default {
 .avatar {
   width: 34px;
   height: 34px;
-  border-radius: 12px;
+  border-radius: 24rpx;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -612,7 +612,7 @@ export default {
 }
 
 .avatar.assistant {
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #A23F00 0%, #8B3500 100%);
   box-shadow: 0 3px 10px rgba(249, 115, 22, 0.3);
 }
 
@@ -623,7 +623,7 @@ export default {
 }
 
 .avatar.user {
-  background: #e2e8f0;
+  background: #E9E1D8;
 }
 
 .avatar-img {
@@ -635,7 +635,7 @@ export default {
 .avatar-user-txt {
   font-size: 13px;
   font-weight: 600;
-  color: #64748b;
+  color: #564337;
 }
 
 .bubble-wrap {
@@ -645,7 +645,7 @@ export default {
 
 .bubble {
   padding: 11px 14px;
-  border-radius: 16px;
+  border-radius: 24rpx;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -659,7 +659,7 @@ export default {
 }
 
 .bubble-user {
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #A23F00 0%, #8B3500 100%);
   color: #fff;
   border-bottom-right-radius: 4px;
   box-shadow: 0 3px 10px rgba(249, 115, 22, 0.3);
@@ -694,7 +694,7 @@ export default {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #f97316;
+  background: #A23F00;
   animation: thinking-bounce 0.6s ease-in-out infinite;
 }
 
@@ -709,7 +709,7 @@ export default {
 /* 图片/语音 */
 .bubble-img {
   max-width: 200px;
-  border-radius: 8px;
+  border-radius: 24rpx;
   display: block;
   margin-bottom: 4px;
 }
@@ -749,15 +749,15 @@ export default {
 .extra-menu-icon {
   width: 44px;
   height: 44px;
-  border-radius: 14px;
+  border-radius: 24rpx;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.extra-menu-icon-album { background: #fff7ed; border: 1px solid #fed7aa; }
-.extra-menu-icon-camera { background: #eff6ff; border: 1px solid #bfdbfe; }
-.extra-menu-icon-voice { background: #f0fdf4; border: 1px solid #bbf7d0; }
+.extra-menu-icon-album { background: #FAF8F5; border: 1px solid #E9E1D8; }
+.extra-menu-icon-camera { background: #FAF8F5; border: 1px solid #bfdbfe; }
+.extra-menu-icon-voice { background: #FAF8F5; border: 1px solid #E9E1D8; }
 .extra-menu-icon-file { background: #fefce8; border: 1px solid #fde68a; }
 
 .extra-menu-icon-img {
@@ -772,7 +772,7 @@ export default {
 
 .extra-menu-label {
   font-size: 12px;
-  color: #64748b;
+  color: #564337;
   font-weight: 500;
 }
 
@@ -781,7 +781,7 @@ export default {
   align-items: center;
   gap: 8px;
   background: #f5f1eb;
-  border-radius: 24px;
+  border-radius: 24rpx;
   padding: 6px 6px 6px 10px;
   min-height: 46px;
 }
@@ -811,20 +811,20 @@ export default {
 .composer-input {
   flex: 1;
   font-size: 15px;
-  color: #0f172a;
+  color: #1a1c1a;
   min-height: 30px;
   background: transparent;
 }
 
 .input-placeholder {
-  color: #94a3b8;
+  color: #564337;
 }
 
 .composer-send-btn {
   width: 38px;
   height: 38px;
-  border-radius: 50%;
-  background: #cbd5e1;
+  border-radius: 999rpx;
+  background: #E9E1D8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -833,8 +833,8 @@ export default {
 }
 
 .composer-send-active {
-  background: #f97316;
-  box-shadow: 0 3px 10px rgba(249, 115, 22, 0.35);
+  background: #A23F00;
+  box-shadow: 0 6rpx 16rpx rgba(162, 63, 0, 0.35);
 }
 
 .composer-send-icon {
@@ -847,8 +847,8 @@ export default {
 .composer-plus-btn {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
-  background: #f97316;
+  border-radius: 999rpx;
+  background: #A23F00;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -38,7 +38,7 @@ export default {
 </script>
 
 <style scoped>
-.page { padding: 20px; min-height: 100vh; background: #faf8f5; }
+.page { padding: 20px; min-height: 100vh; background: #FAF8F5; }
 .card { background: #fff; border-radius: 16px; padding: 16px; }
 .row { margin-bottom: 12px; }
 .name { font-size: 16px; font-weight: 600; }

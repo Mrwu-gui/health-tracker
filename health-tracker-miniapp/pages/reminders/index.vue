@@ -437,8 +437,8 @@ export default {
 .page {
   padding: 18px;
   min-height: 100vh;
-  background: #faf8f5;
-  color: #0f172a;
+  background: #FAF8F5;
+  color: #1a1c1a;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -452,27 +452,29 @@ export default {
 
 .title {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
+  color: #1a1c1a;
 }
 
 .add-btn {
   width: 36px;
   height: 36px;
-  border-radius: 18px;
-  border: 1px solid #fed7aa;
-  background: #fff7ed;
-  color: #f97316;
+  border-radius: 24rpx;
+  border: 1px solid #E9E1D8;
+  background: #FAF8F5;
+  color: #A23F00;
   font-size: 18px;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 6rpx 16rpx rgba(162, 63, 0, 0.4);
 }
 
 .tabs {
   display: inline-flex;
-  background: #e8e2db;
-  border-radius: 999px;
+  background: #E9E1D8;
+  border-radius: 999rpx;
   padding: 2px;
   gap: 4px;
 }
@@ -480,21 +482,21 @@ export default {
 .tab {
   font-size: 10px;
   padding: 4px 8px;
-  border-radius: 999px;
-  color: #64748b;
+  border-radius: 999rpx;
+  color: #564337;
 }
 
 .tab.active {
   background: #ffffff;
-  color: #0f172a;
+  color: #1a1c1a;
 }
 
 .tag {
   font-size: 10px;
-  color: #f97316;
-  background: #fff7ed;
+  color: #A23F00;
+  background: #FAF8F5;
   padding: 4px 8px;
-  border-radius: 999px;
+  border-radius: 999rpx;
   flex-shrink: 0;
 }
 
@@ -502,7 +504,7 @@ export default {
   display: block;
   margin-top: 6px;
   font-size: 10px;
-  color: #f59e0b;
+  color: #A23F00;
 }
 
 .modal-mask {
@@ -520,7 +522,7 @@ export default {
   max-width: 400px;
   max-height: 85vh;
   background: #fff;
-  border-radius: 20px 20px 0 0;
+  border-radius: 24rpx 20px 0 0;
   padding-bottom: env(safe-area-inset-bottom);
   display: flex;
   flex-direction: column;
@@ -530,7 +532,7 @@ export default {
 .modal-sheet-bar {
   width: 36px;
   height: 4px;
-  border-radius: 2px;
+  border-radius: 24rpx;
   background: #e8e2db;
   margin: 10px auto 0;
 }
@@ -546,12 +548,12 @@ export default {
 .modal-sheet-title {
   font-size: 17px;
   font-weight: 600;
-  color: #0f172a;
+  color: #1a1c1a;
 }
 
 .modal-sheet-close {
   font-size: 24px;
-  color: #94a3b8;
+  color: #564337;
   padding: 4px;
   line-height: 1;
 }
@@ -572,16 +574,16 @@ export default {
 
 .field-label {
   font-size: 13px;
-  color: #64748b;
+  color: #564337;
 }
 
 .picker {
-  border: 1px solid #e8e2db;
-  border-radius: 12px;
+  border: 1px solid #E9E1D8;
+  border-radius: 24rpx;
   padding: 12px 14px;
   font-size: 14px;
   background: #fff;
-  color: #0f172a;
+  color: #1a1c1a;
 }
 
 .picker-group {
@@ -591,19 +593,19 @@ export default {
 }
 
 .input {
-  border: 1px solid #e8e2db;
-  border-radius: 12px;
+  border: 1px solid #E9E1D8;
+  border-radius: 24rpx;
   padding: 12px 14px;
   font-size: 14px;
-  color: #0f172a;
+  color: #1a1c1a;
   background: #fff;
 }
 
 .modal-sheet-btn.primary {
   width: 100%;
   padding: 14px;
-  border-radius: 14px;
-  background: #f97316;
+  border-radius: 24rpx;
+  background: #A23F00;
   color: #fff;
   font-size: 15px;
   font-weight: 600;
@@ -616,8 +618,8 @@ export default {
 }
 
 .empty-state {
-  background: #fefcf9;
-  border-radius: 16px;
+  background: #FAF8F5;
+  border-radius: 24rpx;
   padding: 32px 20px;
   display: flex;
   flex-direction: column;
@@ -642,14 +644,14 @@ export default {
 
 .empty-state-desc {
   font-size: 12px;
-  color: #94a3b8;
+  color: #564337;
 }
 
 .card {
   background: #ffffff;
-  border-radius: 16px;
+  border-radius: 24rpx;
   padding: 12px;
-  border: 1px solid #e8e2db;
+  border: 1px solid #E9E1D8;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -680,7 +682,7 @@ export default {
 }
 
 .tag.tag-status {
-  color: #64748b;
+  color: #564337;
   background: #f1f5f9;
 }
 
@@ -696,13 +698,13 @@ export default {
 }
 
 .card-more-hover {
-  background: #e2e8f0;
+  background: #E9E1D8;
 }
 
 .card-more-icon {
   font-size: 20px;
   font-weight: 300;
-  color: #64748b;
+  color: #564337;
   line-height: 1;
 }
 
@@ -714,13 +716,13 @@ export default {
 
 .desc {
   font-size: 10px;
-  color: #94a3b8;
+  color: #564337;
   margin-top: 4px;
   display: block;
 }
 
 .note {
   font-size: 10px;
-  color: #94a3b8;
+  color: #564337;
 }
 </style>

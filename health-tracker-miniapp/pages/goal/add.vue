@@ -71,13 +71,13 @@ export default {
 </script>
 
 <style scoped>
-.page { padding: 20px; min-height: 100vh; background: #faf8f5; }
+.page { padding: 20px; min-height: 100vh; background: #FAF8F5; }
 .card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 20px; }
 .field { margin-bottom: 14px; }
 .label { font-size: 12px; color: #64748b; display: block; margin-bottom: 8px; }
 .pill-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
 .pill { padding: 8px 14px; border-radius: 20px; background: #f5f1eb; color: #64748b; font-size: 13px; }
-.pill.active { background: #f97316; color: #fff; }
+.pill.active { background: #A23F00; color: #fff; }
 .input { border: 1px solid #e8e2db; border-radius: 10px; padding: 10px 12px; font-size: 14px; width: 100%; box-sizing: border-box; margin-top: 6px; }
-.save-btn { background: #f97316; color: #fff; text-align: center; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; }
+.save-btn { background: #A23F00; color: #fff; text-align: center; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; }
 </style>

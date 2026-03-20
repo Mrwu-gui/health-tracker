@@ -165,7 +165,7 @@ export default {
 .page {
   padding: 18px;
   min-height: 100vh;
-  background: #faf8f5;
+  background: #FAF8F5;
   color: #0f172a;
   display: flex;
   flex-direction: column;
@@ -187,9 +187,9 @@ export default {
   width: 36px;
   height: 36px;
   border-radius: 18px;
-  border: 1px solid #fed7aa;
+  border: 1px solid #E9E1D8;
   background: #fff7ed;
-  color: #f97316;
+  color: #A23F00;
   font-size: 18px;
   line-height: 1;
   display: flex;
@@ -296,7 +296,7 @@ export default {
 
 .tag {
   font-size: 10px;
-  color: #f97316;
+  color: #A23F00;
 }
 
 .modal-mask {
@@ -382,7 +382,7 @@ export default {
   width: 100%;
   padding: 14px;
   border-radius: 14px;
-  background: #f97316;
+  background: #A23F00;
   color: #fff;
   font-size: 15px;
   font-weight: 600;

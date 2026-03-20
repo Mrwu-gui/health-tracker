@@ -1,15 +1,15 @@
 {
   "globalStyle": {
-    "navigationBarBackgroundColor": "#faf8f5",
+    "navigationBarBackgroundColor": "#FAF8F5",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#faf8f5"
+    "backgroundColor": "#FAF8F5"
   },
   "pages": [
     {
       "path": "pages/index/index",
       "style": {
         "navigationBarTitleText": "智康AI",
-        "navigationBarBackgroundColor": "#faf8f5",
+        "navigationBarBackgroundColor": "#FAF8F5",
         "navigationBarTextStyle": "black"
       }
     },
@@ -89,7 +89,7 @@
       "path": "pages/login/index",
       "style": {
         "navigationBarTitleText": "登录",
-        "navigationBarBackgroundColor": "#fef9f3",
+        "navigationBarBackgroundColor": "#FAF8F5",
         "navigationStyle": "custom"
       }
     },
@@ -97,7 +97,7 @@
       "path": "pages/login-phone/index",
       "style": {
         "navigationBarTitleText": "手机号登录",
-        "navigationBarBackgroundColor": "#fef9f3"
+        "navigationBarBackgroundColor": "#FAF8F5"
       }
     },
     {
@@ -112,7 +112,7 @@
   "tabBar": {
     "custom": false,
     "color": "#94a3b8",
-    "selectedColor": "#f97316",
+    "selectedColor": "#A23F00",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "height": "56px",

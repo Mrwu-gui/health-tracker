@@ -1,6 +1,6 @@
 <template>
   <view class="page">
-    <view class="profile-card" @tap="openProfileModal">
+    <view class="profile-card card" @tap="openProfileModal">
       <view class="avatar-wrap" :class="{ 'avatar-default': !profile.avatar }">
         <image v-if="profile.avatar" class="avatar-img" :src="String(profile.avatar)" mode="aspectFill" />
         <text v-else class="avatar-letter">{{ profile.name ? profile.name.slice(0, 1) : "?" }}</text>
@@ -11,7 +11,8 @@
       </view>
     </view>
 
-    <view class="menu-card">
+    <!-- 健康管理卡片 -->
+    <view class="menu-card card">
       <navigator class="menu-item" url="/pages/goal/index" hover-class="none">
         <view class="menu-icon icon-g">
           <image class="icon-img" src="/static/tabbar/goal.png" mode="widthFix"></image>
@@ -62,6 +63,10 @@
         </view>
         <text class="menu-arrow">›</text>
       </navigator>
+    </view>
+
+    <!-- 数据与隐私卡片 -->
+    <view class="menu-card card">
       <view class="menu-item" @tap="goReports">
         <view class="menu-icon icon-r">
           <image class="icon-img" src="/static/tabbar/report.png" mode="widthFix"></image>
@@ -112,12 +117,12 @@
               <view class="info-row"><text class="info-label">血压</text><text class="info-value">{{ profile.systolic && profile.diastolic ? profile.systolic + '/' + profile.diastolic : '--' }}</text></view>
               <view class="info-row"><text class="info-label">心率</text><text class="info-value">{{ profile.heartRate ? profile.heartRate + ' 次/分' : '--' }}</text></view>
             </view>
-            <button class="modal-sheet-btn secondary" @tap="bodyModalMode = 'edit'">编辑</button>
+            <button class="modal-sheet-btn secondary pill" @tap="bodyModalMode = 'edit'">编辑</button>
 </template>
           <template v-else>
             <!-- #ifdef MP-WEIXIN -->
             <view class="field"><text class="field-label">头像</text>
-              <button class="ghost" open-type="chooseAvatar" @chooseavatar="onChooseAvatar" :disabled="bodySaving">选择头像</button>
+              <button class="ghost pill" open-type="chooseAvatar" @chooseavatar="onChooseAvatar" :disabled="bodySaving">选择头像</button>
             </view>
             <!-- #endif -->
             <view class="field"><text class="field-label">昵称</text>
@@ -125,8 +130,8 @@
             </view>
             <view class="field"><text class="field-label">性别</text>
               <view class="radio-options">
-                <view class="radio-item" :class="{ active: bodyForm.sex === '男' }" @tap="bodyForm.sex = '男'">男</view>
-                <view class="radio-item" :class="{ active: bodyForm.sex === '女' }" @tap="bodyForm.sex = '女'">女</view>
+                <view class="radio-item pill" :class="{ active: bodyForm.sex === '男' }" @tap="bodyForm.sex = '男'">男</view>
+                <view class="radio-item pill" :class="{ active: bodyForm.sex === '女' }" @tap="bodyForm.sex = '女'">女</view>
               </view>
             </view>
             <view class="field"><text class="field-label">年龄</text>
@@ -147,7 +152,7 @@
             <view class="field"><text class="field-label">心率</text>
               <input class="input" v-model="bodyForm.heartRate" placeholder="心率" type="number" />
             </view>
-            <button class="modal-sheet-btn primary" @tap="saveBodyProfile" :disabled="bodySaving">
+            <button class="modal-sheet-btn primary pill" @tap="saveBodyProfile" :disabled="bodySaving">
               {{ bodySaving ? "保存中..." : "保存" }}
             </button>
 </template>
@@ -158,13 +163,20 @@
     <text v-if="message" class="status">{{ message }}</text>
     <text v-if="loading" class="status">加载中...</text>
     <text v-if="error" class="status error">{{ error }}</text>
+
+    <!-- 自定义底部导航 -->
+    <custom-tabbar :current="3" />
   </view>
 </template>
 
 <script>
 import { request, API_BASE_URL } from "../../utils/api";
+import CustomTabbar from "@/components/custom-tabbar/custom-tabbar.vue";
 
 export default {
+  components: {
+    CustomTabbar
+  },
   data() {
     return {
       profile: {
@@ -496,7 +508,7 @@ export default {
 
 .profile-card {
   background: #fff;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   padding: 16px;
   margin-bottom: 16px;
   display: flex;
@@ -509,7 +521,7 @@ export default {
 .avatar-wrap {
   width: 48px;
   height: 48px;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   background: #E9E1D8;
   display: flex;
   align-items: center;
@@ -554,7 +566,7 @@ export default {
 
 .menu-card {
   background: #fff;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   margin-bottom: 16px;
   border: 1px solid #E9E1D8;
   overflow: hidden;
@@ -579,59 +591,60 @@ export default {
 .menu-icon {
   width: 36px;
   height: 36px;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-/* 用药管理（icon-y）：医疗/健康属性 → 橙色系 */
-.menu-icon.icon-y {
-	border-radius: 24rpx;
-	background: #fff7ed;
-	color: #8B3500;
-}
-
-/* 目标管理（icon-g）：目标/进度属性 → 橙色系 */
+/* 目标管理（icon-g）：淡蓝色 */
 .menu-icon.icon-g {
-	border-radius: 24rpx;
-	background: #fff7ed;
-	color: #A23F00;
+	border-radius: var(--radius-card);
+	background: #dbeafe;
+	color: #1e40af;
 }
 
-/* 提醒设置（icon-t）：通知/提醒属性 → 橙色系 */
+/* 用药管理（icon-y）：淡黄色 */
+.menu-icon.icon-y {
+	border-radius: var(--radius-card);
+	background: #fef9c3;
+	color: #854d0e;
+}
+
+/* 提醒设置（icon-t）：淡紫色 */
 .menu-icon.icon-t {
-	border-radius: 24rpx;
-	background: #fff7ed;
-	color: #A23F00;
+	border-radius: var(--radius-card);
+	background: #f3e8ff;
+	color: #6b21a8;
 }
 
-/* 家庭（icon-f）：亲情/温暖属性 → 治愈的浅绿+深绿背景 */
+/* 家庭（icon-f）：淡绿色 - 保持不变 */
 .menu-icon.icon-f {
-	border-radius: 24rpx;
-	background: #ecfdf5; /* 浅绿背景，体现温暖/健康 */
-	color: #059669;      /* 深绿文字/图标，符合家庭健康的视觉认知 */
+	border-radius: var(--radius-card);
+	background: #ecfdf5;
+	color: #059669;
 }
 
-/* 经期记录（icon-p）：经期/女性健康 → 柔和粉紫 */
+/* 经期记录（icon-p）：淡粉色 - 保持不变 */
 .menu-icon.icon-p {
-	border-radius: 24rpx;
-	background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+	border-radius: var(--radius-card);
+	background: #fce7f3;
+	color: #be185d;
 }
 
-/* 报表（icon-r）：数据/统计属性 → 专业的浅橙+深橙背景 */
+/* 报表（icon-r）：淡青色 */
 .menu-icon.icon-r {
-	border-radius: 24rpx;
-	background: #fff7ed; /* 浅橙背景，适配数据图表的视觉风格 */
-	color: #8B3500;      /* 深橙文字/图标，突出数据可视化 */
+	border-radius: var(--radius-card);
+	background: #ccfbf1;
+	color: #0f766e;
 }
 
-/* 授权（icon-s）：安全/隐私属性 → 稳重的浅灰+深灰背景 */
+/* 授权（icon-s）：淡灰色 */
 .menu-icon.icon-s {
-	border-radius: 24rpx;
-	background: #FAF8F5; /* 浅灰背景，体现安全/中立 */
-	color: #334155;      /* 深灰文字/图标，符合隐私授权的视觉调性 */
+	border-radius: var(--radius-card);
+	background: #f3f4f6;
+	color: #4b5563;
 }
 
 .icon-txt {
@@ -667,17 +680,23 @@ export default {
 
 .logout-wrap {
   margin-top: 24px;
-  padding: 0 4px;
+  padding: 0 0;
 }
 
 .logout-btn {
   width: 100%;
-  padding: 14px;
+  padding: 16px;
   font-size: 15px;
-  color: #564337;
-  background: #FAF8F5;
-  border: 1px solid #E9E1D8;
-  border-radius: 24rpx;
+  font-weight: 700;
+  color: #ef4444 !important;
+  background: #fff;
+  border: 1px solid #ef4444 !important;
+  border-radius: 52rpx;
+  box-shadow: var(--shadow-card);
+}
+
+.logout-btn::after {
+  border: none;
 }
 
 .modal-mask {
@@ -705,7 +724,7 @@ export default {
 .modal-sheet-bar {
   width: 36px;
   height: 4px;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   background: #e8e2db;
   margin: 10px auto 0;
 }
@@ -752,7 +771,7 @@ export default {
 .info-avatar-wrap {
   width: 64px;
   height: 64px;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   background: #e8e2db;
   overflow: hidden;
   display: flex;
@@ -811,7 +830,7 @@ export default {
   padding: 14px;
   font-size: 15px;
   font-weight: 600;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   border: none;
   width: 100%;
 }
@@ -839,11 +858,14 @@ export default {
 
 .input {
   border: 1px solid #E9E1D8;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   padding: 12px 14px;
   font-size: 14px;
   color: #1a1c1a;
   background: #fff;
+  height: 44px;
+  line-height: 20px;
+  box-sizing: border-box;
 }
 
 .input-row {
@@ -864,7 +886,7 @@ export default {
   flex: 1;
   text-align: center;
   padding: 12px 0;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   border: 1px solid #E9E1D8;
   color: #564337;
   font-size: 14px;
@@ -883,7 +905,7 @@ export default {
   color: #475569;
   background: #FAF8F5;
   border: 1px solid #E9E1D8;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   width: 100%;
 }
 

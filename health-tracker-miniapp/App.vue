@@ -20,5 +20,34 @@ page {
   --card-bg-light: #fefcf9;
   --border-warm: #e8e2db;
   --border-warm-light: #f2ede8;
+
+  /* 统一圆角变量 */
+  --radius-card: 52rpx;
+  --radius-card-sm: 30rpx;
+  --radius-pill: 999rpx;
+
+  /* 统一阴影 */
+  --shadow-card: 0 8rpx 24rpx rgba(0, 0, 0, 0.06);
+}
+
+/* 统一卡片类 */
+.card {
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  background: #fff;
+}
+
+.card-sm {
+  border-radius: var(--radius-card-sm);
+}
+
+.pill {
+  border-radius: var(--radius-pill);
+}
+
+.progress-track,
+.progress-fill {
+  border-radius: var(--radius-pill);
 }
 </style>

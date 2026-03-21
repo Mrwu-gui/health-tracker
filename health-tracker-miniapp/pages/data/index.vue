@@ -5,7 +5,7 @@
       <view
         v-for="item in periodTabs"
         :key="item.value"
-        class="period-tab"
+        class="period-tab pill"
         :class="{ active: period === item.value }"
         @tap="switchPeriod(item.value)"
       >
@@ -19,7 +19,7 @@
         <view
           v-for="item in visibleDims"
           :key="item.value"
-          class="dim-tab"
+          class="dim-tab pill"
           :class="{ active: dimension === item.value }"
           @tap="switchDimension(item.value)"
         >
@@ -29,12 +29,12 @@
     </scroll-view>
 
     <!-- 图表卡片 -->
-    <view class="chart-card">
+    <view class="chart-card card">
       <!-- 卡片标题 -->
       <view class="chart-header">
         <view class="chart-title-row">
           <text class="chart-title">{{ currentDimLabel }}·趋势</text>
-          <view class="chart-badge">{{ periodLabel }}</view>
+          <view class="chart-badge pill">{{ periodLabel }}</view>
         </view>
         
         <!-- 图例（仅饮食） -->
@@ -198,14 +198,14 @@
 
       <!-- 统计数据 -->
       <view v-if="showStats" class="stats-section">
-        <view class="stat-card">
+        <view class="stat-card card-sm">
           <text class="stat-label">最高</text>
           <view class="stat-value-row">
             <text class="stat-value">{{ statMax }}</text>
             <text class="stat-unit">{{ statUnit }}</text>
           </view>
         </view>
-        <view class="stat-card stat-highlight">
+        <view class="stat-card stat-highlight card-sm">
           <text class="stat-label">平均</text>
           <view class="stat-value-row">
             <text class="stat-value stat-value-theme">{{ statAvg }}</text>
@@ -213,7 +213,7 @@
           </view>
           <text v-if="dimension === 'sleep'" class="stat-desc">{{ sleepStatusText }}</text>
         </view>
-        <view class="stat-card">
+        <view class="stat-card card-sm">
           <text class="stat-label">最低</text>
           <view class="stat-value-row">
             <text class="stat-value">{{ statMin }}</text>
@@ -224,7 +224,7 @@
     </view>
 
     <!-- AI 分析卡片 -->
-    <view class="ai-card">
+    <view class="ai-card card">
       <view class="ai-header">
         <view class="ai-title-wrap">
           <view class="ai-title-row">
@@ -234,7 +234,7 @@
           <text class="ai-subtitle">{{ periodLabel }}综合解读</text>
         </view>
         <view class="ai-action">
-          <view class="ai-refresh-btn" @tap="fetchAiInsight(true)">
+          <view class="ai-refresh-btn pill" @tap="fetchAiInsight(true)">
             <text class="ai-refresh-text">{{ aiLoading ? '分析中...' : '重新分析' }}</text>
           </view>
         </view>
@@ -251,7 +251,7 @@
         <view v-else-if="aiError" class="ai-error">
           <text class="error-icon">⚠️</text>
           <text class="error-text">{{ aiError }}</text>
-          <view class="error-retry" @tap="fetchAiInsight(true)">
+          <view class="error-retry pill" @tap="fetchAiInsight(true)">
             <text class="error-retry-text">点击重试</text>
           </view>
         </view>
@@ -274,13 +274,19 @@
         </view>
       </view>
     </view>
+    <!-- 自定义底部导航 -->
+    <custom-tabbar :current="1" />
   </view>
 </template>
 
 <script>
 import { request } from "../../utils/api";
+import CustomTabbar from "@/components/custom-tabbar/custom-tabbar.vue";
 
 export default {
+  components: {
+    CustomTabbar
+  },
   data() {
     return {
       period: "week",
@@ -742,7 +748,7 @@ page {
 
 .period-tab-text {
   font-size: 24rpx;
-  color: #9ca3af;
+  color: #564337;
   font-weight: 500;
 }
 
@@ -778,7 +784,7 @@ page {
 
 .dim-label {
   font-size: 24rpx;
-  color: #9ca3af;
+  color: #564337;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -791,7 +797,7 @@ page {
 /* 图表卡片 - 白色卡片，大圆角 */
 .chart-card {
   background: #fff;
-  border-radius: 24rpx;
+  border-radius: 52rpx;
   padding: 20rpx;
   border: 1rpx solid #E9E1D8;
   box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.04);
@@ -811,15 +817,16 @@ page {
 .chart-title {
   font-size: 28rpx;
   font-weight: 600;
-  color: #1f2937;
+  color: #1a1c1a;
 }
 
 .chart-badge {
   padding: 4rpx 12rpx;
-  border-radius: 10rpx;
-  background: #f5f5f5;
+  border-radius: 12rpx;
+  background: #FAF8F5;
+  border: 1rpx solid #E9E1D8;
   font-size: 20rpx;
-  color: #9ca3af;
+  color: #564337;
   font-weight: 500;
 }
 
@@ -844,7 +851,7 @@ page {
 
 .legend-label {
   font-size: 20rpx;
-  color: #6b7280;
+  color: #564337;
 }
 
 /* 图例颜色 - 暖色系 */
@@ -875,7 +882,7 @@ page {
 
 .y-label {
   font-size: 18rpx;
-  color: #9ca3af;
+  color: #94a3b8;
   text-align: right;
   width: 48rpx;
 }
@@ -941,7 +948,7 @@ page {
   left: 0;
   right: 0;
   height: 100%;
-  background: #fafafa;
+  background: #FAF8F5;
   border-radius: 4rpx;
 }
 
@@ -980,7 +987,7 @@ page {
 
 .bar-label {
   font-size: 18rpx;
-  color: #9ca3af;
+  color: #94a3b8;
   text-align: center;
 }
 
@@ -1147,7 +1154,7 @@ page {
 
 .line-label {
   font-size: 18rpx;
-  color: #9ca3af;
+  color: #94a3b8;
   text-align: center;
 }
 
@@ -1170,7 +1177,7 @@ page {
 
 .period-title {
   font-size: 22rpx;
-  color: #6b7280;
+  color: #564337;
   font-weight: 500;
 }
 
@@ -1193,13 +1200,13 @@ page {
 
 .period-legend-label {
   font-size: 18rpx;
-  color: #9ca3af;
+  color: #564337;
 }
 
-.period-level-0 { background: #f5f5f4; }
-.period-level-1 { background: #fecdd3; }
-.period-level-2 { background: #f472b6; }
-.period-level-3 { background: #db2777; }
+.period-level-0 { background: #FAF8F5; }
+.period-level-1 { background: #FEE2E2; }
+.period-level-2 { background: #FCA5A5; }
+.period-level-3 { background: #F87171; }
 
 .period-grid {
   display: flex;
@@ -1217,10 +1224,10 @@ page {
   position: relative;
 }
 
-.period-flow-0 { background: #f5f5f4; }
-.period-flow-1 { background: #fecdd3; }
-.period-flow-2 { background: #f472b6; }
-.period-flow-3 { background: #db2777; }
+.period-flow-0 { background: #FAF8F5; }
+.period-flow-1 { background: #FEE2E2; }
+.period-flow-2 { background: #FCA5A5; }
+.period-flow-3 { background: #F87171; }
 
 .period-flow-dot {
   position: absolute;
@@ -1234,7 +1241,7 @@ page {
 
 .period-cell-label {
   font-size: 18rpx;
-  color: #6b7280;
+  color: #564337;
 }
 
 .period-flow-2 .period-cell-label,
@@ -1248,7 +1255,7 @@ page {
   gap: 12rpx;
   margin-top: 16rpx;
   padding-top: 16rpx;
-  border-top: 1rpx solid #f0f0f0;
+  border-top: 1rpx solid #E9E1D8;
 }
 
 .stat-card {
@@ -1258,18 +1265,19 @@ page {
   align-items: center;
   gap: 4rpx;
   padding: 12rpx 6rpx;
-  border-radius: 12rpx;
-  background: #fafafa;
+  border-radius: 30rpx;
+  background: #FAF8F5;
+  border: 1rpx solid #E9E1D8;
 }
 
 .stat-highlight {
-  background: #fff7ed;
-  border: 1rpx solid #E9E1D8;
+  background: #FAF8F5;
+  border: 1rpx solid #A23F00;
 }
 
 .stat-label {
   font-size: 20rpx;
-  color: #9ca3af;
+  color: #564337;
 }
 
 .stat-value-row {
@@ -1281,7 +1289,7 @@ page {
 .stat-value {
   font-size: 28rpx;
   font-weight: 600;
-  color: #1f2937;
+  color: #1a1c1a;
 }
 
 .stat-value-theme {
@@ -1290,7 +1298,7 @@ page {
 
 .stat-unit {
   font-size: 18rpx;
-  color: #9ca3af;
+  color: #564337;
 }
 
 .stat-desc {
@@ -1302,7 +1310,7 @@ page {
 /* AI 分析卡片 */
 .ai-card {
   background: #fff;
-  border-radius: 24rpx;
+  border-radius: 52rpx;
   padding: 24rpx;
   border: 1rpx solid #E9E1D8;
   box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.04);
@@ -1343,12 +1351,12 @@ page {
 .ai-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: #1f2937;
+  color: #1a1c1a;
 }
 
 .ai-subtitle {
   font-size: 24rpx;
-  color: #9ca3af;
+  color: #564337;
   padding-left: 56rpx;
 }
 
@@ -1393,7 +1401,7 @@ page {
 
 .loading-text {
   font-size: 22rpx;
-  color: #9ca3af;
+  color: #564337;
 }
 
 /* 错误状态 */
@@ -1437,14 +1445,14 @@ page {
 /* AI总结 - 浅米色背景，左侧橙色竖线 */
 .ai-summary-section {
   padding: 20rpx 24rpx;
-  border-radius: 14rpx;
-  background: #faf5ef;
+  border-radius: 30rpx;
+  background: #FAF8F5;
   border-left: 4rpx solid #A23F00;
 }
 
 .ai-summary-text {
   font-size: 26rpx;
-  color: #374151;
+  color: #1a1c1a;
   line-height: 1.8;
   letter-spacing: 0.5rpx;
 }
@@ -1452,7 +1460,7 @@ page {
 /* 行动建议标题 */
 .ai-advice-title {
   font-size: 26rpx;
-  color: #9ca3af;
+  color: #564337;
   text-align: center;
   margin-bottom: 14rpx;
 }
@@ -1469,8 +1477,9 @@ page {
   align-items: flex-start;
   gap: 14rpx;
   padding: 16rpx 20rpx;
-  background: #fff7ed;
-  border-radius: 14rpx;
+  background: #FAF8F5;
+  border: 1rpx solid #E9E1D8;
+  border-radius: 30rpx;
 }
 
 /* 橙色圆形编号 */
@@ -1491,7 +1500,7 @@ page {
 .advice-text {
   flex: 1;
   font-size: 26rpx;
-  color: #4b5563;
+  color: #334155;
   line-height: 1.7;
   letter-spacing: 0.5rpx;
 }

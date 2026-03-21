@@ -18,10 +18,6 @@
       "style": { "navigationBarTitleText": "分析" }
     },
     {
-      "path": "pages/data/export",
-      "style": { "navigationBarTitleText": "导出周报" }
-    },
-    {
       "path": "pages/ai/index",
       "style": { "navigationBarTitleText": "智康AI" }
     },
@@ -30,44 +26,16 @@
       "style": { "navigationBarTitleText": "目标" }
     },
     {
-      "path": "pages/goal/add",
-      "style": { "navigationBarTitleText": "添加目标" }
-    },
-    {
       "path": "pages/reminders/index",
       "style": { "navigationBarTitleText": "提醒" }
-    },
-    {
-      "path": "pages/reminders/add",
-      "style": { "navigationBarTitleText": "新增提醒" }
     },
     {
       "path": "pages/medications/index",
       "style": { "navigationBarTitleText": "药物管理" }
     },
     {
-      "path": "pages/medications/add",
-      "style": { "navigationBarTitleText": "添加药物" }
-    },
-    {
-      "path": "pages/medications/checkin",
-      "style": { "navigationBarTitleText": "用药打卡" }
-    },
-    {
-      "path": "pages/medications/detail",
-      "style": { "navigationBarTitleText": "药物详情" }
-    },
-    {
       "path": "pages/family/index",
       "style": { "navigationBarTitleText": "家庭成员" }
-    },
-    {
-      "path": "pages/family/invite",
-      "style": { "navigationBarTitleText": "邀请家人" }
-    },
-    {
-      "path": "pages/family/add",
-      "style": { "navigationBarTitleText": "添加家庭成员" }
     },
     {
       "path": "pages/period/index",
@@ -110,7 +78,7 @@
     }
   ],
   "tabBar": {
-    "custom": false,
+    "custom": true,
     "color": "#94a3b8",
     "selectedColor": "#A23F00",
     "backgroundColor": "#ffffff",
@@ -143,13 +111,13 @@
       }
     ]
   },
-	"condition" : { //模式配置，仅开发期间生效
-		"current": 0, //当前激活的模式(list 的索引项)
+	"condition" : {
+		"current": 0,
 		"list": [
 			{
-				"name": "", //模式名称
-				"path": "", //启动页面，必选
-				"query": "" //启动参数，在页面的onLoad函数里面得到
+				"name": "",
+				"path": "",
+				"query": ""
 			}
 		]
 	}

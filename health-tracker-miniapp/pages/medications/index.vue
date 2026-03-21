@@ -1,44 +1,147 @@
 <template>
-  <view class="page">
-    <view class="header">
-      <view />
-      <button class="add-btn" @tap="openAdd">+</button>
-    </view>
-
-    <view v-if="aiLoadingSuggestion" class="ai-tip-bar">
-      <text class="ai-tip-text">智康正在想一句建议…</text>
-    </view>
-    <view v-else-if="aiSuggestion" class="ai-suggestion-card">
-      <view class="ai-suggestion-head" @tap="aiSuggestionExpanded = !aiSuggestionExpanded">
-        <text class="ai-suggestion-title">{{ aiSuggestionExpanded ? '✨ 智康建议' : '智康有一句建议，点击查看' }}</text>
-        <text class="ai-suggestion-arrow">{{ aiSuggestionExpanded ? '收起' : '展开' }}</text>
-      </view>
-      <template v-if="aiSuggestionExpanded">
-        <text class="ai-suggestion-text">{{ aiSuggestion }}</text>
-        <view class="ai-suggestion-actions">
-          <navigator class="ai-suggestion-link" url="/pages/ai/index" open-type="switchTab">去和智康对话</navigator>
-          <text class="ai-suggestion-close" @tap.stop="aiSuggestion = ''; aiSuggestionExpanded = false">关闭</text>
+  <view class="page-root">
+    <!-- 空状态页面 -->
+    <view v-if="meds.length === 0" class="empty-page">
+      <view class="empty-content">
+        <view class="empty-illustration">
+          <image class="empty-illustration-icon" src="/static/tabbar/chiyao_w.png" mode="aspectFit" />
         </view>
-      </template>
-    </view>
+        <text class="empty-desc">暂无用药记录，点击下方按钮添加首个药品，让AI准时提醒您。</text>
 
-    <view class="list">
-      <view v-if="meds.length === 0" class="empty-state">
-        <image class="empty-state-icon" src="/static/tabbar/pills.png" mode="widthFix" />
-        <text class="empty-state-title">暂无药物记录</text>
-        <text class="empty-state-desc">点击右上角 + 添加需要服用的药物</text>
-      </view>
-      <view v-for="item in meds" v-else :key="item.id" class="card" @tap="openEdit(item)">
-        <view class="row">
-          <view>
-            <text class="name">{{ item.drugName }} {{ item.dosage }}</text>
-            <text class="desc">{{ item.frequency }} · {{ item.remindTime || "未设置" }}</text>
+        <view class="empty-features">
+          <view class="feature-item">
+            <image class="feature-icon" src="/static/tabbar/clock.png" mode="aspectFit" />
+            <text class="feature-text">准时提醒服药</text>
           </view>
-          <view class="toggle">{{ item.enabled ? "开" : "关" }}</view>
+          <view class="feature-item">
+            <image class="feature-icon" src="/static/tabbar/history_s.png" mode="aspectFit" />
+            <text class="feature-text">记录用药历史</text>
+          </view>
+          <view class="feature-item">
+            <image class="feature-icon" src="/static/tabbar/tips_s.png" mode="aspectFit" />
+            <text class="feature-text">智能健康建议</text>
+          </view>
+        </view>
+
+        <button class="empty-add-btn pill" @tap="openAdd">
+          <image class="empty-add-icon" src="/static/tabbar/add.png" mode="aspectFit" />
+          <text class="empty-add-text">添加第一种药物</text>
+        </button>
+      </view>
+    </view>
+
+    <!-- 有数据时的页面 -->
+    <view v-else class="page">
+      <!-- AI 建议卡片 -->
+      <view v-if="aiLoadingSuggestion" class="ai-tip-card card">
+        <text class="ai-tip-text">✨ 智康正在分析您的用药情况...</text>
+      </view>
+      <view v-else-if="aiSuggestion" class="ai-suggestion-card card" @tap="aiSuggestionExpanded = !aiSuggestionExpanded">
+        <view class="ai-suggestion-head">
+          <image class="ai-suggestion-icon" src="/static/tabbar/tips.png" mode="aspectFit" />
+          <text class="ai-suggestion-title">智康建议</text>
+          <text class="ai-suggestion-arrow">{{ aiSuggestionExpanded ? '收起' : '展开' }}</text>
+        </view>
+        <text v-if="aiSuggestionExpanded" class="ai-suggestion-text">{{ aiSuggestion }}</text>
+      </view>
+
+      <!-- 今日用药标题 -->
+      <view class="section-header">
+        <text class="section-title">今日用药</text>
+        <text class="section-count">{{ todayMeds.length }} 项</text>
+      </view>
+
+      <!-- 用药时间线 -->
+      <view class="medication-timeline">
+        <view v-if="todayMeds.length === 0" class="empty-today card">
+          <text class="empty-today-icon">📅</text>
+          <text class="empty-today-title">今日暂无用药计划</text>
+          <text class="empty-today-desc">点击上方卡片添加</text>
+        </view>
+
+        <view v-for="(item, index) in todayMeds" :key="item.id" class="timeline-item">
+          <!-- 时间线 -->
+          <view class="timeline-line">
+            <view class="timeline-dot" :class="{ 'status-completed': item.status === 'completed', 'status-pending': item.status === 'pending', 'status-overdue': item.status === 'overdue' }"></view>
+            <view v-if="index < todayMeds.length - 1" class="timeline-connector"></view>
+          </view>
+
+          <!-- 药品卡片 -->
+          <view class="medication-card card" :class="{ 'medication-completed': item.status === 'completed' }">
+            <view class="medication-header">
+              <view class="medication-info">
+                <text class="medication-time">{{ item.remindTime || '未设置' }}</text>
+                <text class="medication-status" :class="{ 'status-completed': item.status === 'completed', 'status-pending': item.status === 'pending', 'status-overdue': item.status === 'overdue' }">{{ getStatusText(item.status) }}</text>
+              </view>
+            </view>
+
+            <view class="medication-body">
+              <view class="medication-icon-wrapper">
+                <image class="medication-icon" src="/static/tabbar/pills.png" mode="aspectFit" />
+              </view>
+              <view class="medication-details">
+                <text class="medication-name">{{ item.drugName }}</text>
+                <text class="medication-dosage">{{ item.dosage }} · {{ item.frequency }}</text>
+              </view>
+            </view>
+
+            <view class="medication-actions">
+              <button
+                v-if="item.status === 'pending'"
+                class="action-btn confirm-btn pill"
+                @tap.stop="confirmMedication(item)"
+              >
+                确认服用
+              </button>
+              <button
+                v-if="item.status === 'pending'"
+                class="action-btn delay-btn pill"
+                @tap.stop="delayMedication(item)"
+              >
+                延期
+              </button>
+              <button
+                v-if="item.status === 'completed'"
+                class="action-btn completed-btn pill"
+                disabled
+              >
+                已完成
+              </button>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 所有药物标题 -->
+      <view class="section-header">
+        <text class="section-title">所有药物</text>
+        <text class="section-count">{{ meds.length }} 种</text>
+      </view>
+
+      <!-- 所有药物列表 -->
+      <view class="medication-list">
+        <view v-for="item in meds" :key="item.id" class="medication-item card" @tap="openEdit(item)">
+          <view class="medication-item-icon">
+            <image class="medication-item-icon-img" src="/static/tabbar/pills.png" mode="aspectFit" />
+          </view>
+          <view class="medication-item-content">
+            <text class="medication-item-name">{{ item.drugName }}</text>
+            <text class="medication-item-info">{{ item.dosage }} · {{ item.frequency }}</text>
+          </view>
+          <view class="medication-item-status" :class="{ active: item.enabled }">
+            <text>{{ item.enabled ? '已启用' : '已停用' }}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="fab-container">
+        <view class="fab pill" @tap="openAdd">
+          <text class="fab-icon">+</text>
         </view>
       </view>
     </view>
 
+    <!-- 添加/编辑弹窗 -->
     <view v-if="showModal" class="modal-mask" @tap="closeModal">
       <view class="modal-sheet" @tap.stop>
         <view class="modal-sheet-bar" />
@@ -46,38 +149,59 @@
           <text class="modal-sheet-title">{{ editingId ? "编辑药物" : "添加药物" }}</text>
           <text class="modal-sheet-close" @tap="closeModal">×</text>
         </view>
-        <view class="modal-sheet-body">
-        <view class="field">
-          <text class="field-label">药物名称</text>
-          <input class="input" v-model="form.drugName" placeholder="如 氨氯地平" />
-        </view>
-        <view class="field">
-          <text class="field-label">剂量</text>
-          <input class="input" v-model="form.dosage" placeholder="如 5mg" />
-        </view>
-        <view class="field">
-          <text class="field-label">用法</text>
-          <input class="input" v-model="form.frequency" placeholder="如 每日 1 次" />
-        </view>
-        <view class="field">
-          <text class="field-label">提醒日期</text>
-          <picker mode="date" @change="onDateChange">
-            <view class="input">{{ form.remindDate || "请选择日期" }}</view>
-          </picker>
-        </view>
-        <view class="field">
-          <text class="field-label">提醒时间</text>
-          <picker mode="time" @change="onTimeChange">
-            <view class="input">{{ form.remindTime || "请选择时间" }}</view>
-          </picker>
-        </view>
-        <button class="modal-sheet-btn primary" @tap="submitAdd" :disabled="saving">
-          {{ saving ? "保存中..." : editingId ? "保存修改" : "保存" }}
-        </button>
+        <scroll-view class="modal-sheet-body" scroll-y>
+          <view class="field-group">
+            <text class="field-title">药物名称</text>
+            <view class="input-wrapper">
+              <image class="input-icon" src="/static/tabbar/pills.png" mode="aspectFit" />
+              <input class="input-main" v-model="form.drugName" placeholder="如 氨氯地平" />
+            </view>
+          </view>
+
+          <view class="field-row">
+            <view class="field-group field-half">
+              <text class="field-title">剂量</text>
+              <view class="input-wrapper">
+                <input class="input-main" v-model="form.dosage" placeholder="如 5mg" />
+              </view>
+            </view>
+            <view class="field-group field-half">
+              <text class="field-title">用法</text>
+              <view class="input-wrapper">
+                <input class="input-main" v-model="form.frequency" placeholder="每日1次" />
+              </view>
+            </view>
+          </view>
+
+          <view class="field-group">
+            <text class="field-title">提醒日期</text>
+            <picker mode="date" @change="onDateChange">
+              <view class="input-wrapper picker-wrapper">
+                <image class="input-icon" src="/static/tabbar/remind.png" mode="aspectFit" />
+                <text class="picker-text">{{ form.remindDate || "请选择日期" }}</text>
+                <text class="picker-arrow">›</text>
+              </view>
+            </picker>
+          </view>
+
+          <view class="field-group">
+            <text class="field-title">提醒时间</text>
+            <picker mode="time" @change="onTimeChange">
+              <view class="input-wrapper picker-wrapper">
+                <image class="input-icon" src="/static/tabbar/alarm-clock.png" mode="aspectFit" />
+                <text class="picker-text">{{ form.remindTime || "请选择时间" }}</text>
+                <text class="picker-arrow">›</text>
+              </view>
+            </picker>
+          </view>
+        </scroll-view>
+        <view class="modal-sheet-footer">
+          <button class="save-btn pill" @tap="submitAdd" :disabled="saving">
+            {{ saving ? "保存中..." : editingId ? "保存修改" : "保存" }}
+          </button>
         </view>
       </view>
     </view>
-
   </view>
 </template>
 
@@ -88,6 +212,7 @@ export default {
   data() {
     return {
       meds: [],
+      todayMeds: [],
       aiSuggestion: "",
       aiSuggestionExpanded: false,
       aiLoadingSuggestion: false,
@@ -115,19 +240,137 @@ export default {
           if (Array.isArray(list) && list.length > 0) {
             const mapped = list.map((item) => ({
               ...item,
-              enabled: true
+              enabled: true,
+              status: this.getMedicationStatus(item)
             }));
-            this.setMeds(mapped);
+            this.meds = mapped;
+            this.todayMeds = mapped.filter(item => {
+              const today = new Date().toISOString().slice(0, 10);
+              return item.remindTime && item.remindTime.includes(today);
+            });
           } else {
-            this.setMeds([]);
+            this.meds = [];
+            this.todayMeds = [];
           }
         })
         .catch(() => {
-          this.setMeds([]);
+          this.meds = [];
+          this.todayMeds = [];
         });
     },
-    setMeds(list) {
-      this.meds = list;
+    getMedicationStatus(item) {
+      // 简单的状态判断逻辑，可根据实际需求调整
+      if (!item.remindTime) return 'pending';
+      const now = new Date();
+      const remindDate = new Date(item.remindTime);
+      if (remindDate < now) return 'overdue';
+      return 'pending';
+    },
+    getStatusClass(status) {
+      const statusMap = {
+        'completed': 'status-completed',
+        'pending': 'status-pending',
+        'overdue': 'status-overdue'
+      };
+      return statusMap[status] || 'status-pending';
+    },
+    getStatusText(status) {
+      const statusMap = {
+        'completed': '已完成',
+        'pending': '待服用',
+        'overdue': '已过期'
+      };
+      return statusMap[status] || '待服用';
+    },
+    confirmMedication(item) {
+      if (!item || !item.id) return;
+      const userId = uni.getStorageSync("userId") || 1;
+      const parsed = this.parseRemindDateTime(item.remindTime);
+      const payload = {
+        userId,
+        medicationId: item.id,
+        date: parsed.date,
+        time: parsed.time,
+        status: 1
+      };
+      request("/api/medication/record/add", "POST", payload)
+        .then(() => {
+          uni.showToast({ title: "已确认服用", icon: "success" });
+          this.fetchMeds();
+        })
+        .catch((err) => {
+          uni.showToast({ title: err.message || "操作失败", icon: "none" });
+        });
+    },
+    delayMedication(item) {
+      if (!item || !item.id || !item.remindTime) {
+        uni.showToast({ title: "请先设置提醒时间", icon: "none" });
+        return;
+      }
+      const nextTime = this.addMinutes(item.remindTime, 30);
+      if (!nextTime) {
+        uni.showToast({ title: "时间格式不正确", icon: "none" });
+        return;
+      }
+      const payload = this.buildMedicationUpdatePayload(item, nextTime);
+      request("/api/medication/update", "POST", payload)
+        .then(() => {
+          uni.showToast({ title: "已延期 30 分钟", icon: "success" });
+          this.fetchMeds();
+        })
+        .catch((err) => {
+          uni.showToast({ title: err.message || "延期失败", icon: "none" });
+        });
+    },
+    parseRemindDateTime(value) {
+      const now = new Date();
+      if (!value) {
+        return {
+          date: this.formatDate(now),
+          time: this.formatTime(now)
+        };
+      }
+      const normalized = String(value).replace("T", " ").trim();
+      if (normalized.includes(" ")) {
+        const parts = normalized.split(" ");
+        return {
+          date: parts[0] || this.formatDate(now),
+          time: (parts[1] || "00:00").slice(0, 5)
+        };
+      }
+      if (/^\d{2}:\d{2}$/.test(normalized)) {
+        return { date: this.formatDate(now), time: normalized };
+      }
+      return { date: this.formatDate(now), time: this.formatTime(now) };
+    },
+    formatDate(date) {
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    },
+    formatTime(date) {
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    },
+    addMinutes(value, minutes) {
+      const normalized = String(value).replace("T", " ").trim();
+      const parsed = new Date(normalized.replace(/-/g, "/"));
+      if (Number.isNaN(parsed.getTime())) return null;
+      parsed.setMinutes(parsed.getMinutes() + minutes);
+      return `${this.formatDate(parsed)} ${this.formatTime(parsed)}`;
+    },
+    buildMedicationUpdatePayload(item, remindTime) {
+      return {
+        id: item.id,
+        drugName: item.drugName,
+        dosage: item.dosage,
+        frequency: item.frequency,
+        remindTime,
+        stock: item.stock,
+        stockThreshold: item.stockThreshold,
+        startDate: item.startDate,
+        endDate: item.endDate,
+        notes: item.notes
+      };
     },
     openAdd() {
       this.showModal = true;
@@ -164,7 +407,7 @@ export default {
         const parts = trimmed.split(" ");
         return { date: parts[0] || "", time: (parts[1] || "").slice(0, 5) };
       }
-      if (/^\\d{2}:\\d{2}$/.test(trimmed)) {
+      if (/^\d{2}:\d{2}$/.test(trimmed)) {
         return { date: "", time: trimmed };
       }
       return { date: "", time: "" };
@@ -229,312 +472,757 @@ export default {
 };
 </script>
 
-<style>
-.page {
-  padding: 18px;
+<style scoped>
+.page-root {
   min-height: 100vh;
   background: #FAF8F5;
-  color: #1a1c1a;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 }
 
-.header {
+.page {
+  padding: 24rpx 32rpx 180rpx;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.title {
-  font-size: 18px;
-  font-weight: 700;
+.page-title {
+  font-size: 40rpx;
+  font-weight: 800;
   color: #1a1c1a;
+  font-family: 'Manrope', sans-serif;
 }
 
 .add-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 24rpx;
-  background: #A23F00;
+  width: 68rpx;
+  height: 68rpx;
+  background: linear-gradient(135deg, #A23F00 0%, #FA7025 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  font-weight: 300;
-  box-shadow: 0 6rpx 16rpx rgba(162, 63, 0, 0.4);
+  box-shadow: 0 8rpx 24rpx rgba(162, 63, 0, 0.3);
+  padding: 0;
+  border: none;
 }
 
-.list {
-  display: grid;
-  gap: 10px;
+.add-btn-icon {
+  width: 40rpx;
+  height: 40rpx;
 }
 
-.empty-state {
-  background: #FAF8F5;
-  border-radius: 24rpx;
-  padding: 32px 20px;
+/* 添加今日药品卡片 */
+.add-today-card {
+  background: linear-gradient(135deg, #A23F00 0%, #FA7025 100%);
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 32rpx;
+  overflow: hidden;
+}
+
+.add-today-icon {
+  width: 80rpx;
+  height: 80rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-card-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-today-icon-img {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.add-today-content {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  border: 1px dashed #E9E1D8;
+  gap: 8rpx;
 }
 
-.empty-state-icon {
-  width: 40px;
-  height: auto;
-  margin-bottom: 12px;
-  opacity: 0.85;
-}
-
-.empty-state-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1a1c1a;
-  margin-bottom: 6px;
-}
-
-.empty-state-desc {
-  font-size: 12px;
-  color: #564337;
-}
-
-.card {
-  background: #ffffff;
-  border-radius: 24rpx;
-  padding: 14px;
-  border: 1px solid #E9E1D8;
-  box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.04);
-  transition: transform 120ms ease;
-}
-
-.card:active {
-  transform: scale(0.98);
-}
-
-.row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.name {
-  font-size: 12px;
+.add-today-title {
+  font-size: 32rpx;
   font-weight: 700;
-  display: block;
+  color: #ffffff;
 }
 
-.desc {
-  font-size: 10px;
-  color: #564337;
-  margin-top: 4px;
-  display: block;
+.add-today-desc {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.8);
 }
 
-.toggle {
-  font-size: 10px;
-  background: #FAF8F5;
-  color: #A23F00;
-  padding: 4px 8px;
-  border-radius: 24rpx;
+.add-today-arrow {
+  font-size: 40rpx;
+  color: rgba(255, 255, 255, 0.6);
 }
 
-.ai-tip-bar {
-  padding: 10px 14px;
-  background: #f8fafc;
-  border-radius: 24rpx;
-  border: 1px solid #E9E1D8;
+/* AI 建议卡片 */
+.ai-tip-card {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FEF9C3 100%);
+  border: 2rpx solid #FDE68A;
 }
 
 .ai-tip-text {
-  font-size: 12px;
-  color: #564337;
+  font-size: 24rpx;
+  color: #92400E;
+  font-weight: 500;
 }
 
 .ai-suggestion-card {
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%);
-  border-radius: 24rpx;
-  border: 1px solid #fde68a;
-  margin-bottom: 12px;
+  background: #fff;
+  border: 1px solid #E9E1D8;
+  padding: 24rpx;
 }
 
 .ai-suggestion-head {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 2px 0;
+  gap: 12rpx;
+}
+
+.ai-suggestion-icon {
+  width: 40rpx;
+  height: 40rpx;
 }
 
 .ai-suggestion-title {
-  font-size: 13px;
+  flex: 1;
+  font-size: 28rpx;
   font-weight: 600;
-  color: #92400e;
+  color: #A23F00;
 }
 
 .ai-suggestion-arrow {
-  font-size: 12px;
-  color: #564337;
+  font-size: 24rpx;
+  color: #8B7355;
+  padding: 4rpx 16rpx;
+  background: #FAF8F5;
+  border-radius: 20rpx;
 }
 
 .ai-suggestion-text {
-  font-size: 13px;
-  line-height: 1.5;
-  color: #334155;
+  font-size: 26rpx;
+  line-height: 1.7;
+  color: #564337;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1px solid #FAF8F5;
   display: block;
-  margin: 10px 0 8px;
 }
 
-.ai-suggestion-actions {
+/* Section Header */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24rpx;
+  margin-bottom: 16rpx;
+  padding: 0 4rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1c1a;
+}
+
+.section-count {
+  font-size: 24rpx;
+  color: #8B7355;
+  font-weight: 500;
+  background: #FAF8F5;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+/* Timeline */
+.medication-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 20rpx;
+}
+
+.timeline-line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 24rpx;
+  flex-shrink: 0;
+  padding-top: 8rpx;
+}
+
+.timeline-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+  z-index: 1;
+  border: 4px solid #fff;
+  box-shadow: 0 0 0 2px currentColor;
+}
+
+.timeline-connector {
+  width: 2rpx;
+  flex: 1;
+  background: #E9E1D8;
+  margin: 8rpx 0;
+}
+
+.status-completed {
+  background: #10B981;
+  color: #10B981;
+}
+
+.status-pending {
+  background: #F59E0B;
+  color: #F59E0B;
+}
+
+.status-overdue {
+  background: #EF4444;
+  color: #EF4444;
+}
+
+/* Medication Card */
+.medication-card {
+  flex: 1;
+  margin-bottom: 20rpx;
+  overflow: hidden;
+  padding: 20rpx;
+}
+
+.medication-completed {
+  opacity: 0.6;
+}
+
+.medication-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.medication-info {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 6px;
+  gap: 12rpx;
 }
 
-.ai-suggestion-link {
-  font-size: 12px;
-  color: #4f46e5;
+.medication-time {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #A23F00;
+}
+
+.medication-status {
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 16rpx;
   font-weight: 500;
 }
 
-.ai-suggestion-close {
-  font-size: 12px;
+.status-completed {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.status-pending {
+  background: #FEF3C7;
+  color: #D97706;
+}
+
+.status-overdue {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.medication-body {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.medication-icon-wrapper {
+  width: 56rpx;
+  height: 56rpx;
+  background: #FAF8F5;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #E9E1D8;
+}
+
+.medication-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.medication-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.medication-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1a1c1a;
+}
+
+.medication-dosage {
+  font-size: 24rpx;
   color: #564337;
 }
 
-.rate {
-  font-size: 12px;
+.medication-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 20rpx 24rpx;
+  font-size: 26rpx;
   font-weight: 600;
+  border: none;
+  border-radius: 30rpx;
 }
 
-.bar {
-  height: 6px;
-  background: #e8e2db;
-  border-radius: 24rpx;
-  overflow: hidden;
-  margin-top: 8px;
-}
-
-.bar-fill {
-  height: 100%;
+.confirm-btn {
   background: #A23F00;
+  color: #fff;
 }
 
-.primary {
-  background: #A23F00;
-  color: #ffffff;
+.delay-btn {
+  background: #FAF8F5;
+  color: #564337;
+  border: 1px solid #E9E1D8;
+}
+
+.completed-btn {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+/* Medication List */
+.medication-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.medication-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx;
+}
+
+.medication-item-icon {
+  width: 56rpx;
+  height: 56rpx;
+  background: #FAF8F5;
   border-radius: 24rpx;
-  font-size: 12px;
-  padding: 12px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #E9E1D8;
 }
 
-.primary-btn {
+.medication-item-icon-img {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.medication-item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.medication-item-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1a1c1a;
+}
+
+.medication-item-info {
+  font-size: 24rpx;
+  color: #564337;
+}
+
+.medication-item-status {
+  font-size: 20rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 16rpx;
+  background: #F3F4F6;
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+.medication-item-status.active {
+  background: #FEF3C7;
+  color: #A23F00;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60rpx 32rpx;
   text-align: center;
-  font-weight: 600;
+  border: 2rpx dashed #E9E1D8;
+  background: #ffffff;
 }
+
+.empty-icon {
+  font-size: 64rpx;
+  margin-bottom: 16rpx;
+  opacity: 0.5;
+}
+
+.empty-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1a1c1a;
+  margin-bottom: 8rpx;
+}
+
+.empty-desc {
+  font-size: 24rpx;
+  color: #564337;
+  opacity: 0.7;
+}
+
+/* Empty Page */
+.empty-page {
+  min-height: 100vh;
+  background: #FAF8F5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 32rpx;
+}
+
+.empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: -120rpx;
+}
+
+.empty-illustration {
+  width: 200rpx;
+  height: 200rpx;
+  background: linear-gradient(135deg, #A23F00 0%, #FA7025 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40rpx;
+  box-shadow: 0 8rpx 24rpx rgba(162, 63, 0, 0.3);
+}
+
+.empty-illustration-icon {
+  width: 100rpx;
+  height: 100rpx;
+}
+
+.empty-content .empty-desc {
+  font-size: 28rpx;
+  color: #564337;
+  margin-bottom: 60rpx;
+}
+
+.empty-features {
+  display: flex;
+  gap: 32rpx;
+  margin-bottom: 60rpx;
+}
+
+.feature-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.feature-icon {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.feature-text {
+  font-size: 22rpx;
+  color: #564337;
+  white-space: nowrap;
+}
+
+.empty-add-btn {
+  width: 480rpx;
+  height: 88rpx;
+  background: linear-gradient(135deg, #A23F00 0%, #FA7025 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  box-shadow: 0 8rpx 24rpx rgba(162, 63, 0, 0.3);
+  border: none;
+  border-radius: 999rpx;
+  position: relative;
+  z-index: 10;
+}
+
+.empty-add-btn::after {
+  border: none;
+}
+
+.empty-add-icon {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.empty-add-text {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.fab-container {
+  position: fixed;
+  bottom: 160rpx;
+  right: 48rpx;
+  z-index: 100;
+}
+
+.fab {
+  width: 128rpx;
+  height: 128rpx;
+  background: #a23f00;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 16rpx 40rpx rgba(162, 63, 0, 0.4);
+  transition: all 0.2s ease;
+}
+
+.fab:active {
+  transform: scale(0.9);
+}
+
+.fab-icon {
+  font-size: 64rpx;
+  color: #ffffff;
+  font-weight: 300;
+}
+
+/* Empty Today */
+.empty-today {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48rpx 32rpx;
+  text-align: center;
+  border: 2rpx dashed #E9E1D8;
+}
+
+.empty-today-icon {
+  font-size: 48rpx;
+  margin-bottom: 12rpx;
+  opacity: 0.5;
+}
+
+.empty-today-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #1a1c1a;
+  margin-bottom: 6rpx;
+}
+
+.empty-today-desc {
+  font-size: 20rpx;
+  color: #564337;
+  opacity: 0.7;
+}
+
+/* Card */
+.card {
+  background: #ffffff;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+/* Modal */
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(26, 28, 26, 0.5);
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  z-index: 100;
+  z-index: 200;
 }
 
 .modal-sheet {
   width: 100%;
-  max-width: 400px;
   max-height: 85vh;
   background: #fff;
-  border-radius: 24rpx 20px 0 0;
+  border-radius: 32rpx 32rpx 0 0;
   padding-bottom: env(safe-area-inset-bottom);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .modal-sheet-bar {
-  width: 36px;
-  height: 4px;
-  border-radius: 24rpx;
-  background: #e8e2db;
-  margin: 10px auto 0;
+  width: 72rpx;
+  height: 8rpx;
+  background: #E9E1D8;
+  border-radius: 8rpx;
+  margin: 20rpx auto;
 }
 
 .modal-sheet-head {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 12px 20px 16px;
-  border-bottom: 1px solid #f2ede8;
+  align-items: center;
+  padding: 16rpx 40rpx 32rpx;
 }
 
 .modal-sheet-title {
-  font-size: 17px;
+  font-size: 34rpx;
   font-weight: 600;
   color: #1a1c1a;
 }
 
 .modal-sheet-close {
-  font-size: 24px;
-  color: #564337;
-  padding: 4px;
-  line-height: 1;
+  font-size: 48rpx;
+  color: #8B7355;
+  padding: 8rpx;
 }
 
 .modal-sheet-body {
-  padding: 20px;
+  flex: 1;
   overflow-y: auto;
+  padding: 0 40rpx 48rpx;
+  box-sizing: border-box;
+}
+
+.field-group {
+  margin-bottom: 32rpx;
+}
+
+.field-half {
+  flex: 1;
+}
+
+.field-row {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  gap: 20rpx;
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.field-title {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #8B7355;
+  display: block;
+  margin-bottom: 16rpx;
 }
 
-.field-label {
-  font-size: 13px;
-  color: #564337;
-}
-
-.input {
+.input-wrapper {
+  background: #ffffff;
+  border-radius: 24rpx;
   border: 1px solid #E9E1D8;
-  border-radius: 24rpx;
-  padding: 12px 14px;
-  font-size: 14px;
-  color: #1a1c1a;
-  background: #fff;
+  padding: 0 28rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  box-sizing: border-box;
+  height: 88rpx;
 }
 
-.modal-sheet-btn.primary {
-  width: 100%;
-  padding: 14px;
-  border-radius: 24rpx;
-  background: #A23F00;
-  color: #fff;
-  font-size: 15px;
-  font-weight: 600;
+.input-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.input-main {
+  flex: 1;
+  padding: 24rpx 0;
+  font-size: 28rpx;
+  color: #1a1c1a;
+  background: transparent;
   border: none;
 }
 
-.primary {
-  background: #A23F00;
-  color: #ffffff;
-  border-radius: 24rpx;
-  font-size: 12px;
-  padding: 12px 0;
+.picker-wrapper {
+  cursor: pointer;
 }
 
-.primary-btn {
-  text-align: center;
+.picker-text {
+  flex: 1;
+  padding: 24rpx 0;
+  font-size: 28rpx;
+  color: #1a1c1a;
+}
+
+.picker-arrow {
+  font-size: 32rpx;
+  color: #94A3B8;
+}
+
+.modal-sheet-footer {
+  padding: 20rpx 32rpx 32rpx;
+  border-top: 1px solid #FAF9F6;
+}
+
+.save-btn {
+  width: 100%;
+  height: 96rpx;
+  border-radius: 48rpx;
+  border: none;
+  color: #fff;
+  font-size: 32rpx;
   font-weight: 600;
+  background: linear-gradient(135deg, #A23F00 0%, #FA7025 100%);
+}
+
+.save-btn::after {
+  border: none;
+}
+
+.save-btn::after {
+  border: none;
+}
+
+.save-btn:active {
+  transform: scale(0.98);
 }
 </style>

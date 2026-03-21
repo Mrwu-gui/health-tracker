@@ -137,11 +137,14 @@
       <text v-if="recording" class="recording-tip">🔴 录音中，点击麦克风结束</text>
     </view>
 
+    <!-- 自定义底部导航 -->
+    <custom-tabbar :current="2" />
   </view>
 </template>
 
 <script>
 import { request } from "../../utils/api";
+import CustomTabbar from "@/components/custom-tabbar/custom-tabbar.vue";
 
 const RECOMMEND_QUESTIONS = [
   "经期可以运动吗？",
@@ -175,6 +178,9 @@ function pickRandom(arr, n) {
 }
 
 export default {
+  components: {
+    CustomTabbar
+  },
   data() {
     return {
       input: "",
@@ -477,6 +483,7 @@ export default {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding-bottom: calc(56px + env(safe-area-inset-bottom));
 }
 
 /* 消息区 */
@@ -511,7 +518,7 @@ export default {
 .recommend-logo {
   width: 56px;
   height: 56px;
-  border-radius: 24rpx;
+  border-radius: 30rpx;
   background: linear-gradient(135deg, #A23F00 0%, #8B3500 100%);
   display: flex;
   align-items: center;
@@ -556,7 +563,7 @@ export default {
   gap: 10px;
   padding: 13px 14px;
   background: #fff;
-  border-radius: 24rpx;
+  border-radius: 52rpx;
   border: 1px solid #E9E1D8;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
@@ -603,7 +610,7 @@ export default {
 .avatar {
   width: 34px;
   height: 34px;
-  border-radius: 24rpx;
+  border-radius: 30rpx;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -645,7 +652,7 @@ export default {
 
 .bubble {
   padding: 11px 14px;
-  border-radius: 24rpx;
+  border-radius: 30rpx;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -709,7 +716,7 @@ export default {
 /* 图片/语音 */
 .bubble-img {
   max-width: 200px;
-  border-radius: 24rpx;
+  border-radius: 30rpx;
   display: block;
   margin-bottom: 4px;
 }
@@ -749,7 +756,7 @@ export default {
 .extra-menu-icon {
   width: 44px;
   height: 44px;
-  border-radius: 24rpx;
+  border-radius: 30rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -781,7 +788,7 @@ export default {
   align-items: center;
   gap: 8px;
   background: #f5f1eb;
-  border-radius: 24rpx;
+  border-radius: 30rpx;
   padding: 6px 6px 6px 10px;
   min-height: 46px;
 }
@@ -823,7 +830,7 @@ export default {
 .composer-send-btn {
   width: 38px;
   height: 38px;
-  border-radius: 999rpx;
+  border-radius: var(--radius-pill);
   background: #E9E1D8;
   display: flex;
   align-items: center;
@@ -847,7 +854,7 @@ export default {
 .composer-plus-btn {
   width: 32px;
   height: 32px;
-  border-radius: 999rpx;
+  border-radius: var(--radius-pill);
   background: #A23F00;
   display: flex;
   align-items: center;

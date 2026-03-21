@@ -1,60 +1,153 @@
 <template>
-  <view class="page">
-    <view class="header">
-      <view />
-      <button class="add-btn" @tap="openAdd">+</button>
-    </view>
-
-    <view v-if="nextEstimate" class="estimate-card">
-      <text class="estimate-label">预计下次经期</text>
-      <text class="estimate-value">{{ nextEstimate }}</text>
-    </view>
-
-    <view v-if="aiLoadingSuggestion" class="ai-tip-bar">
-      <text class="ai-tip-text">智康正在想一句建议…</text>
-    </view>
-    <view v-else-if="aiSuggestion" class="ai-suggestion-card">
-      <view class="ai-suggestion-head" @tap="aiSuggestionExpanded = !aiSuggestionExpanded">
-        <text class="ai-suggestion-title">{{ aiSuggestionExpanded ? '✨ 智康建议' : '智康有一句建议，点击查看' }}</text>
-        <text class="ai-suggestion-arrow">{{ aiSuggestionExpanded ? '收起' : '展开' }}</text>
-      </view>
-      <template v-if="aiSuggestionExpanded">
-        <text class="ai-suggestion-text">{{ aiSuggestion }}</text>
-        <view class="ai-suggestion-actions">
-          <navigator class="ai-suggestion-link" url="/pages/ai/index" open-type="switchTab">去和智康对话</navigator>
-          <text class="ai-suggestion-close" @tap.stop="aiSuggestion = ''; aiSuggestionExpanded = false">关闭</text>
+  <view class="page-root">
+    <!-- 空状态页面 -->
+    <view v-if="list.length === 0" class="empty-page">
+      <view class="empty-content">
+        <view class="empty-illustration">
+          <image class="empty-illustration-icon" src="/static/tabbar/period_w.png" mode="aspectFit" />
         </view>
-      </template>
-    </view>
+        <text class="empty-desc">添加后AI将智能预测经期周期，为您提供健康建议。</text>
 
-    <view class="list">
-      <view v-if="list.length === 0" class="empty-state">
-        <image class="empty-state-icon" src="/static/tabbar/remind.png" mode="widthFix" />
-        <text class="empty-state-title">暂无经期记录</text>
-        <text class="empty-state-desc">点击右上角 + 记录经期开始与结束</text>
-      </view>
-      <view
-        v-for="(item, i) in list"
-        :key="item.id"
-        class="card"
-        hover-class="card-hover"
-        hover-stay-time="60"
-        @tap="onCardTap(item)"
-      >
-        <view class="card-row" @tap.stop="onCardTap(item)">
-          <text class="card-date" @tap.stop="onCardTap(item)">{{ item.startDate }}</text>
-          <text v-if="item.flowLabel" class="card-tag" @tap.stop="onCardTap(item)">{{ item.flowLabel }}</text>
+        <view class="empty-features">
+          <view class="feature-item">
+            <image class="feature-icon" src="/static/tabbar/period_s.png" mode="aspectFit" />
+            <text class="feature-text">经期追踪</text>
+          </view>
+          <view class="feature-item">
+            <image class="feature-icon" src="/static/tabbar/tips_s.png" mode="aspectFit" />
+            <text class="feature-text">健康建议</text>
+          </view>
+          <view class="feature-item">
+            <image class="feature-icon" src="/static/tabbar/fork.png" mode="aspectFit" />
+            <text class="feature-text">食谱推荐</text>
+          </view>
         </view>
-        <text class="card-desc" @tap.stop="onCardTap(item)">{{ item.daysText }}</text>
-        <text v-if="item.note" class="card-note" @tap.stop="onCardTap(item)">{{ item.note }}</text>
+
+        <button class="empty-add-btn" @tap="openAdd">
+          <image class="empty-add-icon" src="/static/tabbar/add.png" mode="aspectFit" />
+          <text class="empty-add-text">添加第一条记录</text>
+        </button>
       </view>
     </view>
 
+    <!-- 有数据时的页面 -->
+    <view v-else class="page">
+      <!-- 年月显示区域 -->
+    <view class="month-header">
+      <view class="month-info">
+        <text class="month-year">{{ currentYear }}年{{ currentMonth }}月</text>
+        <text class="month-predict" v-if="nextEstimate">预计下次经期：{{ formatPredictDate(nextEstimate) }}</text>
+      </view>
+    </view>
+
+    <!-- 日历选择器 -->
+    <view class="calendar-section">
+      <view class="calendar-weekdays">
+        <text class="weekday" v-for="day in weekDays" :key="day">{{ day }}</text>
+      </view>
+      <view class="calendar-days">
+        <view 
+          v-for="(day, index) in calendarDays" 
+          :key="index"
+          class="calendar-day"
+          :class="{ 
+            'empty': !day.date,
+            'today': day.isToday,
+            'period': day.isPeriod,
+            'predict': day.isPredict
+          }"
+          @tap="selectDay(day)"
+        >
+          <text class="day-number" v-if="day.date">{{ day.date }}</text>
+          <view v-if="day.isPeriod" class="period-dot"></view>
+          <view v-if="day.isPredict" class="predict-dot"></view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 上次结束于信息卡片 -->
+    <view class="last-period-card" v-if="lastPeriodInfo">
+      <view class="last-period-left">
+        <image class="last-period-icon" src="/static/tabbar/period.png" mode="aspectFit" />
+        <view class="last-period-text">
+          <text class="last-period-title">上次结束于</text>
+          <text class="last-period-date">{{ lastPeriodInfo.endDate }}</text>
+        </view>
+      </view>
+      <view class="last-period-right">
+        <text class="last-period-days">本次已过 {{ lastPeriodInfo.daysPassed }} 天</text>
+      </view>
+    </view>
+
+    <!-- AI智能分析卡片 -->
+    <view class="ai-card" v-if="aiSuggestion" @tap="aiSuggestionExpanded = !aiSuggestionExpanded">
+      <view class="ai-card-header">
+        <image class="ai-icon" src="/static/tabbar/robot-active.png" mode="aspectFit" />
+        <text class="ai-title">AI智能分析</text>
+        <text class="ai-arrow">{{ aiSuggestionExpanded ? '收起' : '展开' }}</text>
+      </view>
+      <view class="ai-content" v-if="aiSuggestionExpanded">
+        <text class="ai-text">{{ aiSuggestion }}</text>
+        <navigator class="ai-link" url="/pages/ai/index" open-type="switchTab">
+          <text>去和智康对话</text>
+          <text class="link-arrow">→</text>
+        </navigator>
+      </view>
+    </view>
+
+    <!-- 最近记录列表 -->
+    <view class="records-section" v-if="list.length > 0">
+      <view class="section-header">
+        <text class="section-title">最近记录</text>
+        <text class="section-more" @tap="showAllRecords">查看全部</text>
+      </view>
+      <view class="records-list">
+        <view 
+          v-for="(item, index) in list.slice(0, 3)" 
+          :key="item.id"
+          class="record-item"
+          @tap="onCardTap(item)"
+        >
+          <view class="record-left">
+            <text class="record-date">{{ formatRecordDate(item.startDate) }}</text>
+            <text class="record-duration">{{ item.daysText }}</text>
+          </view>
+          <view class="record-right">
+            <text class="record-flow" v-if="item.flowLabel">{{ item.flowLabel }}</text>
+            <image class="record-arrow" src="/static/tabbar/all.png" mode="aspectFit" />
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部提示卡片 -->
+    <view class="tips-section">
+      <view class="tip-card warm-tip">
+        <image class="tip-icon" src="/static/tabbar/tips.png" mode="aspectFit" />
+        <text class="tip-title">暖宫小贴士</text>
+        <text class="tip-desc">经期保暖很重要，建议多喝温水</text>
+      </view>
+      <view class="tip-card food-tip">
+        <image class="tip-icon" src="/static/tabbar/food.png" mode="aspectFit" />
+        <text class="tip-title">推荐食谱</text>
+        <text class="tip-desc">红枣桂圆汤，补血养颜</text>
+      </view>
+    </view>
+
+    <!-- 添加按钮 -->
+    <view class="fab-container">
+      <view class="fab" @tap="openAdd">
+        <text class="fab-icon">+</text>
+      </view>
+    </view>
+    </view>
+
+    <!-- 添加/编辑经期弹窗 -->
     <view v-if="showModal" class="modal-mask" @tap="closeModal">
       <view class="modal-sheet" @tap.stop>
         <view class="modal-sheet-bar" />
         <view class="modal-sheet-head">
-          <text class="modal-sheet-title">{{ editingId ? "编辑经期" : "记录经期" }}</text>
+          <text class="modal-sheet-title">{{ editingId ? "编辑经期" : "添加经期" }}</text>
           <text class="modal-sheet-close" @tap="closeModal">×</text>
         </view>
         <view class="modal-sheet-body">
@@ -126,8 +219,11 @@ export default {
         { value: "heavy", label: "多" }
       ],
       aiSuggestion: "",
-      aiSuggestionExpanded: false,
-      aiLoadingSuggestion: false
+      aiSuggestionExpanded: true,
+      aiLoadingSuggestion: false,
+      currentYear: new Date().getFullYear(),
+      currentMonth: new Date().getMonth() + 1,
+      weekDays: ['一', '二', '三', '四', '五', '六', '日']
     };
   },
   computed: {
@@ -143,12 +239,100 @@ export default {
       const m = String(d.getMonth() + 1).padStart(2, "0");
       const day = String(d.getDate()).padStart(2, "0");
       return `${y}-${m}-${day}`;
+    },
+    lastPeriodInfo() {
+      if (this.list.length === 0) return null;
+      const last = this.list[0];
+      if (!last.endDate) return null;
+      const endDate = new Date(last.endDate.replace(/-/g, "/"));
+      const today = new Date();
+      const daysPassed = Math.floor((today - endDate) / 86400000);
+      return {
+        endDate: this.formatRecordDate(last.endDate),
+        daysPassed: daysPassed > 0 ? daysPassed : 0
+      };
+    },
+    calendarDays() {
+      const year = this.currentYear;
+      const month = this.currentMonth;
+      const firstDay = new Date(year, month - 1, 1);
+      const lastDay = new Date(year, month, 0);
+      const daysInMonth = lastDay.getDate();
+      const startWeekday = firstDay.getDay() === 0 ? 7 : firstDay.getDay();
+      
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      
+      const days = [];
+      
+      // 填充月初空白
+      for (let i = 1; i < startWeekday; i++) {
+        days.push({ date: null, isToday: false, isPeriod: false, isPredict: false });
+      }
+      
+      // 填充日期
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        const isToday = dateStr === todayStr;
+        const isPeriod = this.isPeriodDate(dateStr);
+        const isPredict = this.isPredictDate(dateStr);
+        
+        days.push({ 
+          date: d, 
+          dateStr,
+          isToday, 
+          isPeriod, 
+          isPredict 
+        });
+      }
+      
+      return days;
     }
   },
   onShow() {
     this.fetchList();
   },
   methods: {
+    isPeriodDate(dateStr) {
+      return this.list.some(item => {
+        if (!item.startDate) return false;
+        const start = item.startDate;
+        const end = item.endDate || item.startDate;
+        return dateStr >= start && dateStr <= end;
+      });
+    },
+    isPredictDate(dateStr) {
+      if (!this.nextEstimate) return false;
+      const predictStart = new Date(this.nextEstimate.replace(/-/g, "/"));
+      const predictEnd = new Date(predictStart);
+      predictEnd.setDate(predictEnd.getDate() + 5);
+      
+      const checkDate = new Date(dateStr.replace(/-/g, "/"));
+      return checkDate >= predictStart && checkDate <= predictEnd;
+    },
+    formatPredictDate(dateStr) {
+      if (!dateStr) return "";
+      const d = new Date(dateStr.replace(/-/g, "/"));
+      return `${d.getMonth() + 1}月${d.getDate()}日`;
+    },
+    formatRecordDate(dateStr) {
+      if (!dateStr) return "";
+      const d = new Date(dateStr.replace(/-/g, "/"));
+      return `${d.getMonth() + 1}月${d.getDate()}日`;
+    },
+    selectDay(day) {
+      if (!day.date) return;
+      // 可以添加点击日期的逻辑
+    },
+    showCalendarPicker() {
+      // 显示日历选择器
+    },
+    showMoreOptions() {
+      // 显示更多选项
+    },
+    showAllRecords() {
+      // 显示全部记录
+    },
     todayStr() {
       const n = new Date();
       return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
@@ -318,7 +502,7 @@ export default {
     },
     fetchAiSuggestionForPeriod(payload) {
       this.aiLoadingSuggestion = true;
-      this.aiSuggestionExpanded = false;
+      this.aiSuggestionExpanded = true;
       const flowLabel = this.flowOptions.find((o) => o.value === payload.flow)?.label || payload.flow;
       const prompt = `用户刚记录了经期：开始日期 ${payload.startDate}，结束日期 ${payload.endDate || payload.startDate}，经量 ${flowLabel}。请用 1～3 句话给出简要的健康建议或注意事项，语气亲切。`;
       const userId = uni.getStorageSync("userId") || 1;
@@ -336,203 +520,479 @@ export default {
 </script>
 
 <style scoped>
-.page {
+.page-root {
   min-height: 100vh;
   background: #FAF8F5;
-  color: #1a1c1a;
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
-.header {
+/* 空状态页面 */
+.empty-page {
+  min-height: 100vh;
+  background: #FAF8F5;
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  padding: 12px 16px;
+  padding: 0 32rpx;
 }
 
-.add-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 24rpx;
-  background: #A23F00;
-  color: #fff;
-  font-size: 20px;
-  line-height: 1;
-  padding: 0;
+.empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: -120rpx;
+}
+
+.empty-illustration {
+  width: 200rpx;
+  height: 200rpx;
+  background: linear-gradient(135deg, #A23F00 0%, #FA7025 100%);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 40rpx;
+  box-shadow: 0 8rpx 24rpx rgba(162, 63, 0, 0.3);
 }
 
-.add-btn::after {
+.empty-illustration-icon {
+  width: 100rpx;
+  height: 100rpx;
+}
+
+.empty-title-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.empty-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1a1c1a;
+  line-height: 1.4;
+}
+
+.empty-content .empty-desc {
+  font-size: 28rpx;
+  color: #564337;
+  margin-bottom: 60rpx;
+}
+
+.empty-features {
+  display: flex;
+  gap: 32rpx;
+  margin-bottom: 60rpx;
+}
+
+.feature-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.feature-icon {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.feature-text {
+  font-size: 22rpx;
+  color: #564337;
+  white-space: nowrap;
+}
+
+.empty-add-btn {
+  width: 480rpx;
+  height: 88rpx;
+  background: linear-gradient(135deg, #A23F00 0%, #FA7025 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  box-shadow: 0 8rpx 24rpx rgba(162, 63, 0, 0.3);
+  border: none;
+  border-radius: 999rpx;
+  position: relative;
+  z-index: 10;
+}
+
+.empty-add-btn::after {
   border: none;
 }
 
-.estimate-card {
-  background: #FAF8F5;
-  border-radius: 24rpx;
-  margin: 0 16px 16px;
-  padding: 14px 16px;
-  border: 1px solid #E9E1D8;
-  box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.04);
+.empty-add-icon {
+  width: 36rpx;
+  height: 36rpx;
 }
 
-.estimate-label {
-  font-size: 12px;
-  color: #564337;
-  display: block;
-  margin-bottom: 4px;
+.empty-add-text {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #ffffff;
 }
 
-.estimate-value {
-  font-size: 16px;
+/* 有数据时的页面 */
+.page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FFF5F0 0%, #FFF9F7 50%, #FAF8F5 100%);
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
+}
+
+/* 年月显示区域 */
+.month-header {
+  padding: 32rpx 32rpx 16rpx;
+}
+
+.month-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.month-year {
+  font-size: 40rpx;
   font-weight: 700;
   color: #1a1c1a;
 }
 
-.ai-tip-bar {
-  margin: 0 16px 12px;
-  padding: 10px 14px;
-  background: #FAF8F5;
+.month-predict {
+  font-size: 26rpx;
+  color: #FA7025;
+  background: rgba(250, 112, 37, 0.1);
+  padding: 8rpx 16rpx;
   border-radius: 24rpx;
-  border: 1px solid #E9E1D8;
+  display: inline-block;
+  align-self: flex-start;
 }
 
-.ai-tip-text {
-  font-size: 12px;
-  color: #564337;
+/* 日历选择器 */
+.calendar-section {
+  margin: 16rpx 24rpx;
+  background: #fff;
+  border-radius: 32rpx;
+  padding: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(162, 63, 0, 0.06);
 }
 
-.ai-suggestion-card {
-  margin: 0 16px 16px;
-  padding: 12px 16px;
-  background: #FAF8F5;
-  border-radius: 24rpx;
-  border: 1px solid #E9E1D8;
-}
-
-.ai-suggestion-head {
+.calendar-weekdays {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 2px 0;
+  justify-content: space-around;
+  margin-bottom: 16rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 1px solid #f0e8e0;
 }
 
-.ai-suggestion-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #92400e;
-}
-
-.ai-suggestion-arrow {
-  font-size: 12px;
-  color: #564337;
-}
-
-.ai-suggestion-text {
-  font-size: 13px;
-  line-height: 1.5;
-  color: #334155;
-  display: block;
-  margin: 10px 0 8px;
-}
-
-.ai-suggestion-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 6px;
-}
-
-.ai-suggestion-link {
-  font-size: 12px;
-  color: #4f46e5;
-  font-weight: 500;
-}
-
-.ai-suggestion-close {
-  font-size: 12px;
-  color: #564337;
-}
-
-.list {
-  padding: 0 16px;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 48px 24px;
+.weekday {
+  font-size: 24rpx;
+  color: #8B7355;
+  width: 64rpx;
   text-align: center;
 }
 
-.empty-state-icon {
-  width: 40px;
-  height: auto;
-  margin-bottom: 12px;
-  opacity: 0.85;
+.calendar-days {
+  display: flex;
+  flex-wrap: wrap;
 }
 
-.empty-state-title {
-  font-size: 15px;
+.calendar-day {
+  width: calc(100% / 7);
+  height: 72rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.calendar-day.empty {
+  height: 72rpx;
+}
+
+.day-number {
+  font-size: 28rpx;
+  color: #1a1c1a;
+  z-index: 2;
+}
+
+.calendar-day.today .day-number {
+  color: #fff;
+  background: linear-gradient(135deg, #A23F00 0%, #FA7025 100%);
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 600;
-  color: #475569;
-  margin-bottom: 8px;
 }
 
-.empty-state-desc {
-  font-size: 13px;
-  color: #564337;
+.calendar-day.period {
+  background: rgba(255, 182, 193, 0.3);
 }
 
-.card {
+.period-dot {
+  position: absolute;
+  bottom: 8rpx;
+  width: 12rpx;
+  height: 12rpx;
+  background: #FF6B8A;
+  border-radius: 50%;
+}
+
+.calendar-day.predict {
+  background: rgba(250, 112, 37, 0.1);
+}
+
+.predict-dot {
+  position: absolute;
+  bottom: 8rpx;
+  width: 12rpx;
+  height: 12rpx;
+  background: #FA7025;
+  border-radius: 50%;
+}
+
+/* 上次结束于信息卡片 */
+.last-period-card {
+  margin: 0 24rpx 24rpx;
   background: #fff;
   border-radius: 24rpx;
-  padding: 14px 16px;
-  margin-bottom: 12px;
-  border: 1px solid #E9E1D8;
-}
-
-.card-hover {
-  opacity: 0.85;
-  background: #f8fafc;
-}
-
-.card-row {
+  padding: 24rpx;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  box-shadow: 0 4rpx 20rpx rgba(162, 63, 0, 0.06);
 }
 
-.card-date {
-  font-size: 15px;
+.last-period-left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.last-period-icon {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.last-period-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.last-period-title {
+  font-size: 24rpx;
+  color: #8B7355;
+}
+
+.last-period-date {
+  font-size: 30rpx;
   font-weight: 600;
-  color: #1e293b;
+  color: #1a1c1a;
+  margin-top: 4rpx;
 }
 
-.card-tag {
-  font-size: 11px;
-  color: #6366f1;
-  background: #e0e7ff;
-  padding: 2px 8px;
+.last-period-right {
+  background: rgba(250, 112, 37, 0.1);
+  padding: 12rpx 20rpx;
   border-radius: 24rpx;
 }
 
-.card-desc {
-  font-size: 13px;
-  color: #564337;
+.last-period-days {
+  font-size: 24rpx;
+  color: #FA7025;
+  font-weight: 500;
+}
+
+/* AI智能分析卡片 */
+.ai-card {
+  margin: 0 24rpx 24rpx;
+  background: linear-gradient(135deg, #FFF5F0 0%, #FFE8DE 100%);
+  border-radius: 24rpx;
+  padding: 24rpx;
+  border: 1px solid rgba(250, 112, 37, 0.2);
+}
+
+.ai-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.ai-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.ai-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #A23F00;
+  flex: 1;
+}
+
+.ai-arrow {
+  font-size: 24rpx;
+  color: #8B7355;
+}
+
+.ai-content {
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1px solid rgba(162, 63, 0, 0.1);
+}
+
+.ai-text {
+  font-size: 26rpx;
+  color: #4A3728;
+  line-height: 1.6;
   display: block;
 }
 
-.card-note {
-  font-size: 12px;
-  color: #564337;
-  display: block;
-  margin-top: 6px;
+.ai-link {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8rpx;
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #A23F00;
 }
 
+.link-arrow {
+  font-size: 28rpx;
+}
+
+/* 最近记录列表 */
+.records-section {
+  margin: 0 24rpx 24rpx;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1a1c1a;
+}
+
+.section-more {
+  font-size: 24rpx;
+  color: #8B7355;
+}
+
+.records-list {
+  background: #fff;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(162, 63, 0, 0.06);
+}
+
+.record-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx;
+  border-bottom: 1px solid #f0e8e0;
+}
+
+.record-item:last-child {
+  border-bottom: none;
+}
+
+.record-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.record-date {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1a1c1a;
+}
+
+.record-duration {
+  font-size: 24rpx;
+  color: #8B7355;
+}
+
+.record-right {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.record-flow {
+  font-size: 22rpx;
+  color: #FA7025;
+  background: rgba(250, 112, 37, 0.1);
+  padding: 6rpx 16rpx;
+  border-radius: 24rpx;
+}
+
+.record-arrow {
+  width: 32rpx;
+  height: 32rpx;
+  opacity: 0.5;
+  transform: rotate(-90deg);
+}
+
+/* 底部提示卡片 */
+.tips-section {
+  display: flex;
+  gap: 16rpx;
+  margin: 0 24rpx 24rpx;
+}
+
+.tip-card {
+  flex: 1;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 20rpx;
+  box-shadow: 0 4rpx 20rpx rgba(162, 63, 0, 0.06);
+}
+
+.tip-icon {
+  width: 40rpx;
+  height: 40rpx;
+  margin-bottom: 12rpx;
+}
+
+.tip-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1a1c1a;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.tip-desc {
+  font-size: 22rpx;
+  color: #8B7355;
+  display: block;
+  line-height: 1.4;
+}
+
+.warm-tip {
+  border-left: 4rpx solid #FF6B8A;
+}
+
+.food-tip {
+  border-left: 4rpx solid #FA7025;
+}
+
+/* 弹窗样式 */
 .modal-mask {
   position: fixed;
   inset: 0;
@@ -547,69 +1007,63 @@ export default {
   width: 100%;
   max-height: 80vh;
   background: #fff;
-  border-radius: 24rpx 20px 0 0;
+  border-radius: 32rpx 32rpx 0 0;
   padding-bottom: env(safe-area-inset-bottom);
   overflow-y: auto;
 }
 
 .modal-sheet-bar {
-  width: 36px;
-  height: 4px;
+  width: 72rpx;
+  height: 8rpx;
   background: #E9E1D8;
-  border-radius: 24rpx;
-  margin: 10px auto;
+  border-radius: 8rpx;
+  margin: 20rpx auto;
 }
 
 .modal-sheet-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 20px 16px;
+  padding: 16rpx 40rpx 32rpx;
 }
 
 .modal-sheet-title {
-  font-size: 17px;
+  font-size: 34rpx;
   font-weight: 600;
   color: #1a1c1a;
 }
 
 .modal-sheet-close {
-  font-size: 24px;
-  color: #564337;
-  padding: 4px;
+  font-size: 48rpx;
+  color: #8B7355;
+  padding: 8rpx;
 }
 
 .modal-sheet-body {
-  padding: 0 20px 24px;
+  padding: 0 40rpx 48rpx;
   box-sizing: border-box;
 }
 
 .field {
-  margin-bottom: 16px;
+  margin-bottom: 32rpx;
 }
 
 .field-label {
-  font-size: 13px;
-  color: #564337;
+  font-size: 26rpx;
+  color: #8B7355;
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 16rpx;
 }
 
 .picker {
   border: 1px solid #E9E1D8;
   border-radius: 24rpx;
-  padding: 12px 14px;
-  font-size: 14px;
+  padding: 24rpx 28rpx;
+  font-size: 28rpx;
   color: #1a1c1a;
   background: #fff;
-}
-
-.input {
-  border: 1px solid #E9E1D8;
-  border-radius: 24rpx;
-  padding: 12px 14px;
-  font-size: 14px;
-  width: 100%;
+  height: 88rpx;
+  line-height: 40rpx;
   box-sizing: border-box;
 }
 
@@ -619,50 +1073,75 @@ export default {
 
 .input-note {
   width: 100%;
-  min-height: 80px;
+  min-height: 160rpx;
   box-sizing: border-box;
   border: 1px solid #E9E1D8;
   border-radius: 24rpx;
-  padding: 12px 14px;
-  font-size: 14px;
+  padding: 24rpx 28rpx;
+  font-size: 28rpx;
   line-height: 1.5;
   color: #1a1c1a;
 }
 
 .pill-wrap {
   display: flex;
-  gap: 10px;
+  gap: 20rpx;
 }
 
 .pill {
-  padding: 8px 16px;
-  border-radius: 24rpx;
+  padding: 16rpx 32rpx;
+  border-radius: 48rpx;
   background: #f5f1eb;
-  color: #564337;
-  font-size: 13px;
+  color: #8B7355;
+  font-size: 26rpx;
 }
 
 .pill.active {
-  background: #A23F00;
+  background: linear-gradient(135deg, #A23F00 0%, #FA7025 100%);
   color: #fff;
 }
 
 .modal-sheet-btn {
   width: 100%;
-  height: 48px;
-  border-radius: 24rpx;
-  font-size: 16px;
+  height: 96rpx;
+  border-radius: 48rpx;
+  font-size: 32rpx;
   font-weight: 600;
-  margin-top: 8px;
+  margin-top: 16rpx;
 }
 
 .modal-sheet-btn.primary {
-  background: #A23F00;
+  background: linear-gradient(135deg, #A23F00 0%, #FA7025 100%);
   color: #fff;
   border: none;
 }
 
 .modal-sheet-btn::after {
   border: none;
+}
+
+/* FAB 按钮 */
+.fab-container {
+  position: fixed;
+  bottom: 180rpx;
+  right: 32rpx;
+  z-index: 50;
+}
+
+.fab {
+  width: 100rpx;
+  height: 100rpx;
+  background: linear-gradient(135deg, #A23F00 0%, #FA7025 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(162, 63, 0, 0.3);
+}
+
+.fab-icon {
+  font-size: 48rpx;
+  color: #fff;
+  font-weight: 300;
 }
 </style>

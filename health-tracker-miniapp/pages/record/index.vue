@@ -1,149 +1,102 @@
 <template>
   <view class="page">
-    <view class="quick-entry-bar">
-      <view class="quick-entry-item" @tap="goRecord('diet')">
-        <view class="quick-entry-icon">
-          <image class="quick-entry-icon-img" src="/static/tabbar/food2.png" mode="aspectFit" />
-        </view>
-        <text class="quick-entry-text">饮食记录</text>
+    <view class="header">
+      <view />
+      <button class="add-btn" @tap="openAdd">+</button>
+    </view>
+
+    <view v-if="nextEstimate" class="estimate-card">
+      <text class="estimate-label">预计下次经期</text>
+      <text class="estimate-value">{{ nextEstimate }}</text>
+    </view>
+
+    <view v-if="aiLoadingSuggestion" class="ai-tip-bar">
+      <text class="ai-tip-text">智康正在想一句建议…</text>
+    </view>
+    <view v-else-if="aiSuggestion" class="ai-suggestion-card">
+      <view class="ai-suggestion-head" @tap="aiSuggestionExpanded = !aiSuggestionExpanded">
+        <text class="ai-suggestion-title">{{ aiSuggestionExpanded ? '✨ 智康建议' : '智康有一句建议，点击查看' }}</text>
+        <text class="ai-suggestion-arrow">{{ aiSuggestionExpanded ? '收起' : '展开' }}</text>
       </view>
-      <view class="quick-entry-item" @tap="goRecord('sleep')">
-        <view class="quick-entry-icon">
-          <image class="quick-entry-icon-img" src="/static/tabbar/sleep2.png" mode="aspectFit" />
+      <template v-if="aiSuggestionExpanded">
+        <text class="ai-suggestion-text">{{ aiSuggestion }}</text>
+        <view class="ai-suggestion-actions">
+          <navigator class="ai-suggestion-link" url="/pages/ai/index" open-type="switchTab">去和智康对话</navigator>
+          <text class="ai-suggestion-close" @tap.stop="aiSuggestion = ''; aiSuggestionExpanded = false">关闭</text>
         </view>
-        <text class="quick-entry-text">昨晚睡眠</text>
+      </template>
+    </view>
+
+    <view class="list">
+      <view v-if="list.length === 0" class="empty-state">
+        <image class="empty-state-icon" src="/static/tabbar/remind.png" mode="widthFix" />
+        <text class="empty-state-title">暂无经期记录</text>
+        <text class="empty-state-desc">点击右上角 + 记录经期开始与结束</text>
       </view>
-      <view class="quick-entry-item" @tap="goRecord('weight')">
-        <view class="quick-entry-icon">
-          <image class="quick-entry-icon-img" src="/static/tabbar/weight.png" mode="aspectFit" />
+      <view
+        v-for="(item, i) in list"
+        :key="item.id"
+        class="card"
+        hover-class="card-hover"
+        hover-stay-time="60"
+        @tap="onCardTap(item)"
+      >
+        <view class="card-row" @tap.stop="onCardTap(item)">
+          <text class="card-date" @tap.stop="onCardTap(item)">{{ item.startDate }}</text>
+          <text v-if="item.flowLabel" class="card-tag" @tap.stop="onCardTap(item)">{{ item.flowLabel }}</text>
         </view>
-        <text class="quick-entry-text">记录体重</text>
+        <text class="card-desc" @tap.stop="onCardTap(item)">{{ item.daysText }}</text>
+        <text v-if="item.note" class="card-note" @tap.stop="onCardTap(item)">{{ item.note }}</text>
       </view>
     </view>
-    <view class="card">
-      <text class="title">{{ pageTitle }}</text>
-      <view v-if="type === 'exercise'" class="form">
-        <view class="field">
-          <text class="label">类型</text>
-          <view class="pill-wrap">
-            <view
-              v-for="item in exerciseTypes"
-              :key="item"
-              class="pill"
-              :class="{ active: form.exerciseType === item }"
-              @tap="form.exerciseType = item"
-            >{{ item }}</view>
+
+    <view v-if="showModal" class="modal-mask" @tap="closeModal">
+      <view class="modal-sheet" @tap.stop>
+        <view class="modal-sheet-bar" />
+        <view class="modal-sheet-head">
+          <text class="modal-sheet-title">{{ editingId ? "编辑经期" : "记录经期" }}</text>
+          <text class="modal-sheet-close" @tap="closeModal">×</text>
+        </view>
+        <view class="modal-sheet-body">
+          <view class="field">
+            <text class="field-label">开始日期</text>
+            <picker mode="date" :value="form.startDate" @change="onStartDateChange">
+              <view class="picker">{{ form.startDate || "选择日期" }}</view>
+            </picker>
           </view>
-        </view>
-        <view class="field">
-          <text class="label">步数</text>
-          <input class="input" type="number" placeholder="0" v-model="form.steps" />
-        </view>
-        <view class="field">
-          <text class="label">时长(分钟)</text>
-          <input class="input" type="number" placeholder="0" v-model="form.duration" />
-        </view>
-        <view class="field">
-          <text class="label">消耗(kcal)</text>
-          <input class="input" type="number" placeholder="0" v-model="form.calories" />
-        </view>
-      </view>
-      <view v-else-if="type === 'diet'" class="form">
-        <view class="field">
-          <text class="label">餐次</text>
-          <view class="pill-wrap">
-            <view
-              v-for="item in dietTypes"
-              :key="item"
-              class="pill"
-              :class="{ active: form.mealType === item }"
-              @tap="form.mealType = item"
-            >{{ item }}</view>
+          <view class="field">
+            <text class="field-label">结束日期</text>
+            <picker mode="date" :value="form.endDate" @change="onEndDateChange">
+              <view class="picker">{{ form.endDate || "选择日期" }}</view>
+            </picker>
           </view>
-        </view>
-        <view class="field">
-          <text class="label">食物</text>
-          <input
-            class="input"
-            type="text"
-            placeholder="如：米饭、青菜、番茄炒蛋"
-            v-model="form.foodName"
-            @blur="onFoodBlur"
-          />
-          <text class="field-hint">输入后点击其他处可自动估算热量</text>
-        </view>
-        <view class="field">
-          <text class="label">热量(kcal)</text>
-          <input
-            class="input"
-            type="number"
-            placeholder="自动估算或手动填写"
-            v-model="form.dietCalories"
-            :disabled="dietCaloriesEstimating"
-          />
-          <text v-if="dietCaloriesEstimating" class="field-hint">估算中…</text>
-        </view>
-      </view>
-      <view v-else-if="type === 'sleep'" class="form">
-        <view class="field">
-          <text class="label">入睡时间</text>
-          <picker mode="time" :value="form.sleepStart" @change="onSleepStartChange">
-            <view class="picker">{{ form.sleepStart || "选择时间" }}</view>
-          </picker>
-        </view>
-        <view class="field">
-          <text class="label">起床时间</text>
-          <picker mode="time" :value="form.sleepEnd" @change="onSleepEndChange">
-            <view class="picker">{{ form.sleepEnd || "选择时间" }}</view>
-          </picker>
-        </view>
-        <view class="field">
-          <text class="label">睡眠质量</text>
-          <view class="pill-wrap">
-            <view
-              v-for="opt in sleepQualityOptions"
-              :key="opt.value"
-              class="pill"
-              :class="{ active: form.sleepQuality === opt.value }"
-              @tap="form.sleepQuality = opt.value"
-            >{{ opt.label }}</view>
+          <view class="field">
+            <text class="field-label">经量</text>
+            <view class="pill-wrap">
+              <view
+                v-for="opt in flowOptions"
+                :key="opt.value"
+                class="pill"
+                :class="{ active: form.flow === opt.value }"
+                @tap="form.flow = opt.value"
+              >{{ opt.label }}</view>
+            </view>
           </view>
-        </view>
-      </view>
-      <view v-else-if="type === 'weight'" class="form">
-        <view class="field">
-          <text class="label">体重(kg)</text>
-          <input class="input" type="digit" placeholder="62.5" v-model="form.weight" />
-        </view>
-      </view>
-      <view v-else-if="type === 'period'" class="form">
-        <view class="field">
-          <text class="label">经期开始日期</text>
-          <picker mode="date" :value="form.periodStart" @change="onPeriodStartChange">
-            <view class="picker">{{ form.periodStart || "选择日期" }}</view>
-          </picker>
-        </view>
-        <view class="field">
-          <text class="label">经期结束日期</text>
-          <picker mode="date" :value="form.periodEnd" @change="onPeriodEndChange">
-            <view class="picker">{{ form.periodEnd || "选择日期" }}</view>
-          </picker>
-        </view>
-        <view class="field">
-          <text class="label">经量</text>
-          <view class="pill-wrap">
-            <view
-              v-for="opt in periodFlowOptions"
-              :key="opt.value"
-              class="pill"
-              :class="{ active: form.periodFlow === opt.value }"
-              @tap="form.periodFlow = opt.value"
-            >{{ opt.label }}</view>
+          <view class="field field-note">
+            <text class="field-label">备注（选填）</text>
+            <textarea
+              class="input-note"
+              v-model="form.note"
+              placeholder="如：痛经、情绪、身体反应等"
+              maxlength="200"
+            />
           </view>
+          <button class="modal-sheet-btn primary" @tap="submitAdd" :disabled="saving">
+            {{ saving ? "保存中..." : editingId ? "保存修改" : "保存" }}
+          </button>
         </view>
       </view>
     </view>
-    <view class="save-btn-view" @tap="saveThenBack">保存并返回</view>
   </view>
 </template>
 
@@ -151,266 +104,567 @@
 import { request } from "../../utils/api";
 import { requestSubscribeByKey } from "../../utils/subscribe";
 
+const FLOW_MAP = { light: "少", medium: "中", heavy: "多" };
+const STORAGE_KEY = "periodRecords";
+
 export default {
   data() {
     return {
-      type: "exercise",
+      list: [],
+      showModal: false,
+      saving: false,
+      editingId: null,
       form: {
-        exerciseType: "步行",
-        steps: "",
-        duration: "",
-        calories: "",
-        mealType: "午餐",
-        foodName: "",
-        dietCalories: "",
-        dietNote: "",
-        sleepStart: "",
-        sleepEnd: "",
-        sleepQuality: "normal",
-        weight: "",
-        height: "",
-        periodStart: "",
-        periodEnd: "",
-        periodFlow: "medium"
+        startDate: "",
+        endDate: "",
+        flow: "medium",
+        note: ""
       },
-      exerciseTypes: ["步行", "跑步", "骑行"],
-      dietTypes: ["早餐", "午餐", "晚餐", "加餐"],
-      sleepQualityOptions: [
-        { value: "light", label: "轻度" },
-        { value: "normal", label: "正常" },
-        { value: "good", label: "好" }
-      ],
-      dietCaloriesEstimating: false,
-      periodFlowOptions: [
+      flowOptions: [
         { value: "light", label: "少" },
         { value: "medium", label: "中" },
         { value: "heavy", label: "多" }
-      ]
+      ],
+      aiSuggestion: "",
+      aiSuggestionExpanded: false,
+      aiLoadingSuggestion: false
     };
   },
   computed: {
-    pageTitle() {
-      const t = { exercise: "记录运动", diet: "记录饮食", sleep: "记录睡眠", weight: "记录体重", period: "记录经期" };
-      return t[this.type] || "记录";
-    }
-  },
-  onLoad(query) {
-    const type = (query && query.type) ? query.type : "exercise";
-    this.applyType(type, query);
-  },
-  methods: {
-    goRecord(type) {
-      if (this.type === type) return;
-      uni.redirectTo({ url: `/pages/record/index?type=${type}&t=${Date.now()}` });
-    },
-    applyType(nextType, query) {
-      const type = nextType || "exercise";
-      this.type = type;
-      const today = this.todayDate();
-      const yesterday = this.yesterdayDate();
-      this.form = {
-        exerciseType: "步行",
-        steps: "",
-        duration: "",
-        calories: "",
-        mealType: (query && query.meal && type === "diet") ? decodeURIComponent(query.meal) : "午餐",
-        foodName: "",
-        dietCalories: "",
-        dietNote: "",
-        sleepStart: type === "sleep" ? "23:00" : "",
-        sleepEnd: type === "sleep" ? "07:00" : "",
-        sleepQuality: "normal",
-        weight: "",
-        height: "",
-        periodStart: today,
-        periodEnd: today,
-        periodFlow: "medium"
-      };
-    },
-    yesterdayDate() {
-      const d = new Date();
-      d.setDate(d.getDate() - 1);
+    nextEstimate() {
+      if (this.list.length === 0) return "";
+      const last = this.list[0];
+      const start = last.startDate;
+      if (!start) return "";
+      const cycleDays = 28;
+      const d = new Date(start.replace(/-/g, "/"));
+      d.setDate(d.getDate() + cycleDays);
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, "0");
       const day = String(d.getDate()).padStart(2, "0");
       return `${y}-${m}-${day}`;
+    }
+  },
+  onShow() {
+    this.fetchList();
+  },
+  methods: {
+    todayStr() {
+      const n = new Date();
+      return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
     },
-    onSleepStartChange(e) {
-      this.form.sleepStart = e.detail.value || "";
-    },
-    onSleepEndChange(e) {
-      this.form.sleepEnd = e.detail.value || "";
-    },
-    onFoodBlur() {
-      const name = (this.form.foodName || "").trim();
-      if (!name || this.dietCaloriesEstimating) return;
-      this.estimateDietCalories(name);
-    },
-    async estimateDietCalories(foodName) {
-      if (!foodName || this.dietCaloriesEstimating) return;
-      this.dietCaloriesEstimating = true;
-      try {
-        const userId = uni.getStorageSync("userId") || 1;
-        const res = await request("/api/ai/chat", "POST", {
-          userId,
-          message: `根据以下食物估算热量(kcal)。只回复一个数字，不要单位、不要解释、不要其他文字。食物：${foodName}`,
-          store: false
-        });
-        const content = (res && (res.content != null ? res.content : (res.data && res.data.content != null ? res.data.content : null)));
-        const raw = content != null ? String(content).trim() : "";
-        const num = this.parseCaloriesFromText(raw);
-        if (num >= 0 && num <= 5000) {
-          this.form.dietCalories = String(num);
-        }
-      } catch (e) {
-        // 估算失败时保留用户已填或留空
-      } finally {
-        this.dietCaloriesEstimating = false;
-      }
-    },
-    parseCaloriesFromText(text) {
-      if (!text) return NaN;
-      const s = text.trim();
-      const rangeMatch = s.match(/(\d+)\s*[-~至]\s*(\d+)/);
-      if (rangeMatch) {
-        const a = parseInt(rangeMatch[1], 10);
-        const b = parseInt(rangeMatch[2], 10);
-        if (!Number.isNaN(a) && !Number.isNaN(b) && a <= 5000 && b <= 5000) {
-          return Math.round((a + b) / 2);
-        }
-        if (!Number.isNaN(a)) return a;
-        if (!Number.isNaN(b)) return b;
-      }
-      const numMatch = s.match(/\d+/);
-      if (numMatch) {
-        const n = parseInt(numMatch[0], 10);
-        return (!Number.isNaN(n) && n >= 0 && n <= 5000) ? n : NaN;
-      }
-      return NaN;
-    },
-    onPeriodStartChange(e) {
-      this.form.periodStart = e.detail.value || "";
-      if (!this.form.periodEnd || this.form.periodEnd < this.form.periodStart) this.form.periodEnd = this.form.periodStart;
-    },
-    onPeriodEndChange(e) {
-      this.form.periodEnd = e.detail.value || "";
-    },
-    normalizeDateTime(date, time) {
-      if (!time) return "";
-      if (time.includes("T")) return time;
-      if (time.includes("-")) return time.replace(" ", "T");
-      const normalizedTime = time.length <= 5 ? `${time}:00` : time;
-      return `${date}T${normalizedTime}`;
-    },
-    todayDate() {
-      const now = new Date();
-      const y = now.getFullYear();
-      const m = String(now.getMonth() + 1).padStart(2, "0");
-      const d = String(now.getDate()).padStart(2, "0");
-      return `${y}-${m}-${d}`;
-    },
-    toInt(value) {
-      const num = parseInt(value, 10);
-      return Number.isNaN(num) ? 0 : num;
-    },
-    toFloat(value) {
-      const num = parseFloat(value);
-      return Number.isNaN(num) ? 0 : num;
-    },
-    async saveThenBack() {
+    fetchList() {
       const userId = uni.getStorageSync("userId") || 1;
-      const today = this.todayDate();
-      try {
-        if (this.type === "exercise") {
-          await request("/api/exercise/add", "POST", {
-            userId,
-            type: this.form.exerciseType,
-            steps: this.toInt(this.form.steps),
-            duration: this.toInt(this.form.duration),
-            calories: this.toInt(this.form.calories),
-            date: today
+      request("/api/period/list", "GET", { userId })
+        .then((data) => {
+          this.list = this.normalizeList(Array.isArray(data) ? data : []);
+        })
+        .catch(() => {
+          try {
+            const raw = uni.getStorageSync(STORAGE_KEY);
+            this.list = this.normalizeList(raw ? JSON.parse(raw) : []);
+          } catch (e) {
+            this.list = [];
+          }
+        });
+    },
+    normalizeList(arr) {
+      return (arr || [])
+        .map((item, index) => {
+          const start = item.startDate || item.start_date || "";
+          const end = item.endDate || item.end_date || "";
+          const flow = item.flow || "medium";
+          let days = 0;
+          if (start && end) {
+            const a = new Date(start.replace(/-/g, "/"));
+            const b = new Date(end.replace(/-/g, "/"));
+            days = Math.round((b - a) / 86400000) + 1;
+          }
+          const id = item.id != null && item.id !== "" ? item.id : "idx-" + index;
+          return {
+            id,
+            startDate: start,
+            endDate: end,
+            flow,
+            flowLabel: FLOW_MAP[flow] || "",
+            daysText: end ? `共 ${days} 天` : "进行中",
+            note: item.note || ""
+          };
+        })
+        .sort((a, b) => (b.startDate || "").localeCompare(a.startDate || ""));
+    },
+    openAdd() {
+      const today = this.todayStr();
+      this.editingId = null;
+      this.form = { startDate: today, endDate: today, flow: "medium", note: "" };
+      this.showModal = true;
+    },
+    onCardTap(item) {
+      if (!item) return;
+      this.openEdit(item);
+    },
+    openEdit(item) {
+      if (!item) return;
+      this.editingId = item.id;
+      this.showModal = true;
+      this.form = {
+        startDate: item.startDate || "",
+        endDate: item.endDate || item.startDate || "",
+        flow: item.flow || "medium",
+        note: item.note || ""
+      };
+    },
+    closeModal() {
+      this.showModal = false;
+      this.editingId = null;
+    },
+    onStartDateChange(e) {
+      this.form.startDate = e.detail.value || "";
+      if (!this.form.endDate || this.form.endDate < this.form.startDate) {
+        this.form.endDate = this.form.startDate;
+      }
+    },
+    onEndDateChange(e) {
+      this.form.endDate = e.detail.value || "";
+    },
+    async submitAdd() {
+      if (!this.form.startDate) {
+        uni.showToast({ title: "请选择开始日期", icon: "none" });
+        return;
+      }
+      this.saving = true;
+      const userId = uni.getStorageSync("userId") || 1;
+      const payload = {
+        userId,
+        startDate: this.form.startDate,
+        endDate: this.form.endDate || this.form.startDate,
+        flow: this.form.flow,
+        note: (this.form.note || "").trim()
+      };
+      const isEdit = !!this.editingId;
+      if (isEdit) {
+        payload.id = this.editingId;
+        request("/api/period/update", "PUT", payload)
+          .then(() => {
+            uni.showToast({ title: "已更新", icon: "success" });
+            this.closeModal();
+            this.fetchList();
+          })
+          .catch(() => {
+            this.updatePeriodLocal();
+          })
+          .finally(() => {
+            this.saving = false;
           });
-        } else if (this.type === "diet") {
-          await request("/api/diet/add", "POST", {
-            userId,
-            mealType: this.form.mealType,
-            foodName: this.form.foodName || "未填写",
-            calories: this.toInt(this.form.dietCalories),
-            note: this.form.dietNote || "",
-            date: today
-          });
-        } else if (this.type === "sleep") {
-          const yesterday = this.yesterdayDate();
-          const startTime = this.normalizeDateTime(yesterday, this.form.sleepStart);
-          const endTime = this.normalizeDateTime(today, this.form.sleepEnd);
-          await request("/api/sleep/add", "POST", {
-            userId,
-            startTime,
-            endTime,
-            quality: this.form.sleepQuality || "normal"
-          });
-        } else if (this.type === "weight") {
-          const weight = this.toFloat(this.form.weight);
-          const height = this.toFloat(this.form.height);
-          const bmi = height > 0 ? Number((weight / ((height / 100) ** 2)).toFixed(1)) : null;
-          await request("/api/weight/add", "POST", {
-            userId,
-            weight,
-            bmi,
-            date: today
-          });
-        } else if (this.type === "period") {
-          const payload = {
-            userId,
-            startDate: this.form.periodStart || today,
-            endDate: this.form.periodEnd || this.form.periodStart || today,
-            flow: this.form.periodFlow || "medium",
-            note: ""
+        return;
+      }
+      await requestSubscribeByKey("period");
+      request("/api/period/add", "POST", payload)
+        .then(() => {
+          uni.showToast({ title: "已保存", icon: "success" });
+          this.closeModal();
+          this.fetchList();
+          this.fetchAiSuggestionForPeriod(payload);
+        })
+        .catch(() => {
+          const newItem = {
+            id: "local_" + Date.now(),
+            startDate: payload.startDate,
+            endDate: payload.endDate,
+            flow: payload.flow,
+            note: payload.note
           };
           try {
-            await requestSubscribeByKey("period");
-            await request("/api/period/add", "POST", payload);
-          } catch (e) {
-            const key = "periodRecords";
-            const raw = uni.getStorageSync(key);
+            const raw = uni.getStorageSync(STORAGE_KEY);
             const arr = raw ? JSON.parse(raw) : [];
-            arr.unshift({
-              id: "local_" + Date.now(),
-              startDate: payload.startDate,
-              endDate: payload.endDate,
-              flow: payload.flow,
-              note: payload.note
-            });
-            uni.setStorageSync(key, JSON.stringify(arr));
+            arr.unshift(newItem);
+            uni.setStorageSync(STORAGE_KEY, JSON.stringify(arr));
+            this.list = this.normalizeList(arr);
+            uni.showToast({ title: "已保存（本地）", icon: "success" });
+            this.closeModal();
+            this.fetchAiSuggestionForPeriod(payload);
+          } catch (e) {
+            uni.showToast({ title: "保存失败", icon: "none" });
           }
+        })
+        .finally(() => {
+          this.saving = false;
+        });
+    },
+    updatePeriodLocal() {
+      const payload = {
+        startDate: this.form.startDate,
+        endDate: this.form.endDate || this.form.startDate,
+        flow: this.form.flow,
+        note: (this.form.note || "").trim()
+      };
+      try {
+        const raw = uni.getStorageSync(STORAGE_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        const idx = arr.findIndex((item) => String(item.id) === String(this.editingId));
+        if (idx >= 0) {
+          arr[idx] = { ...arr[idx], ...payload, id: arr[idx].id };
+          uni.setStorageSync(STORAGE_KEY, JSON.stringify(arr));
+          this.list = this.normalizeList(arr);
+          uni.showToast({ title: "已更新（本地）", icon: "success" });
+        } else {
+          uni.showToast({ title: "更新失败", icon: "none" });
         }
-        uni.showToast({ title: "已保存", icon: "success" });
-        setTimeout(() => uni.navigateBack(), 500);
-      } catch (err) {
-        uni.showToast({ title: "保存失败", icon: "error" });
+      } catch (e) {
+        uni.showToast({ title: "更新失败", icon: "none" });
       }
+      this.closeModal();
+      this.saving = false;
+    },
+    fetchAiSuggestionForPeriod(payload) {
+      this.aiLoadingSuggestion = true;
+      this.aiSuggestionExpanded = false;
+      const flowLabel = this.flowOptions.find((o) => o.value === payload.flow)?.label || payload.flow;
+      const prompt = `用户刚记录了经期：开始日期 ${payload.startDate}，结束日期 ${payload.endDate || payload.startDate}，经量 ${flowLabel}。请用 1～3 句话给出简要的健康建议或注意事项，语气亲切。`;
+      const userId = uni.getStorageSync("userId") || 1;
+      request("/api/ai/chat", "POST", { userId, message: prompt, store: false })
+        .then((res) => {
+          if (res && res.content) this.aiSuggestion = String(res.content).trim();
+        })
+        .catch(() => {})
+        .finally(() => {
+          this.aiLoadingSuggestion = false;
+        });
     }
   }
 };
 </script>
 
 <style scoped>
-.page { padding: 20px; min-height: 100vh; background: #FAF8F5; padding-top: 12px; }
-.quick-entry-bar { display: flex; gap: 10px; margin-bottom: 16px; }
-.quick-entry-item { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; background: #fff; border-radius: 12px; border: 1px solid #e8e2db; }
-.quick-entry-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
-.quick-entry-icon-img { width: 20px; height: 20px; }
-.quick-entry-text { font-size: 13px; color: #475569; font-weight: 500; }
-.card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 20px; }
-.title { font-size: 16px; font-weight: 600; display: block; margin-bottom: 16px; }
-.form { display: flex; flex-direction: column; gap: 14px; }
-.field { display: flex; flex-direction: column; gap: 6px; }
-.label { font-size: 12px; color: #64748b; }
-.field-hint { font-size: 11px; color: #94a3b8; margin-top: 4px; display: block; }
-.input { border: 1px solid #e8e2db; border-radius: 10px; padding: 10px 12px; font-size: 14px; }
-.picker { border: 1px solid #e8e2db; border-radius: 10px; padding: 10px 12px; font-size: 14px; color: #0f172a; background: #fff; }
-.pill-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
-.pill { padding: 8px 14px; border-radius: 20px; background: #f5f1eb; color: #64748b; font-size: 13px; }
-.pill.active { background: #A23F00; color: #fff; }
-.save-btn-view { background: #A23F00; color: #fff; text-align: center; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; }
+.page {
+  min-height: 100vh;
+  background: #FAF8F5;
+  color: #1a1c1a;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 12px 16px;
+}
+
+.add-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 24rpx;
+  background: #A23F00;
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-btn::after {
+  border: none;
+}
+
+.estimate-card {
+  background: #FAF8F5;
+  border-radius: 24rpx;
+  margin: 0 16px 16px;
+  padding: 14px 16px;
+  border: 1px solid #E9E1D8;
+  box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.04);
+}
+
+.estimate-label {
+  font-size: 12px;
+  color: #564337;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.estimate-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1c1a;
+}
+
+.ai-tip-bar {
+  margin: 0 16px 12px;
+  padding: 10px 14px;
+  background: #FAF8F5;
+  border-radius: 24rpx;
+  border: 1px solid #E9E1D8;
+}
+
+.ai-tip-text {
+  font-size: 12px;
+  color: #564337;
+}
+
+.ai-suggestion-card {
+  margin: 0 16px 16px;
+  padding: 12px 16px;
+  background: #FAF8F5;
+  border-radius: 24rpx;
+  border: 1px solid #E9E1D8;
+}
+
+.ai-suggestion-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
+}
+
+.ai-suggestion-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.ai-suggestion-arrow {
+  font-size: 12px;
+  color: #564337;
+}
+
+.ai-suggestion-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #334155;
+  display: block;
+  margin: 10px 0 8px;
+}
+
+.ai-suggestion-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.ai-suggestion-link {
+  font-size: 12px;
+  color: #4f46e5;
+  font-weight: 500;
+}
+
+.ai-suggestion-close {
+  font-size: 12px;
+  color: #564337;
+}
+
+.list {
+  padding: 0 16px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.empty-state-icon {
+  width: 40px;
+  height: auto;
+  margin-bottom: 12px;
+  opacity: 0.85;
+}
+
+.empty-state-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.empty-state-desc {
+  font-size: 13px;
+  color: #564337;
+}
+
+.card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border: 1px solid #E9E1D8;
+}
+
+.card-hover {
+  opacity: 0.85;
+  background: #f8fafc;
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.card-date {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.card-tag {
+  font-size: 11px;
+  color: #6366f1;
+  background: #e0e7ff;
+  padding: 2px 8px;
+  border-radius: 24rpx;
+}
+
+.card-desc {
+  font-size: 13px;
+  color: #564337;
+  display: block;
+}
+
+.card-note {
+  font-size: 12px;
+  color: #564337;
+  display: block;
+  margin-top: 6px;
+}
+
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-sheet {
+  width: 100%;
+  max-height: 80vh;
+  background: #fff;
+  border-radius: 24rpx 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  overflow-y: auto;
+}
+
+.modal-sheet-bar {
+  width: 36px;
+  height: 4px;
+  background: #E9E1D8;
+  border-radius: 24rpx;
+  margin: 10px auto;
+}
+
+.modal-sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 20px 16px;
+}
+
+.modal-sheet-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1a1c1a;
+}
+
+.modal-sheet-close {
+  font-size: 24px;
+  color: #564337;
+  padding: 4px;
+}
+
+.modal-sheet-body {
+  padding: 0 20px 24px;
+  box-sizing: border-box;
+}
+
+.field {
+  margin-bottom: 16px;
+}
+
+.field-label {
+  font-size: 13px;
+  color: #564337;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.picker {
+  border: 1px solid #E9E1D8;
+  border-radius: 24rpx;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #1a1c1a;
+  background: #fff;
+}
+
+.input {
+  border: 1px solid #E9E1D8;
+  border-radius: 24rpx;
+  padding: 24rpx 28rpx;
+  font-size: 28rpx;
+  width: 100%;
+  box-sizing: border-box;
+  height: 88rpx;
+  line-height: 40rpx;
+}
+
+.field-note {
+  width: 100%;
+}
+
+.input-note {
+  width: 100%;
+  min-height: 80px;
+  box-sizing: border-box;
+  border: 1px solid #E9E1D8;
+  border-radius: 24rpx;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1a1c1a;
+}
+
+.pill-wrap {
+  display: flex;
+  gap: 10px;
+}
+
+.pill {
+  padding: 8px 16px;
+  border-radius: 24rpx;
+  background: #f5f1eb;
+  color: #564337;
+  font-size: 13px;
+}
+
+.pill.active {
+  background: #A23F00;
+  color: #fff;
+}
+
+.modal-sheet-btn {
+  width: 100%;
+  height: 48px;
+  border-radius: 24rpx;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.modal-sheet-btn.primary {
+  background: #A23F00;
+  color: #fff;
+  border: none;
+}
+
+.modal-sheet-btn::after {
+  border: none;
+}
 </style>

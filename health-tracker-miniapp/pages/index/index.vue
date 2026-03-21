@@ -18,12 +18,12 @@
       <view class="metrics-row">
 
         <!-- 步数 -->
-        <view class="metric-mini metric-mini-steps">
+        <view class="metric-mini metric-mini-steps card-sm">
           <view class="metric-mini-top">
             <view class="metric-mini-icon metric-mini-icon-steps">
               <image class="metric-mini-icon-img" src="/static/tabbar/sport.png" mode="aspectFit" />
             </view>
-            <view v-if="stepsDelta !== 0" class="metric-diff-badge" :class="stepsDeltaIsUp ? 'diff-up' : 'diff-down'">
+            <view v-if="stepsDelta !== 0" class="metric-diff-badge pill" :class="stepsDeltaIsUp ? 'diff-up' : 'diff-down'">
               <text class="diff-badge-text">{{ stepsDeltaIsUp ? '↑' : '↓' }}{{ Math.abs(stepsDelta) > 999 ? (Math.abs(stepsDelta)/1000).toFixed(1)+'k' : Math.abs(stepsDelta) }}</text>
             </view>
           </view>
@@ -32,12 +32,12 @@
         </view>
 
         <!-- 睡眠 -->
-        <view class="metric-mini metric-mini-sleep">
+        <view class="metric-mini metric-mini-sleep card-sm">
           <view class="metric-mini-top">
             <view class="metric-mini-icon metric-mini-icon-sleep">
               <image class="metric-mini-icon-img" src="/static/tabbar/sleep.png" mode="aspectFit" />
             </view>
-            <view v-if="sleepDeltaMinutes !== 0" class="metric-diff-badge" :class="sleepDeltaMinutes > 0 ? 'diff-up' : 'diff-down'">
+            <view v-if="sleepDeltaMinutes !== 0" class="metric-diff-badge pill" :class="sleepDeltaMinutes > 0 ? 'diff-up' : 'diff-down'">
               <text class="diff-badge-text">{{ sleepDeltaMinutes > 0 ? '↑' : '↓' }}{{ Math.abs(sleepDiffHours) }}h</text>
             </view>
           </view>
@@ -46,12 +46,12 @@
         </view>
 
         <!-- 体重 -->
-        <view class="metric-mini metric-mini-weight">
+        <view class="metric-mini metric-mini-weight card-sm">
           <view class="metric-mini-top">
             <view class="metric-mini-icon metric-mini-icon-weight">
               <image class="metric-mini-icon-img" src="/static/tabbar/weight.png" mode="aspectFit" />
             </view>
-            <view v-if="weightDelta !== 0 && overview.weight" class="metric-diff-badge" :class="weightDelta > 0 ? 'diff-up' : 'diff-down'">
+            <view v-if="weightDelta !== 0 && overview.weight" class="metric-diff-badge pill" :class="weightDelta > 0 ? 'diff-up' : 'diff-down'">
               <text class="diff-badge-text">{{ weightDelta > 0 ? '↑' : '↓' }}{{ Math.abs(weightDelta).toFixed(1) }}</text>
             </view>
           </view>
@@ -60,12 +60,12 @@
         </view>
 
         <!-- 饮食 -->
-        <view class="metric-mini metric-mini-diet">
+        <view class="metric-mini metric-mini-diet card-sm">
           <view class="metric-mini-top">
             <view class="metric-mini-icon metric-mini-icon-diet">
               <image class="metric-mini-icon-img" src="/static/tabbar/food.png" mode="aspectFit" />
             </view>
-            <view v-if="dietDeltaCalories !== 0 && dietCaloriesToday > 0" class="metric-diff-badge" :class="dietDeltaCalories > 0 ? 'diff-up' : 'diff-down'">
+            <view v-if="dietDeltaCalories !== 0 && dietCaloriesToday > 0" class="metric-diff-badge pill" :class="dietDeltaCalories > 0 ? 'diff-up' : 'diff-down'">
               <text class="diff-badge-text">{{ dietDeltaCalories > 0 ? '↑' : '↓' }}{{ Math.abs(dietDeltaCalories) > 999 ? (Math.abs(dietDeltaCalories)/1000).toFixed(1)+'k' : Math.abs(dietDeltaCalories) }}</text>
             </view>
           </view>
@@ -76,12 +76,12 @@
       </view>
 
       <!-- 今日AI健康解读 -->
-      <view class="daily-ai-card">
+      <view class="daily-ai-card card">
         <view class="daily-ai-head">
           <view class="daily-ai-title-block">
             <text class="daily-ai-title">看看智康怎么说</text>
           </view>
-          <view v-if="!dailyAiLoading && dailyAiText" class="daily-ai-refresh-btn" @tap="fetchDailyAi(true)">
+          <view v-if="!dailyAiLoading && dailyAiText" class="daily-ai-refresh-btn pill" @tap="fetchDailyAi(true)">
             <text class="daily-ai-refresh-text">刷新</text>
           </view>
         </view>
@@ -103,22 +103,22 @@
       </view>
 
       <!-- 快捷入口 -->
-      <view class="quick-entrance-card">
+      <view class="quick-entrance-card card">
         <view class="quick-entrance-head">
           <view class="quick-entrance-head-info">
             <text class="quick-entrance-title">和智康聊聊</text>
           </view>
         </view>
         <view class="quick-entrance-row">
-          <view class="quick-entrance-item" @tap="goAiWithQuery('今天吃什么比较健康？')">
+          <view class="quick-entrance-item card-sm" @tap="goAiWithQuery('今天吃什么比较健康？')">
             <image class="quick-entrance-icon" src="/static/tabbar/food2.png" mode="aspectFit" />
             <text class="quick-entrance-text">今天吃什么？</text>
           </view>
-          <view class="quick-entrance-item" @tap="goAiWithQuery('给我一些适合今天的运动建议')">
+          <view class="quick-entrance-item card-sm" @tap="goAiWithQuery('给我一些适合今天的运动建议')">
             <image class="quick-entrance-icon" src="/static/tabbar/sport.png" mode="aspectFit" />
             <text class="quick-entrance-text">动一动！</text>
           </view>
-          <view class="quick-entrance-item" @tap="goAiWithQuery('如何改善睡眠质量？')">
+          <view class="quick-entrance-item card-sm" @tap="goAiWithQuery('如何改善睡眠质量？')">
             <image class="quick-entrance-icon" src="/static/tabbar/sleep.png" mode="aspectFit" />
             <text class="quick-entrance-text">睡个好觉</text>
           </view>
@@ -126,7 +126,7 @@
       </view>
 
       <!-- 今日提醒 -->
-      <view class="section-card" v-if="reminders.length > 0">
+      <view class="section-card card" v-if="reminders.length > 0">
         <view class="section-card-head">
           <view class="section-title-wrap">
             <view class="section-icon section-icon-reminder">
@@ -143,14 +143,14 @@
                 <text class="list-item-title">{{ item.title }}</text>
                 <text class="list-item-meta">{{ item.time }} · {{ item.content }}</text>
               </view>
-              <text class="list-item-tag list-item-tag-reminder">{{ item.typeLabel || "提醒" }}</text>
+              <text class="list-item-tag list-item-tag-reminder pill">{{ item.typeLabel || "提醒" }}</text>
             </view>
           </view>
         </view>
       </view>
 
       <!-- 今日目标 -->
-      <view class="section-card" v-if="todayGoals.length > 0">
+      <view class="section-card card" v-if="todayGoals.length > 0">
         <view class="section-card-head">
           <view class="section-title-wrap">
             <view class="section-icon section-icon-goal">
@@ -172,7 +172,7 @@
                   <text class="goal-progress-num">{{ item.progress }}%</text>
                 </view>
               </view>
-              <view class="goal-status-badge" :class="item.progress >= 100 ? 'goal-badge-done' : 'goal-badge-going'">
+              <view class="goal-status-badge pill" :class="item.progress >= 100 ? 'goal-badge-done' : 'goal-badge-going'">
                 <text class="goal-status-text">{{ item.progress >= 100 ? '达成' : '进行中' }}</text>
               </view>
             </view>
@@ -222,13 +222,20 @@
         <text class="add-record-btn-text">{{ fabOpen ? '关闭' : '记录' }}</text>
       </view>
     </view>
+    <!-- 自定义底部导航 -->
+    <custom-tabbar :current="0" />
   </view>
 </template>
 
 <script>
 import { request } from "../../utils/api";
 import { REMINDER_TYPE } from "../../constants/enums";
+import CustomTabbar from "@/components/custom-tabbar/custom-tabbar.vue";
+
 export default {
+  components: {
+    CustomTabbar
+  },
   data() {
     return {
       overview: {
@@ -438,7 +445,11 @@ export default {
       try {
         const list = await request("/api/reminder/list", "GET", { userId });
         const raw = Array.isArray(list) ? list : Array.isArray(list?.records) ? list.records : Array.isArray(list?.list) ? list.list : [];
-        this.reminders = raw.filter(item => Number(item.type) !== 4).slice(0, 3).map(item => ({
+        this.reminders = raw
+          .filter(item => Number(item.type) !== 4)
+          .filter(item => this.isTodayReminder(item.remindTime))
+          .slice(0, 3)
+          .map(item => ({
           id: item.id,
           title: item.title,
           content: item.content || "提醒事项",
@@ -723,6 +734,25 @@ export default {
       const pad = num => String(num).padStart(2, "0");
       return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
     },
+    parseReminderDate(value) {
+      if (!value) return null;
+      let normalized = String(value).replace("T", " ").trim();
+      if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(normalized)) {
+        normalized += ":00";
+      }
+      const date = new Date(normalized.replace(/-/g, "/"));
+      return Number.isNaN(date.getTime()) ? null : date;
+    },
+    isTodayReminder(value) {
+      const date = this.parseReminderDate(value);
+      if (!date) return false;
+      const now = new Date();
+      return (
+        date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth() &&
+        date.getDate() === now.getDate()
+      );
+    },
     updateTabBarSelected(index) {
       const pages = getCurrentPages();
       const page = pages[pages.length - 1];
@@ -792,12 +822,13 @@ export default {
 .icon-btn {
   width: 38px;
   height: 38px;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card-sm);
   background: #fff;
   border: 1px solid #E9E1D8;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .icon-btn-img {
@@ -816,14 +847,15 @@ export default {
   flex: 1;
   background: #fff;
   border: 1px solid #E9E1D8;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   padding: 14px 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
-  box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.04);
+  box-shadow: var(--shadow-card);
   transition: transform 120ms ease;
+  overflow: hidden;
 }
 
 .metric-mini:active {
@@ -840,7 +872,7 @@ export default {
 .metric-mini-icon {
   width: 32px;
   height: 32px;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -858,7 +890,7 @@ export default {
 }
 
 .metric-diff-badge {
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   padding: 0px 3px;
 }
 
@@ -893,9 +925,9 @@ export default {
 .daily-ai-card {
   background: #fff;
   border: 1px solid #E9E1D8;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   overflow: hidden;
-  box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.04);
+  box-shadow: var(--shadow-card);
   transition: transform 120ms ease;
 }
 
@@ -915,7 +947,7 @@ export default {
 .daily-ai-icon-wrap {
   width: 34px;
   height: 34px;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   background: linear-gradient(135deg, #A23F00 0%, #8B3500 100%);
   display: flex;
   align-items: center;
@@ -957,7 +989,7 @@ export default {
 .daily-ai-refresh-btn {
   background: #fff;
   border: 1px solid #E9E1D8;
-  border-radius: 999rpx;
+  border-radius: var(--radius-pill);
   padding: 4px 10px;
 }
 
@@ -1041,9 +1073,9 @@ export default {
 .quick-entrance-card {
   background: #fff;
   border: 1px solid #E9E1D8;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   overflow: hidden;
-  box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.04);
+  box-shadow: var(--shadow-card);
 }
 
 .quick-entrance-head {
@@ -1057,7 +1089,7 @@ export default {
 .quick-entrance-icon-wrap {
   width: 34px;
   height: 34px;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   background: linear-gradient(135deg, #A23F00 0%, #8B3500 100%);
   display: flex;
   align-items: center;
@@ -1102,7 +1134,7 @@ export default {
   min-width: 0;
   background: #FAF8F5;
   border: 1px solid #E9E1D8;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   padding: 14px 6px;
   display: flex;
   flex-direction: column;
@@ -1133,7 +1165,7 @@ export default {
 .ai-guide-card {
   background: #FAF8F5;
   border: 1px solid #E9E1D8;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   overflow: hidden;
   margin-top: 8px;
   transition: transform 120ms ease;
@@ -1154,7 +1186,7 @@ export default {
 .ai-guide-icon-wrap {
   width: 34px;
   height: 34px;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   background: linear-gradient(135deg, #A23F00 0%, #8B3500 100%);
   display: flex;
   align-items: center;
@@ -1191,7 +1223,7 @@ export default {
 .ai-guide-go-btn {
   background: #FAF8F5;
   border: 1px solid #E9E1D8;
-  border-radius: 999rpx;
+  border-radius: var(--radius-pill);
   padding: 4px 10px;
 }
 
@@ -1218,7 +1250,7 @@ export default {
 .ai-scene-icon-wrap {
   width: 44px;
   height: 44px;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1244,9 +1276,9 @@ export default {
 .section-card {
   background: #fff;
   border: 1px solid #E9E1D8;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   overflow: hidden;
-  box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.04);
+  box-shadow: var(--shadow-card);
   transition: transform 120ms ease;
 }
 
@@ -1271,7 +1303,7 @@ export default {
 .section-icon {
   width: 26px;
   height: 26px;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1307,7 +1339,7 @@ export default {
   align-items: center;
   padding: 12px 14px;
   background: #FAF8F5;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   border: 1px solid #E9E1D8;
 }
 
@@ -1334,7 +1366,7 @@ export default {
   font-size: 11px;
   font-weight: 600;
   padding: 3px 8px;
-  border-radius: 999rpx;
+  border-radius: var(--radius-pill);
   margin-left: 10px;
   flex-shrink: 0;
 }
@@ -1354,14 +1386,14 @@ export default {
   flex: 1;
   height: 4px;
   background: #E9E1D8;
-  border-radius: 999rpx;
+  border-radius: var(--radius-pill);
   overflow: hidden;
 }
 
 .goal-progress-fill {
   height: 4px;
   background: linear-gradient(90deg, #A23F00, #8B3500);
-  border-radius: 999rpx;
+  border-radius: var(--radius-pill);
   transition: width 0.3s;
 }
 
@@ -1373,7 +1405,7 @@ export default {
 
 .goal-status-badge {
   padding: 3px 8px;
-  border-radius: 999rpx;
+  border-radius: var(--radius-pill);
   margin-left: 10px;
   flex-shrink: 0;
 }
@@ -1410,7 +1442,7 @@ export default {
   position: fixed;
   left: 0;
   top: 0;
-  z-index: 100;
+  z-index: 10000;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -1430,15 +1462,15 @@ export default {
   gap: 10px;
   background: #fff;
   border: 1px solid #E9E1D8;
-  border-radius: 999rpx;
+  border-radius: var(--radius-pill);
   padding: 8px 16px 8px 10px;
-  box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.04);
+  box-shadow: var(--shadow-card);
 }
 
 .add-record-icon {
   width: 30px;
   height: 30px;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1464,7 +1496,7 @@ export default {
   align-items: center;
   gap: 5px;
   background: linear-gradient(135deg, #A23F00 0%, #8B3500 100%);
-  border-radius: 999rpx;
+  border-radius: var(--radius-pill);
   padding: 11px 20px;
   box-shadow: 0 6rpx 16rpx rgba(162,63,0,0.4);
 }

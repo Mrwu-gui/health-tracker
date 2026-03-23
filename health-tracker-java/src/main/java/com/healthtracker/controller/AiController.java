@@ -3,24 +3,29 @@ package com.healthtracker.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthtracker.ai.AiProviderRequest;
+import com.healthtracker.ai.AiProviderResponse;
+import com.healthtracker.ai.AiProviderRouter;
+import com.healthtracker.ai.vision.DashscopeVisionService;
 import com.healthtracker.dto.AiChatRequest;
+import com.healthtracker.dto.AiVisionRequest;
 import com.healthtracker.entity.AiChatMessage;
 import com.healthtracker.entity.AiLog;
+import com.healthtracker.entity.AiVisionRecord;
 import com.healthtracker.entity.FileRecord;
 import com.healthtracker.entity.User;
 import com.healthtracker.service.AiChatMessageService;
 import com.healthtracker.service.AiLogService;
+import com.healthtracker.service.AiVisionRecordService;
 import com.healthtracker.service.FileRecordService;
 import com.healthtracker.service.UserService;
 import jakarta.validation.Valid;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Base64;
@@ -29,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -44,7 +48,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -53,19 +56,13 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 public class AiController {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
+    private final AiProviderRouter aiProviderRouter;
+    private final DashscopeVisionService dashscopeVisionService;
+    private final AiVisionRecordService aiVisionRecordService;
     private final AiChatMessageService aiChatMessageService;
     private final UserService userService;
     private final AiLogService aiLogService;
     private final FileRecordService fileRecordService;
-
-    @Value("${yuanqi.base-url:https://yuanqi.tencent.com}")
-    private String baseUrl;
-
-    @Value("${yuanqi.appid:}")
-    private String appId;
-
-    @Value("${yuanqi.appkey:}")
-    private String appKey;
 
     @Value("${tencent.asr.secret-id:}")
     private String asrSecretId;
@@ -89,18 +86,19 @@ public class AiController {
     private String uploadDir;
 
     public AiController(ObjectMapper objectMapper,
-                        RestTemplateBuilder builder,
+                        RestTemplate restTemplate,
+                        AiProviderRouter aiProviderRouter,
+                        DashscopeVisionService dashscopeVisionService,
+                        AiVisionRecordService aiVisionRecordService,
                         AiChatMessageService aiChatMessageService,
                         UserService userService,
                         AiLogService aiLogService,
-                        FileRecordService fileRecordService,
-                        @Value("${ai.http.connect-timeout-seconds:10}") int connectTimeoutSeconds,
-                        @Value("${ai.http.read-timeout-seconds:60}") int readTimeoutSeconds) {
+                        FileRecordService fileRecordService) {
         this.objectMapper = objectMapper;
-        this.restTemplate = builder
-            .setConnectTimeout(Duration.ofSeconds(connectTimeoutSeconds))
-            .setReadTimeout(Duration.ofSeconds(readTimeoutSeconds))
-            .build();
+        this.restTemplate = restTemplate;
+        this.aiProviderRouter = aiProviderRouter;
+        this.dashscopeVisionService = dashscopeVisionService;
+        this.aiVisionRecordService = aiVisionRecordService;
         this.aiChatMessageService = aiChatMessageService;
         this.userService = userService;
         this.aiLogService = aiLogService;
@@ -109,9 +107,6 @@ public class AiController {
 
     @PostMapping("/chat")
     public Map<String, Object> chat(@Valid @RequestBody AiChatRequest request) throws Exception {
-        if (appId == null || appId.isBlank() || appKey == null || appKey.isBlank()) {
-            throw new IllegalArgumentException("AI 配置缺失");
-        }
         if ((request.getMessage() == null || request.getMessage().isBlank())
             && (request.getImageUrl() == null || request.getImageUrl().isBlank())
             && (request.getAudioUrl() == null || request.getAudioUrl().isBlank())) {
@@ -125,16 +120,6 @@ public class AiController {
         String text = request.getMessage() == null ? "" : request.getMessage();
         if (text.isBlank() && request.getAudioUrl() != null && !request.getAudioUrl().isBlank()) {
             text = recognizeAudio(request.getAudioUrl());
-        }
-        Map<String, Object> contentText = Map.of("type", "text", "text", text);
-        Map<String, Object> message = new HashMap<>();
-        message.put("role", "user");
-        if (request.getImageUrl() != null && !request.getImageUrl().isBlank()) {
-            Map<String, Object> imageUrl = Map.of("url", request.getImageUrl());
-            Map<String, Object> imageContent = Map.of("type", "image_url", "image_url", imageUrl);
-            message.put("content", List.of(contentText, imageContent));
-        } else {
-            message.put("content", List.of(contentText));
         }
 
         if (store && userIdLong != null) {
@@ -155,45 +140,27 @@ public class AiController {
             aiChatMessageService.save(userMsg);
         }
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("assistant_id", appId);
-        payload.put("user_id", wxOpenid == null || wxOpenid.isBlank() ? userId : wxOpenid);
-        payload.put("stream", false);
-        payload.put("messages", List.of(message));
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(appKey);
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
-        String url = baseUrl + "/openapi/v1/agent/chat/completions";
-        ResponseEntity<String> response;
+        String messageToSend = text;
+        if ((messageToSend == null || messageToSend.isBlank())
+            && request.getImageUrl() != null && !request.getImageUrl().isBlank()) {
+            messageToSend = "请识别图片内容";
+        }
+        
+        AiProviderRequest providerRequest = new AiProviderRequest();
+        providerRequest.setUserId(userIdLong);
+        providerRequest.setUserIdentity(wxOpenid == null || wxOpenid.isBlank() ? userId : wxOpenid);
+        providerRequest.setPrompt(messageToSend == null ? "" : messageToSend);
+        providerRequest.setImageUrl(request.getImageUrl());
+        AiProviderResponse providerResponse;
         try {
-            response = restTemplate.postForEntity(url, entity, String.class);
-        } catch (ResourceAccessException ex) {
-            saveAiLog(userIdLong, wxOpenid, text, null, 1, "AI 请求超时");
-            throw new IllegalArgumentException("服务响应较慢，请稍后再试", ex);
+            providerResponse = aiProviderRouter.current().chat(providerRequest);
         } catch (Exception ex) {
-            saveAiLog(userIdLong, wxOpenid, text, null, 1, ex.getMessage());
-            if (request.getImageUrl() != null && !request.getImageUrl().isBlank()) {
-                throw new IllegalArgumentException("当前模型暂不支持图片识别");
-            }
+            saveAiLog(userIdLong, wxOpenid, messageToSend, null, 1, ex.getMessage());
             throw ex;
         }
 
-        String content = "";
-        if (response.getBody() != null) {
-            JsonNode root = objectMapper.readTree(response.getBody());
-            JsonNode choices = root.path("choices");
-            if (choices.isArray() && choices.size() > 0) {
-                JsonNode messageNode = choices.get(0).path("message").path("content");
-                if (messageNode.isTextual()) {
-                    content = messageNode.asText();
-                } else if (messageNode.isArray() && messageNode.size() > 0) {
-                    content = messageNode.get(0).path("text").asText("");
-                }
-            }
-        }
+        String content = providerResponse == null ? "" : providerResponse.getContent();
+        content = stripGoalBlock(content);
 
         if (store && userIdLong != null) {
             AiChatMessage assistantMsg = new AiChatMessage();
@@ -209,7 +176,7 @@ public class AiController {
 
         Map<String, Object> result = new HashMap<>();
         result.put("content", content == null ? "" : content);
-        saveAiLog(userIdLong, wxOpenid, text, content, 0, null);
+        saveAiLog(userIdLong, wxOpenid, messageToSend, content, 0, null);
         return result;
     }
 
@@ -218,6 +185,30 @@ public class AiController {
         return aiChatMessageService.list(new LambdaQueryWrapper<AiChatMessage>()
             .eq(AiChatMessage::getUserId, userId)
             .orderByAsc(AiChatMessage::getCreatedAt));
+    }
+
+    @PostMapping("/clear")
+    public Map<String, Object> clearHistory(@RequestBody(required = false) Map<String, Object> body,
+                                            @RequestParam(required = false) Long userId) {
+        Long targetUserId = userId;
+        if (targetUserId == null && body != null && body.get("userId") != null) {
+            try {
+                targetUserId = Long.valueOf(String.valueOf(body.get("userId")));
+            } catch (NumberFormatException ex) {
+                throw new IllegalArgumentException("用户信息不合法");
+            }
+        }
+        if (targetUserId == null) {
+            targetUserId = parseUserId(resolveUserId());
+        }
+        if (targetUserId == null) {
+            throw new IllegalArgumentException("用户信息缺失");
+        }
+        aiChatMessageService.remove(new LambdaQueryWrapper<AiChatMessage>()
+            .eq(AiChatMessage::getUserId, targetUserId));
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        return result;
     }
 
     @PostMapping("/upload")
@@ -254,6 +245,31 @@ public class AiController {
         body.put("url", url);
         body.put("id", record.getId());
         return body;
+    }
+
+    @PostMapping("/vision/recognize")
+    public Map<String, Object> recognize(@Valid @RequestBody AiVisionRequest request) throws Exception {
+        Map<String, Object> result = dashscopeVisionService.recognize(request.getImageUrl());
+        Long userId = request.getUserId();
+        if (userId != null) {
+            AiVisionRecord record = new AiVisionRecord();
+            record.setUserId(userId);
+            record.setType(String.valueOf(result.getOrDefault("type", "invalid")));
+            record.setImageUrl(request.getImageUrl());
+            record.setPayloadJson(objectMapper.writeValueAsString(result));
+            record.setCreatedAt(LocalDateTime.now());
+            aiVisionRecordService.save(record);
+            result.put("recordId", record.getId());
+        }
+        return result;
+    }
+
+    @GetMapping("/vision/records")
+    public List<AiVisionRecord> visionRecords(@RequestParam Long userId) {
+        return aiVisionRecordService.lambdaQuery()
+            .eq(AiVisionRecord::getUserId, userId)
+            .orderByDesc(AiVisionRecord::getCreatedAt)
+            .list();
     }
 
     private String resolveUserId() {
@@ -384,5 +400,22 @@ public class AiController {
             sb.append(hex);
         }
         return sb.toString();
+    }
+
+    private String stripGoalBlock(String content) {
+        if (content == null) return "";
+        return content.replaceAll("(?s)<goal>.*?</goal>", "").trim();
+    }
+
+    private boolean isGoalValueSafe(int goalType, int targetValue, String period) {
+        switch (goalType) {
+            case 1: return targetValue >= 1000 && targetValue <= 50000; // steps
+            case 2:
+                if (!"week".equalsIgnoreCase(period)) return false;
+                return targetValue >= 1 && targetValue <= 2; // kg per week
+            case 3: return targetValue >= 500 && targetValue <= 6000; // ml
+            case 4: return targetValue >= 4 && targetValue <= 12; // hours
+            default: return false;
+        }
     }
 }

@@ -120,42 +120,71 @@
             <button class="modal-sheet-btn secondary pill" @tap="bodyModalMode = 'edit'">编辑</button>
 </template>
           <template v-else>
-            <!-- #ifdef MP-WEIXIN -->
-            <view class="field"><text class="field-label">头像</text>
-              <button class="ghost pill" open-type="chooseAvatar" @chooseavatar="onChooseAvatar" :disabled="bodySaving">选择头像</button>
+            <!-- 头像区域 -->
+            <view class="avatar-section-edit">
+              <button class="avatar-btn" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
+                <image v-if="profile.avatar || bodyForm.avatarUrl" class="avatar-preview" :src="String(profile.avatar || bodyForm.avatarUrl)" mode="aspectFill" />
+                <view v-else class="avatar-placeholder">
+                  <text class="avatar-placeholder-text">{{ (bodyForm.nickname || '?').slice(0, 1) }}</text>
+                </view>
+                <view class="avatar-camera">
+                  <text class="camera-icon">📷</text>
+                </view>
+              </button>
+              <text class="avatar-tip">点击更换头像</text>
             </view>
-            <!-- #endif -->
-            <view class="field"><text class="field-label">昵称</text>
-              <input class="input" type="nickname" v-model="bodyForm.nickname" placeholder="请输入昵称" />
-            </view>
-            <view class="field"><text class="field-label">性别</text>
-              <view class="radio-options">
-                <view class="radio-item pill" :class="{ active: bodyForm.sex === '男' }" @tap="bodyForm.sex = '男'">男</view>
-                <view class="radio-item pill" :class="{ active: bodyForm.sex === '女' }" @tap="bodyForm.sex = '女'">女</view>
+
+            <!-- 基本信息表单 -->
+            <view class="form-section-edit">
+              <view class="form-field card-white">
+                <text class="form-field-label">昵称</text>
+                <input class="form-field-input" type="nickname" v-model="bodyForm.nickname" placeholder="请输入昵称" />
+              </view>
+              <view class="form-field card-white" @tap="showSexPicker = true">
+                <text class="form-field-label">性别</text>
+                <view class="form-field-select">
+                  <text :class="{ 'placeholder': !bodyForm.sex }">{{ bodyForm.sex || '请选择' }}</text>
+                  <text class="select-arrow">▼</text>
+                </view>
+              </view>
+              <view class="form-field card-white">
+                <text class="form-field-label">年龄</text>
+                <input class="form-field-input" v-model="bodyForm.age" placeholder="请输入年龄" type="number" />
               </view>
             </view>
-            <view class="field"><text class="field-label">年龄</text>
-              <input class="input" v-model="bodyForm.age" placeholder="年龄" type="number" />
-            </view>
-            <view class="field"><text class="field-label">身高（cm）</text>
-              <input class="input" v-model="bodyForm.height" placeholder="身高" type="number" />
-            </view>
-            <view class="field"><text class="field-label">体重（kg）</text>
-              <input class="input" v-model="bodyForm.weight" placeholder="体重" type="number" />
-            </view>
-            <view class="field"><text class="field-label">收缩压 / 舒张压</text>
-              <view class="input-row">
-                <input class="input" v-model="bodyForm.systolic" placeholder="高压" type="number" />
-                <input class="input" v-model="bodyForm.diastolic" placeholder="低压" type="number" />
+
+            <!-- 健康数据 -->
+            <view class="health-section">
+              <view class="health-grid-4">
+                <view class="health-card-white">
+                  <text class="health-card-label">身高 (CM)</text>
+                  <input class="health-card-value-input" v-model="bodyForm.height" placeholder="--" type="number" />
+                </view>
+                <view class="health-card-white">
+                  <text class="health-card-label">体重 (KG)</text>
+                  <input class="health-card-value-input" v-model="bodyForm.weight" placeholder="--" type="number" />
+                </view>
+                <view class="health-card-white">
+                  <text class="health-card-label">心率 (BPM)</text>
+                  <input class="health-card-value-input" v-model="bodyForm.heartRate" placeholder="--" type="number" />
+                </view>
+                <view class="health-card-white">
+                  <text class="health-card-label">血压 (MMHG)</text>
+                  <view class="bp-inputs">
+                    <input class="bp-input" v-model="bodyForm.systolic" placeholder="--" type="number" />
+                    <text class="bp-divider">/</text>
+                    <input class="bp-input" v-model="bodyForm.diastolic" placeholder="--" type="number" />
+                  </view>
+                </view>
               </view>
             </view>
-            <view class="field"><text class="field-label">心率</text>
-              <input class="input" v-model="bodyForm.heartRate" placeholder="心率" type="number" />
+
+            <view class="save-btn-wrap">
+              <button class="save-btn" @tap="saveBodyProfile" :disabled="bodySaving">
+                {{ bodySaving ? "保存中..." : "保存" }}
+              </button>
             </view>
-            <button class="modal-sheet-btn primary pill" @tap="saveBodyProfile" :disabled="bodySaving">
-              {{ bodySaving ? "保存中..." : "保存" }}
-            </button>
-</template>
+          </template>
         </view>
       </view>
     </view>
@@ -163,6 +192,21 @@
     <text v-if="message" class="status">{{ message }}</text>
     <text v-if="loading" class="status">加载中...</text>
     <text v-if="error" class="status error">{{ error }}</text>
+
+    <!-- 性别选择器 -->
+    <view v-if="showSexPicker" class="picker-mask" @tap="showSexPicker = false">
+      <view class="picker-sheet" @tap.stop>
+        <view class="picker-options">
+          <view class="picker-option" :class="{ active: bodyForm.sex === '男' }" @tap="selectSex('男')">
+            <text>男</text>
+          </view>
+          <view class="picker-option" :class="{ active: bodyForm.sex === '女' }" @tap="selectSex('女')">
+            <text>女</text>
+          </view>
+        </view>
+        <view class="picker-cancel" @tap="showSexPicker = false">取消</view>
+      </view>
+    </view>
 
     <!-- 自定义底部导航 -->
     <custom-tabbar :current="3" />
@@ -205,8 +249,10 @@ export default {
         weight: "",
         systolic: "",
         diastolic: "",
-        heartRate: ""
-      }
+        heartRate: "",
+        avatarUrl: ""
+      },
+      showSexPicker: false
     };
   },
   computed: {
@@ -351,7 +397,7 @@ export default {
     },
     openProfileModal() {
       this.showBodyModal = true;
-      this.bodyModalMode = "view";
+      this.bodyModalMode = "edit";
       const body = uni.getStorageSync("bodyProfile") || {};
       this.bodyForm.nickname = body.nickname || this.profile.name || "";
       this.bodyForm.sex = body.sex || this.profile.sex || "";
@@ -476,10 +522,12 @@ export default {
         uni.showToast({ title: "未获取头像", icon: "none" });
         return;
       }
+      this.bodyForm.avatarUrl = String(avatarUrl);
       this.bodySaving = true;
       this.uploadAvatar(String(avatarUrl))
         .then((serverUrl) => {
           this.profile.avatar = serverUrl;
+          this.bodyForm.avatarUrl = serverUrl;
           uni.setStorageSync("userAvatar", serverUrl);
           return request("/api/user/profile/update", "POST", {
             userId: uni.getStorageSync("userId") || 1,
@@ -493,6 +541,44 @@ export default {
         .finally(() => {
           this.bodySaving = false;
         });
+    },
+    chooseAvatar() {
+      // #ifdef MP-WEIXIN
+      // 小程序环境下使用 chooseAvatar
+      // 这里需要用户手动点击 button 触发
+      uni.showToast({ title: "请点击头像按钮选择", icon: "none" });
+      // #endif
+      // #ifndef MP-WEIXIN
+      uni.chooseImage({
+        count: 1,
+        sizeType: ['compressed'],
+        sourceType: ['album', 'camera'],
+        success: (res) => {
+          const tempFilePath = res.tempFilePaths[0];
+          this.bodySaving = true;
+          this.uploadAvatarFile(tempFilePath)
+            .then((serverUrl) => {
+              this.profile.avatar = serverUrl;
+              uni.setStorageSync("userAvatar", serverUrl);
+              return request("/api/user/profile/update", "POST", {
+                userId: uni.getStorageSync("userId") || 1,
+                wxNickname: this.bodyForm.nickname || this.profile.name || "",
+                wxAvatar: serverUrl
+              });
+            })
+            .catch(() => {
+              uni.showToast({ title: "头像上传失败", icon: "none" });
+            })
+            .finally(() => {
+              this.bodySaving = false;
+            });
+        }
+      });
+      // #endif
+    },
+    selectSex(sex) {
+      this.bodyForm.sex = sex;
+      this.showSexPicker = false;
     }
   }
 };
@@ -715,7 +801,7 @@ export default {
   max-height: 85vh;
   background: #fff;
   border-radius: 24rpx 20px 0 0;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -754,9 +840,6 @@ export default {
   padding: 20px;
   overflow-y: auto;
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
 }
 
 .info-block {
@@ -929,5 +1012,280 @@ export default {
     border: none !important;
     /* 去掉图片默认间隙 */
     vertical-align: middle;
+}
+
+/* 头像区域 */
+.avatar-section-edit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 32rpx;
+}
+
+.avatar-btn {
+  position: relative;
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  overflow: visible;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
+.avatar-preview {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #A23F00 0%, #FA7025 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-placeholder-text {
+  font-size: 56rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+.avatar-camera {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 48rpx;
+  height: 48rpx;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.camera-icon {
+  font-size: 24rpx;
+}
+
+.avatar-tip {
+  font-size: 24rpx;
+  color: #8B7355;
+}
+
+/* 基本信息表单 */
+.form-section-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-bottom: 32rpx;
+}
+
+.form-field {
+  display: flex;
+  align-items: center;
+  padding: 0 24rpx;
+  height: 88rpx;
+}
+
+.form-field.card-white {
+  background: #fff;
+  border: 1px solid #E9E1D8;
+  border-radius: var(--radius-card);
+}
+
+.form-field-label {
+  font-size: 28rpx;
+  color: #1a1c1a;
+  font-weight: 500;
+  width: 120rpx;
+  flex-shrink: 0;
+}
+
+.form-field-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: #1a1c1a;
+  text-align: right;
+  background: transparent;
+}
+
+.form-field-select {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8rpx;
+}
+
+.form-field-select text {
+  font-size: 28rpx;
+  color: #1a1c1a;
+}
+
+.form-field-select .placeholder {
+  color: #8B7355;
+}
+
+.select-arrow {
+  font-size: 20rpx;
+  color: #8B7355;
+}
+
+/* 健康数据区域 */
+.health-section {
+  margin-bottom: 32rpx;
+}
+
+.health-grid-4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.health-card-white {
+  background: #fff;
+  border: 1px solid #E9E1D8;
+  border-radius: var(--radius-card);
+  padding: 24rpx 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.health-card-label {
+  font-size: 24rpx;
+  color: #8B7355;
+}
+
+.health-card-value-input {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1a1c1a;
+  background: transparent;
+  padding: 0;
+  height: auto;
+  line-height: 1;
+  text-align: center;
+  width: 100%;
+}
+
+.bp-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.bp-input {
+  width: 80rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1c1a;
+  background: transparent;
+  text-align: center;
+  padding: 0;
+  height: auto;
+  line-height: 1;
+}
+
+.bp-divider {
+  font-size: 32rpx;
+  color: #8B7355;
+  font-weight: 600;
+}
+
+/* 保存按钮 */
+.save-btn-wrap {
+  margin-top: 32rpx;
+}
+
+.save-btn {
+  width: 100%;
+  height: 88rpx;
+  background: linear-gradient(135deg, #A23F00 0%, #FA7025 100%);
+  border-radius: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  box-shadow: 0 8rpx 24rpx rgba(162, 63, 0, 0.3);
+}
+
+.save-btn::after {
+  border: none;
+}
+
+.save-btn[disabled] {
+  opacity: 0.6;
+}
+
+/* 性别选择器 */
+.picker-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 200;
+}
+
+.picker-sheet {
+  width: 100%;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 24rpx 32rpx calc(24rpx + env(safe-area-inset-bottom));
+}
+
+.picker-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.picker-option {
+  height: 88rpx;
+  background: #FAF8F5;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: #1a1c1a;
+  border: 2rpx solid transparent;
+}
+
+.picker-option.active {
+  background: #FFF4ED;
+  border-color: #A23F00;
+  color: #A23F00;
+}
+
+.picker-cancel {
+  height: 88rpx;
+  background: #fff;
+  border: 2rpx solid #E9E1D8;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: #8B7355;
 } 
 </style>

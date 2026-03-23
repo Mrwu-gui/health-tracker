@@ -41,10 +41,9 @@
       <!-- 筛选标签 -->
       <view class="chips">
         <view class="chip" :class="{ active: tabFilter === 0 }" @tap="tabFilter = 0">全部</view>
-        <view class="chip" :class="{ active: tabFilter === 1 }" @tap="tabFilter = 1">用药</view>
-        <view class="chip" :class="{ active: tabFilter === 2 }" @tap="tabFilter = 2">运动</view>
-        <view class="chip" :class="{ active: tabFilter === 3 }" @tap="tabFilter = 3">饮食</view>
-        <view class="chip" :class="{ active: tabFilter === 4 }" @tap="tabFilter = 4">睡眠</view>
+        <view class="chip" :class="{ active: tabFilter === 1 }" @tap="tabFilter = 1">运动</view>
+        <view class="chip" :class="{ active: tabFilter === 2 }" @tap="tabFilter = 2">饮食</view>
+        <view class="chip" :class="{ active: tabFilter === 3 }" @tap="tabFilter = 3">睡眠</view>
       </view>
 
       <!-- 时间线列表 -->
@@ -57,7 +56,7 @@
           </view>
 
           <!-- 提醒卡片 -->
-          <view class="reminder-card card" :class="{ 'reminder-completed': item.statusTag === '已完成' }" @tap="openEdit(item)">
+          <view class="reminder-card card" :class="{ 'reminder-completed': item.statusTag === '已完成' || item.statusTag === '已忽略' }" @tap="openEdit(item)">
             <view class="reminder-header">
               <text class="reminder-time">{{ item.timeDisplay }}</text>
               <text class="reminder-status" :class="item.statusTag === '已完成' ? 'status-completed' : (item.statusTag === '已忽略' ? 'status-ignored' : 'status-pending')">{{ item.statusTag || '待处理' }}</text>
@@ -73,9 +72,13 @@
               </view>
             </view>
 
-            <view v-if="item.statusTag !== '已完成' && item.statusTag !== '已忽略' && item.statusTag !== '已提醒'" class="reminder-actions">
-              <view class="action-btn confirm-btn" @tap.stop="setStatus(item, REMINDER_STATUS.DONE)">完成</view>
-              <view class="action-btn delay-btn" @tap.stop="openPostpone(item)">延期</view>
+            <!-- 操作入口按钮 - 只有进行中的项才显示 -->
+            <view v-if="item.statusTag !== '已完成' && item.statusTag !== '已忽略' && item.statusTag !== '已提醒'" class="reminder-action-trigger" @tap.stop="openActionMenu(item)">
+              <view class="action-dots">
+                <view class="action-dot"></view>
+                <view class="action-dot"></view>
+                <view class="action-dot"></view>
+              </view>
             </view>
           </view>
         </view>
@@ -165,6 +168,41 @@
         </view>
       </view>
     </view>
+
+    <!-- 自定义操作菜单 -->
+    <view v-if="showActionSheet" class="action-sheet-mask" @tap="closeActionSheet">
+      <view class="action-sheet" @tap.stop>
+        <view class="action-sheet-title">提醒操作</view>
+        <view class="action-sheet-subtitle">请确认您对当前提醒的处理状态</view>
+        
+        <!-- 任务预览卡片 -->
+        <view v-if="actionItem" class="action-preview-card">
+          <view class="action-preview-icon-wrapper">
+            <image class="action-preview-icon" :src="actionItem.icon" mode="aspectFit" />
+          </view>
+          <view class="action-preview-info">
+            <text class="action-preview-status">{{ actionItem.statusTag || '进行中' }}</text>
+            <text class="action-preview-title">{{ actionItem.title }}</text>
+          </view>
+          <view class="action-preview-time">
+            <text class="action-preview-time-label">截止时间</text>
+            <text class="action-preview-time-value">{{ actionItem.timeDisplay }}</text>
+          </view>
+        </view>
+
+        <view class="action-sheet-buttons">
+          <view class="action-btn-primary" @tap="handleAction(0)">
+            <text class="action-btn-icon">✓</text>
+            <text class="action-btn-label">标记为已完成</text>
+          </view>
+          <view class="action-btn-secondary" @tap="handleAction(1)">
+            <text class="action-btn-icon">⏱</text>
+            <text class="action-btn-label">稍后提醒</text>
+          </view>
+        </view>
+        <view class="action-sheet-cancel" @tap="closeActionSheet">取消</view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -181,13 +219,12 @@ export default {
       saving: false,
       editingId: null,
       titleOptions: [
-        { label: "用药提醒", type: REMINDER_TYPE.MEDICATION },
         { label: "运动提醒", type: REMINDER_TYPE.EXERCISE },
         { label: "饮食提醒", type: REMINDER_TYPE.DIET },
         { label: "睡眠提醒", type: REMINDER_TYPE.SLEEP }
       ],
       form: {
-        type: REMINDER_TYPE.MEDICATION,
+        type: REMINDER_TYPE.EXERCISE,
         content: "",
         remindDate: "",
         remindTime: ""
@@ -198,6 +235,7 @@ export default {
       postponeTime: "",
       postponeSaving: false,
       actionItem: null,
+      showActionSheet: false,
       REMINDER_STATUS
     };
   },
@@ -220,15 +258,22 @@ export default {
       return match ? match.label : "请选择标题";
     },
     filteredReminders() {
-      if (this.tabFilter === 0) return this.reminders;
-      // tabFilter 1=用药, 2=运动, 3=饮食, 4=睡眠
-      const typeMap = {
-        1: REMINDER_TYPE.MEDICATION,
-        2: REMINDER_TYPE.EXERCISE,
-        3: REMINDER_TYPE.DIET,
-        4: REMINDER_TYPE.SLEEP
-      };
-      return this.reminders.filter((item) => Number(item.type) === typeMap[this.tabFilter]);
+      let list = this.reminders;
+      if (this.tabFilter !== 0) {
+        // tabFilter 1=运动, 2=饮食, 3=睡眠
+        const typeMap = {
+          1: REMINDER_TYPE.EXERCISE,
+          2: REMINDER_TYPE.DIET,
+          3: REMINDER_TYPE.SLEEP
+        };
+        list = list.filter((item) => Number(item.type) === typeMap[this.tabFilter]);
+      }
+      // 按时间正序排序
+      return [...list].sort((a, b) => {
+        const timeA = a.timeDisplay || '00:00';
+        const timeB = b.timeDisplay || '00:00';
+        return timeA.localeCompare(timeB);
+      });
     },
     pendingCount() {
       return this.reminders.filter((item) => Number(item.status) === REMINDER_STATUS.PENDING).length;
@@ -245,6 +290,7 @@ export default {
           const raw = Array.isArray(data) ? data : (data?.list || data?.records || []);
           const mapped = raw
             .filter((item) => this.isTodayReminder(item.remindTime))
+            .filter((item) => Number(item.type) !== 4)
             .map((item) => ({
               id: item.id,
               title: item.title,
@@ -266,7 +312,7 @@ export default {
       this.showModal = true;
       this.editingId = null;
       this.form = {
-        type: REMINDER_TYPE.MEDICATION,
+        type: REMINDER_TYPE.EXERCISE,
         content: "",
         remindDate: "",
         remindTime: ""
@@ -274,11 +320,15 @@ export default {
     },
     openEdit(item) {
       if (!item) return;
+      // 已过期/已忽略/已完成的项不能编辑
+      if (item.statusTag === '已完成' || item.statusTag === '已忽略' || item.statusTag === '已提醒') {
+        return;
+      }
       const parts = this.splitDateTime(item.time);
       this.editingId = item.id;
       this.showModal = true;
       this.form = {
-        type: Number(item.type || REMINDER_TYPE.MEDICATION),
+        type: Number(item.type || REMINDER_TYPE.EXERCISE),
         content: item.content || "",
         remindDate: parts.date,
         remindTime: parts.time
@@ -384,8 +434,6 @@ export default {
           return "饮食";
         case REMINDER_TYPE.SLEEP:
           return "睡眠";
-        case REMINDER_TYPE.MEDICATION:
-          return "用药";
         default:
           return "提醒";
       }
@@ -393,15 +441,13 @@ export default {
     typeIcon(type) {
       switch (Number(type)) {
         case REMINDER_TYPE.EXERCISE:
-          return "/static/tabbar/sport.png";
+          return "/static/tabbar/sport_s.png";
         case REMINDER_TYPE.DIET:
-          return "/static/tabbar/food.png";
+          return "/static/tabbar/fork.png";
         case REMINDER_TYPE.SLEEP:
-          return "/static/tabbar/sleep.png";
-        case REMINDER_TYPE.MEDICATION:
-          return "/static/tabbar/pills.png";
+          return "/static/tabbar/sleep_s.png";
         default:
-          return "/static/tabbar/remind.png";
+          return "/static/tabbar/remind_s.png";
       }
     },
     formatTime(value) {
@@ -456,19 +502,25 @@ export default {
     },
     openActionMenu(item) {
       if (!item) return;
+      // 已过期/已忽略/已完成的项不能操作
+      if (item.statusTag === '已完成' || item.statusTag === '已忽略' || item.statusTag === '已提醒') {
+        return;
+      }
       this.actionItem = item;
-      uni.showActionSheet({
-        itemList: ["延期", "忽略"],
-        success: (res) => {
-          const it = this.actionItem;
-          this.actionItem = null;
-          if (res.tapIndex === 0) this.openPostpone(it);
-          else if (res.tapIndex === 1) this.setStatus(it, REMINDER_STATUS.IGNORED);
-        },
-        fail: () => {
-          this.actionItem = null;
-        }
-      });
+      this.showActionSheet = true;
+    },
+    closeActionSheet() {
+      this.showActionSheet = false;
+      this.actionItem = null;
+    },
+    handleAction(index) {
+      const item = this.actionItem;
+      this.closeActionSheet();
+      if (index === 0) {
+        this.setStatus(item, REMINDER_STATUS.DONE);
+      } else if (index === 1) {
+        this.openPostpone(item);
+      }
     },
     setStatus(item, status) {
       if (!item || !item.id) return;
@@ -537,7 +589,11 @@ export default {
       }
       const remindTime = `${this.postponeDate} ${this.postponeTime}:00`;
       this.postponeSaving = true;
-      request("/api/reminder/status", "POST", { id: this.postponeItem.id, remind_time: remindTime })
+      request("/api/reminder/status", "POST", {
+        id: this.postponeItem.id,
+        status: REMINDER_STATUS.PENDING,
+        remindTime
+      })
         .then(() => {
           uni.showToast({ title: "已延期", icon: "success" });
           this.closePostpone();
@@ -658,9 +714,11 @@ export default {
   flex: 1;
   margin-bottom: 20rpx;
   background: #fff;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   padding: 20rpx;
+  padding-right: 80rpx;
   border: 1px solid #E9E1D8;
+  position: relative;
 }
 
 .reminder-completed {
@@ -727,7 +785,6 @@ export default {
 .reminder-icon-wrapper {
   width: 56rpx;
   height: 56rpx;
-  background: #FAF8F5;
   border-radius: 24rpx;
   display: flex;
   align-items: center;
@@ -756,12 +813,218 @@ export default {
 
 .reminder-content {
   font-size: 24rpx;
-  color: #564337;
+  color: #1a1c1a;
 }
 
 .reminder-actions {
   display: flex;
+  justify-content: center;
   gap: 16rpx;
+}
+
+/* 操作触发按钮 */
+.reminder-action-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64rpx;
+  height: 64rpx;
+  position: absolute;
+  right: 20rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FFF4ED 0%, #FFEBE0 100%);
+  box-shadow: 0 4rpx 12rpx rgba(162, 63, 0, 0.08);
+  border: 1px solid rgba(162, 63, 0, 0.1);
+}
+
+.action-dots {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  align-items: center;
+}
+
+.action-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: #A23F00;
+}
+
+.reminder-action-trigger:active {
+  transform: translateY(-50%) scale(0.95);
+  background: linear-gradient(135deg, #FFE8D6 0%, #FFDDD0 100%);
+}
+
+/* 自定义操作菜单 */
+.action-sheet-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 300;
+}
+
+.action-sheet {
+  width: 100%;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 40rpx 40rpx calc(24rpx + env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+
+.action-sheet-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1a1c1a;
+  text-align: center;
+  margin-bottom: 8rpx;
+}
+
+.action-sheet-subtitle {
+  font-size: 22rpx;
+  color: #8B7355;
+  text-align: center;
+  margin-bottom: 28rpx;
+}
+
+/* 预览卡片 */
+.action-preview-card {
+  background: #F5F5F5;
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 28rpx;
+}
+
+.action-preview-icon-wrapper {
+  width: 64rpx;
+  height: 64rpx;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #E9E1D8;
+}
+
+.action-preview-icon {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.action-preview-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.action-preview-status {
+  font-size: 18rpx;
+  color: #8B7355;
+}
+
+.action-preview-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1a1c1a;
+}
+
+.action-preview-time {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4rpx;
+}
+
+.action-preview-time-label {
+  font-size: 18rpx;
+  color: #8B7355;
+}
+
+.action-preview-time-value {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #A23F00;
+}
+
+/* 操作按钮 */
+.action-sheet-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.action-btn-primary {
+  width: 100%;
+  height: 80rpx;
+  background: linear-gradient(135deg, #A23F00 0%, #FA7025 100%);
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  box-shadow: 0 6rpx 20rpx rgba(162, 63, 0, 0.3);
+}
+
+.action-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.action-btn-secondary {
+  width: 100%;
+  height: 80rpx;
+  background: #fff;
+  border: 2rpx solid #E9E1D8;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+
+.action-btn-secondary:active {
+  background: #FAF8F5;
+}
+
+.action-btn-icon {
+  font-size: 24rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+.action-btn-secondary .action-btn-icon {
+  color: #1a1c1a;
+}
+
+.action-btn-label {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #fff;
+}
+
+.action-btn-secondary .action-btn-label {
+  color: #1a1c1a;
+}
+
+.action-sheet-cancel {
+  font-size: 26rpx;
+  color: #8B7355;
+  text-align: center;
+  padding: 20rpx 0;
+  font-weight: 500;
+}
+
+.action-sheet-cancel:active {
+  color: #A23F00;
 }
 
 .action-btn {
@@ -769,7 +1032,7 @@ export default {
   padding: 20rpx 24rpx;
   font-size: 26rpx;
   font-weight: 600;
-  border-radius: 30rpx;
+  border-radius: var(--radius-pill);
   text-align: center;
 }
 

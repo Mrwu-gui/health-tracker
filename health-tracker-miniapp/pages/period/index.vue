@@ -761,7 +761,7 @@ export default {
 .last-period-card {
   margin: 0 24rpx 24rpx;
   background: #fff;
-  border-radius: 24rpx;
+  border-radius: var(--radius-card);
   padding: 24rpx;
   display: flex;
   justify-content: space-between;
@@ -787,7 +787,7 @@ export default {
 
 .last-period-title {
   font-size: 24rpx;
-  color: #8B7355;
+  color: #1a1c1a;
 }
 
 .last-period-date {
@@ -934,7 +934,7 @@ export default {
 }
 
 .record-flow {
-  font-size: 22rpx;
+  font-size: 20rpx;
   color: #FA7025;
   background: rgba(250, 112, 37, 0.1);
   padding: 6rpx 16rpx;
@@ -1005,7 +1005,7 @@ export default {
 
 .modal-sheet {
   width: 100%;
-  max-height: 80vh;
+  max-height: 85vh;
   background: #fff;
   border-radius: 32rpx 32rpx 0 0;
   padding-bottom: env(safe-area-inset-bottom);

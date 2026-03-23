@@ -72,14 +72,6 @@
         </view>
 
         <scroll-view class="modal-sheet-body" scroll-y>
-          <view class="modal-hero">
-            <view class="modal-hero-icon-wrap">
-              <image class="modal-hero-icon" src="/static/tabbar/family.png" mode="aspectFit" />
-            </view>
-            <text class="modal-hero-title">建立健康档案</text>
-            <text class="modal-hero-sub">智康AI 将协助您共同守护家人的健康</text>
-          </view>
-
           <view class="field-card card-sm">
             <text class="field-label">姓名</text>
             <input class="input-main" v-model="form.name" placeholder="请输入姓名" />
@@ -411,9 +403,9 @@ export default {
 
 .member-card {
   background: #fff;
-  border-radius: 32rpx;
+  border-radius: var(--radius-card);
   border: 1px solid #e9e1d8;
-  padding: 16px;
+  padding: 24rpx;
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -470,7 +462,7 @@ export default {
 }
 
 .member-name {
-  font-size: 16px;
+  font-size: 32rpx;
   color: #1a1c1a;
   font-weight: 700;
 }
@@ -487,7 +479,7 @@ export default {
 .member-meta {
   margin-top: 8rpx;
   font-size: 24rpx;
-  color: #8B7355;
+  color: #1a1c1a;
 }
 
 .member-tags {
@@ -500,7 +492,7 @@ export default {
 .member-desc {
   margin-top: 16rpx;
   font-size: 24rpx;
-  color: #564337;
+  color: #1a1c1a;
   line-height: 1.5;
   background: #f7f4ef;
   border-radius: 16rpx;
@@ -607,42 +599,6 @@ export default {
   box-sizing: border-box;
 }
 
-.modal-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  margin-bottom: 12px;
-}
-
-.modal-hero-icon-wrap {
-  width: 64px;
-  height: 64px;
-  border-radius: 32px;
-  background: #ffddb9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 8px;
-}
-
-.modal-hero-icon {
-  width: 30px;
-  height: 30px;
-}
-
-.modal-hero-title {
-  font-size: 16px;
-  color: #1a1c1a;
-  font-weight: 800;
-}
-
-.modal-hero-sub {
-  margin-top: 2px;
-  font-size: 12px;
-  color: #7b6a58;
-}
-
 .field-card {
   background: #fff;
   border-radius: 28rpx;
@@ -708,6 +664,6 @@ export default {
 }
 
 .card-sm {
-  border-radius: 22rpx;
+  border-radius: var(--radius-card-sm);
 }
 </style>

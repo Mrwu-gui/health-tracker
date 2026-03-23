@@ -125,44 +125,27 @@
         </view>
       </view>
 
-      <!-- 今日提醒 -->
-      <view class="section-card card" v-if="reminders.length > 0">
+      <!-- 今日待办 -->
+      <view class="section-card card" v-if="pendingGoals.length > 0 || pendingReminders.length > 0">
         <view class="section-card-head">
-          <view class="section-title-wrap">
-            <view class="section-icon section-icon-reminder">
-              <image class="icon-img" src="/static/tabbar/remind.png" mode="widthFix" />
+          <view class="todo-tabs">
+            <view class="todo-tab" :class="{ 'active': todoTab === 0 }" @tap="todoTab = 0">
+              <text class="todo-tab-text">目标</text>
+              <view v-if="pendingGoals.length > 0" class="todo-tab-badge">{{ pendingGoals.length }}</view>
             </view>
-            <text class="section-title">今日提醒</text>
-          </view>
-          <navigator class="section-link" url="/pages/reminders/index">全部 ›</navigator>
-        </view>
-        <view class="section-card-body">
-          <view class="list-body">
-            <view v-for="item in reminders" :key="item.id" class="list-item">
-              <view class="list-item-main">
-                <text class="list-item-title">{{ item.title }}</text>
-                <text class="list-item-meta">{{ item.time }} · {{ item.content }}</text>
-              </view>
-              <text class="list-item-tag list-item-tag-reminder pill">{{ item.typeLabel || "提醒" }}</text>
+            <view class="todo-tab" :class="{ 'active': todoTab === 1 }" @tap="todoTab = 1">
+              <text class="todo-tab-text">提醒</text>
+              <view v-if="pendingReminders.length > 0" class="todo-tab-badge">{{ pendingReminders.length }}</view>
             </view>
           </view>
         </view>
-      </view>
-
-      <!-- 今日目标 -->
-      <view class="section-card card" v-if="todayGoals.length > 0">
-        <view class="section-card-head">
-          <view class="section-title-wrap">
-            <view class="section-icon section-icon-goal">
-              <image class="icon-img" src="/static/tabbar/mubiao.png" mode="widthFix" />
-            </view>
-            <text class="section-title">今日目标</text>
+        <!-- 目标列表 -->
+        <view v-if="todoTab === 0" class="section-card-body">
+          <view v-if="pendingGoals.length === 0" class="todo-empty">
+            <text class="todo-empty-text">暂无待完成目标</text>
           </view>
-          <navigator class="section-link" url="/pages/goal/index">查看 ›</navigator>
-        </view>
-        <view class="section-card-body">
-          <view class="list-body">
-            <view v-for="item in todayGoals" :key="item.id" class="list-item">
+          <view v-else class="list-body">
+            <view v-for="item in pendingGoals" :key="item.id" class="list-item">
               <view class="list-item-main">
                 <text class="list-item-title">{{ item.goalLabel }}</text>
                 <view class="goal-progress-row">
@@ -172,11 +155,28 @@
                   <text class="goal-progress-num">{{ item.progress }}%</text>
                 </view>
               </view>
-              <view class="goal-status-badge pill" :class="item.progress >= 100 ? 'goal-badge-done' : 'goal-badge-going'">
-                <text class="goal-status-text">{{ item.progress >= 100 ? '达成' : '进行中' }}</text>
+              <view class="goal-status-badge pill goal-badge-going">
+                <text class="goal-status-text">进行中</text>
               </view>
             </view>
           </view>
+          <navigator class="todo-more" url="/pages/goal/index">查看全部目标 ›</navigator>
+        </view>
+        <!-- 提醒列表 -->
+        <view v-if="todoTab === 1" class="section-card-body">
+          <view v-if="pendingReminders.length === 0" class="todo-empty">
+            <text class="todo-empty-text">暂无待处理提醒</text>
+          </view>
+          <view v-else class="list-body">
+            <view v-for="item in pendingReminders" :key="item.id" class="list-item">
+              <view class="list-item-main">
+                <text class="list-item-title">{{ item.title }}</text>
+                <text class="list-item-meta">{{ item.time }} · {{ item.content }}</text>
+              </view>
+              <text class="list-item-tag list-item-tag-reminder pill">{{ item.typeLabel || "提醒" }}</text>
+            </view>
+          </view>
+          <navigator class="todo-more" url="/pages/reminders/index">查看全部提醒 ›</navigator>
         </view>
       </view>
 
@@ -284,10 +284,17 @@ export default {
       dietCaloriesToday: 0,
       dietCaloriesYesterday: 0,
       weightToday: 0,
-      weightYesterday: 0
+      weightYesterday: 0,
+      todoTab: 0
     };
   },
   computed: {
+    pendingGoals() {
+      return this.todayGoals.filter(item => item.progress < 100);
+    },
+    pendingReminders() {
+      return this.reminders.filter(item => item.status !== 1);
+    },
     showPeriod() {
       const sex = this.userSex || uni.getStorageSync("userSex") || "";
       return String(sex).includes("女");
@@ -448,13 +455,14 @@ export default {
         this.reminders = raw
           .filter(item => Number(item.type) !== 4)
           .filter(item => this.isTodayReminder(item.remindTime))
-          .slice(0, 3)
+          .slice(0, 5)
           .map(item => ({
           id: item.id,
           title: item.title,
           content: item.content || "提醒事项",
           time: this.formatReminderTime(item.remindTime),
-          typeLabel: this.reminderTagLabel(item.type)
+          typeLabel: this.reminderTagLabel(item.type),
+          status: item.status || 0
         }));
       } catch (err) { this.reminders = []; }
 
@@ -1290,8 +1298,75 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 16px 14px;
+  padding: 12px 16px;
   border-bottom: 1px solid #E9E1D8;
+}
+
+/* 今日待办 Tab 样式 */
+.todo-tabs {
+  display: flex;
+  flex: 1;
+  gap: 16rpx;
+}
+
+.todo-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 10rpx 24rpx;
+  border-radius: var(--radius-pill);
+  background: #F5F3F0;
+  transition: all 0.2s;
+}
+
+.todo-tab.active {
+  background: #A23F00;
+}
+
+.todo-tab-text {
+  font-size: 26rpx;
+  color: #5C5C5C;
+  font-weight: 600;
+}
+
+.todo-tab.active .todo-tab-text {
+  color: #FFFFFF;
+}
+
+.todo-tab-badge {
+  font-size: 20rpx;
+  color: #FFFFFF;
+  background: rgba(0,0,0,0.15);
+  padding: 2rpx 12rpx;
+  border-radius: 16rpx;
+  min-width: 32rpx;
+  text-align: center;
+}
+
+.todo-tab.active .todo-tab-badge {
+  background: rgba(255,255,255,0.3);
+}
+
+.todo-empty {
+  padding: 40rpx 0;
+  text-align: center;
+}
+
+.todo-empty-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.todo-more {
+  display: block;
+  text-align: center;
+  padding: 20rpx 0;
+  font-size: 24rpx;
+  color: #A23F00;
+  border-top: 1px solid #E9E1D8;
+  margin-top: 12rpx;
 }
 
 .section-title-wrap {

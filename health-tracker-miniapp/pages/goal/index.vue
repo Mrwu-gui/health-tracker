@@ -76,36 +76,112 @@
         </view>
       </section>
 
-      <!-- Goals List Header -->
-      <view class="list-header">
-        <text class="list-title">我的健康目标</text>
-        <text class="list-subtitle">进行中</text>
+      <!-- 目标列表（不分组） -->
+      <view v-if="goals.length > 0" class="goal-section">
+        <view class="list-header">
+          <text class="list-title">目标列表</text>
+          <text class="list-subtitle">{{ goals.length }}项</text>
+        </view>
+        <view class="goals-list">
+          <view v-for="item in goals" :key="item.id" class="goal-card card" @tap="openEdit(item)">
+            <view class="goal-header">
+              <view class="goal-icon-wrapper">
+                <image class="goal-icon-img" :src="getGoalIcon(item.goalType)" mode="aspectFit" />
+              </view>
+              <view class="goal-meta">
+                <view class="goal-title-row">
+                  <text class="goal-name">{{ item.goalLabel }}</text>
+                  <text class="goal-status-tag" :class="{
+                    'ongoing': getGoalStatusTag(item) === '进行中',
+                    'done': getGoalStatusTag(item) === '已完成',
+                    'expired': getGoalStatusTag(item) === '已过期',
+                    'abandoned': getGoalStatusTag(item) === '已放弃'
+                  }">{{ getGoalStatusTag(item) }}</text>
+                </view>
+                <text class="goal-progress-text">{{ item.currentValue || 0 }} / {{ item.targetValue }}{{ goalUnitSuffix(item.goalType) }}</text>
+              </view>
+            </view>
+            <view class="goal-progress">
+              <view class="progress-bar">
+                <view class="progress-fill" :class="'progress-fill-' + item.goalType" :style="{ width: `${item.progress}%` }"></view>
+              </view>
+              <view class="progress-info">
+                <text class="progress-status">{{ getProgressStatus(item.progress) }}</text>
+                <text class="progress-percent">{{ item.progress }}%</text>
+              </view>
+            </view>
+            <view v-if="getGoalStatusTag(item) === '进行中'" class="goal-action-trigger" @tap.stop="openGoalAction(item)">
+              <view class="action-dots">
+                <view class="action-dot"></view>
+                <view class="action-dot"></view>
+                <view class="action-dot"></view>
+              </view>
+            </view>
+          </view>
+        </view>
       </view>
 
-      <!-- Goals List -->
-      <view class="goals-list">
-        <view v-for="item in goals" :key="item.id" class="goal-card card" :class="{ 'goal-card-disabled': item.status === 3 || isGoalExpired(item) }" @tap="openEdit(item)">
-          <view class="goal-header">
-            <view class="goal-icon-wrapper">
-              <image class="goal-icon-img" :src="getGoalIcon(item.goalType)" mode="aspectFit" />
+      <!-- 自定义操作菜单 -->
+      <view v-if="showActionSheet" class="action-sheet-mask" @tap="closeActionSheet">
+        <view class="action-sheet" @tap.stop>
+          <view class="action-sheet-title">目标操作</view>
+          <view class="action-sheet-subtitle">请确认您对当前目标的处理状态</view>
+          
+          <!-- 任务预览卡片 -->
+          <view v-if="actionItem" class="action-preview-card">
+            <view class="action-preview-icon-wrapper">
+              <image class="action-preview-icon" :src="getGoalIcon(actionItem.goalType)" mode="aspectFit" />
             </view>
-            <view class="goal-meta">
-              <view class="goal-title-row">
-                <text class="goal-name">{{ item.goalLabel }}</text>
-                <text class="goal-daily-tag">{{ item.periodLabel }}</text>
-              </view>
-              <text class="goal-progress-text">{{ item.currentValue || 0 }} / {{ item.targetValue }}{{ goalUnitSuffix(item.goalType) }}</text>
+            <view class="action-preview-info">
+              <text class="action-preview-status">进行中</text>
+              <text class="action-preview-title">{{ actionItem.goalLabel }} ({{ actionItem.currentValue }}/{{ actionItem.targetValue }}{{ goalUnitSuffix(actionItem.goalType) }})</text>
+            </view>
+            <view class="action-preview-time">
+              <text class="action-preview-time-label">{{ actionItem.periodLabel }}</text>
+              <text class="action-preview-time-value">{{ actionItem.countdown }}</text>
             </view>
           </view>
 
-          <view class="goal-progress" v-if="item.status !== 3 && !isGoalExpired(item)">
-            <view class="progress-bar">
-              <view class="progress-fill" :class="'progress-fill-' + item.goalType" :style="{ width: `${item.progress}%` }"></view>
+          <view class="action-sheet-buttons">
+            <view class="action-btn-primary" @tap="handleGoalAction(0)">
+              <text class="action-btn-icon">✓</text>
+              <text class="action-btn-label">标记为已完成</text>
             </view>
-            <view class="progress-info">
-              <text class="progress-status">{{ getProgressStatus(item.progress) }}</text>
-              <text class="progress-percent">{{ item.progress }}%</text>
+            <view class="action-btn-secondary" @tap="handleGoalAction(1)">
+              <text class="action-btn-icon">⏱</text>
+              <text class="action-btn-label">延期目标</text>
             </view>
+            <view class="action-btn-tertiary" @tap="handleGoalAction(2)">
+              <text class="action-btn-icon">✕</text>
+              <text class="action-btn-label">放弃目标</text>
+            </view>
+          </view>
+          <view class="action-sheet-cancel" @tap="closeActionSheet">取消</view>
+        </view>
+      </view>
+
+      <!-- 延期日期选择弹窗 -->
+      <view v-if="showDelayModal" class="modal-mask" @tap="closeDelayModal">
+        <view class="modal-sheet" @tap.stop>
+          <view class="modal-sheet-bar" />
+          <view class="modal-sheet-head">
+            <text class="modal-sheet-title">延期目标</text>
+            <text class="modal-sheet-close" @tap="closeDelayModal">×</text>
+          </view>
+          <view class="modal-sheet-body">
+            <view class="field-group">
+              <text class="field-title">延期至</text>
+              <picker mode="date" :value="delayDate" @change="onDelayDateChange" class="input-main">
+                <view class="input-content">{{ delayDate || '请选择日期' }}</view>
+              </picker>
+            </view>
+            <view class="field-group">
+              <text class="field-title">提醒时间</text>
+              <picker mode="time" :value="delayTime" @change="onDelayTimeChange" class="input-main">
+                <view class="input-content">{{ delayTime || '请选择时间' }}</view>
+              </picker>
+            </view>
+            <button class="submit-btn pill" @tap="submitDelay" :disabled="delaySaving">{{ delaySaving ? "保存中..." : "确定延期" }}</button>
           </view>
         </view>
       </view>
@@ -186,6 +262,13 @@ export default {
       showModal: false,
       saving: false,
       editingId: null,
+      showDelayModal: false,
+      delayItem: null,
+      delayDate: "",
+      delayTime: "",
+      delaySaving: false,
+      actionItem: null,
+      showActionSheet: false,
       goalTypes: [
         { label: "步数", value: 1, icon: "/static/tabbar/sport.png" },
         { label: "体重", value: 2, icon: "/static/tabbar/weight.png" },
@@ -263,19 +346,10 @@ export default {
     },
     getGoalIcon(goalType) {
       switch (Number(goalType)) {
-        case 1: return "/static/tabbar/sport.png";
-        case 2: return "/static/tabbar/weight.png";
-        case 3: return "/static/tabbar/water_h.png";
-        case 4: return "/static/tabbar/sleep.png";
-        default: return "/static/tabbar/goal.png";
-      }
-    },
-    getTypeIcon(goalType) {
-      switch (Number(goalType)) {
-        case 1: return "/static/tabbar/sport.png";
-        case 2: return "/static/tabbar/weight.png";
-        case 3: return "/static/tabbar/water_h.png";
-        case 4: return "/static/tabbar/sleep.png";
+        case 1: return "/static/tabbar/sport_s.png";
+        case 2: return "/static/tabbar/weight_s.png";
+        case 3: return "/static/tabbar/water_s.png";
+        case 4: return "/static/tabbar/sleep_s.png";
         default: return "/static/tabbar/goal.png";
       }
     },
@@ -285,10 +359,104 @@ export default {
       if (progress >= 50) return "进展顺利";
       return "稳定保持";
     },
+    getGoalStatusTag(item) {
+      if (!item) return "进行中";
+      if (item.status === 2) return "已完成";
+      if (item.status === 3) return "已放弃";
+      if (this.isGoalExpired(item)) return "已过期";
+      return "进行中";
+    },
+    statusClass(tag) {
+      switch (tag) {
+        case "已完成":
+          return "done";
+        case "已放弃":
+          return "abandoned";
+        case "已过期":
+          return "expired";
+        default:
+          return "ongoing";
+      }
+    },
     isGoalExpired(item) {
       if (!item.endDate) return false;
       const endDate = new Date(item.endDate.replace(/-/g, "/"));
       return endDate < new Date();
+    },
+    completeGoal(item) {
+      uni.showModal({
+        title: "确认完成",
+        content: `确定完成「${item.goalLabel}」目标吗？`,
+        success: (res) => {
+          if (res.confirm) {
+            const userId = uni.getStorageSync("userId") || 1;
+            request("/api/goal/update", "POST", {
+              id: item.id,
+              userId,
+              status: 2,
+              goalType: item.goalType,
+              targetValue: item.targetValue,
+              currentValue: item.currentValue,
+              period: item.periodValue
+            }).then(() => {
+              uni.showToast({ title: "目标已完成", icon: "success" });
+              this.fetchGoals();
+            }).catch(() => {
+              uni.showToast({ title: "操作失败", icon: "none" });
+            });
+          }
+        }
+      });
+    },
+    delayGoal(item) {
+      uni.showModal({
+        title: "确认延期",
+        content: `确定延期「${item.goalLabel}」目标吗？`,
+        success: (res) => {
+          if (res.confirm) {
+            const userId = uni.getStorageSync("userId") || 1;
+            request("/api/goal/update", "POST", {
+              id: item.id,
+              userId,
+              status: 1,
+              goalType: item.goalType,
+              targetValue: item.targetValue,
+              currentValue: item.currentValue,
+              period: item.periodValue
+            }).then(() => {
+              uni.showToast({ title: "已延期", icon: "success" });
+              this.fetchGoals();
+            }).catch(() => {
+              uni.showToast({ title: "操作失败", icon: "none" });
+            });
+          }
+        }
+      });
+    },
+    ignoreGoal(item) {
+      uni.showModal({
+        title: "确认放弃",
+        content: `确定放弃「${item.goalLabel}」目标吗？`,
+        success: (res) => {
+          if (res.confirm) {
+            const userId = uni.getStorageSync("userId") || 1;
+            request("/api/goal/update", "POST", {
+              id: item.id,
+              userId,
+              status: 3,
+              goalType: item.goalType,
+              targetValue: item.targetValue,
+              currentValue: item.currentValue,
+              period: item.periodValue
+            }).then(() => {
+              uni.showToast({ title: "已放弃", icon: "success" });
+              this.fetchGoals();
+            }).catch(() => {
+              uni.showToast({ title: "操作失败", icon: "none" });
+            });
+          }
+        }
+      });
     },
     getPlaceholder(goalType) {
       switch (Number(goalType)) {
@@ -345,6 +513,10 @@ export default {
     },
     openEdit(item) {
       if (!item) return;
+      // 已过期/已放弃/已完成的项不能编辑
+      if (item.status === 3 || item.status === 2 || this.isGoalExpired(item)) {
+        return;
+      }
       this.editingId = item.id;
       this.showModal = true;
       this.form = {
@@ -353,6 +525,85 @@ export default {
         targetValue: item.targetValue,
         currentValue: item.currentValue
       };
+    },
+    openGoalAction(item) {
+      if (!item) return;
+      // 已过期/已放弃/已完成的项不能操作
+      if (item.status === 3 || item.status === 2 || this.isGoalExpired(item)) {
+        return;
+      }
+      this.actionItem = item;
+      this.showActionSheet = true;
+    },
+    closeActionSheet() {
+      this.showActionSheet = false;
+      this.actionItem = null;
+    },
+    handleGoalAction(index) {
+      const item = this.actionItem;
+      this.closeActionSheet();
+      if (index === 0) {
+        this.completeGoal(item);
+      } else if (index === 1) {
+        this.openDelayModal(item);
+      } else if (index === 2) {
+        this.ignoreGoal(item);
+      }
+    },
+    openDelayModal(item) {
+      if (!item) return;
+      this.delayItem = item;
+      // 设置初始延期日期
+      const now = new Date();
+      now.setDate(now.getDate() + 1);
+      this.delayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      this.delayTime = "09:00";
+      this.showDelayModal = true;
+    },
+    closeDelayModal() {
+      this.showDelayModal = false;
+      this.delayItem = null;
+    },
+    onDelayDateChange(e) {
+      this.delayDate = e.detail.value || "";
+    },
+    onDelayTimeChange(e) {
+      this.delayTime = e.detail.value || "";
+    },
+    submitDelay() {
+      if (!this.delayItem || !this.delayItem.id) {
+        this.closeDelayModal();
+        return;
+      }
+      if (!this.delayDate || !this.delayTime) {
+        uni.showToast({ title: "请选择日期和时间", icon: "none" });
+        return;
+      }
+      // 验证时间不能是过去的时间
+      const selectedDateTime = new Date(`${this.delayDate} ${this.delayTime}`);
+      if (selectedDateTime <= new Date()) {
+        uni.showToast({ title: "请选择未来的时间", icon: "none" });
+        return;
+      }
+      const userId = uni.getStorageSync("userId") || 1;
+      this.delaySaving = true;
+      request("/api/goal/update", "POST", {
+        id: this.delayItem.id,
+        userId,
+        endDate: this.delayDate,
+        goalType: this.delayItem.goalType,
+        targetValue: this.delayItem.targetValue,
+        currentValue: this.delayItem.currentValue,
+        period: this.delayItem.periodValue
+      }).then(() => {
+        uni.showToast({ title: "已延期", icon: "success" });
+        this.closeDelayModal();
+        this.fetchGoals();
+      }).catch(() => {
+        uni.showToast({ title: "延期失败", icon: "none" });
+      }).finally(() => {
+        this.delaySaving = false;
+      });
     },
     closeModal() {
       this.showModal = false;
@@ -527,6 +778,7 @@ export default {
 
 .overview-detail {
   display: flex;
+  justify-content: center;
   gap: 20rpx;
 }
 
@@ -610,6 +862,64 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 20rpx;
+}
+
+/* 目标分组 */
+.goal-section {
+  margin-bottom: 32rpx;
+}
+
+.goal-section:last-child {
+  margin-bottom: 0;
+}
+
+/* 已完成卡片 */
+.goal-card-done {
+  opacity: 0.8;
+  background: #F0FDF4;
+  border-color: #86EFAC;
+}
+
+/* 已过期卡片 */
+.goal-card-expired {
+  opacity: 0.7;
+  background: #FEF2F2;
+  border-color: #FECACA;
+}
+
+/* 已放弃卡片 */
+.goal-card-abandoned {
+  opacity: 0.6;
+  background: #F5F5F5;
+  border-color: #D4D4D4;
+}
+
+/* 状态标签 */
+.goal-status-tag {
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+  font-weight: 500;
+}
+
+.goal-status-tag.done {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.goal-status-tag.expired {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.goal-status-tag.abandoned {
+  background: #E5E5E5;
+  color: #737373;
+}
+
+.goal-status-tag.ongoing {
+  background: #FFF4ED;
+  color: #A23F00;
 }
 
 /* Empty Page */
@@ -768,6 +1078,7 @@ export default {
   background: #ffffff;
   border-radius: var(--radius-card);
   padding: 24rpx;
+  padding-right: 80rpx;
   display: flex;
   flex-direction: column;
   gap: 16rpx;
@@ -777,6 +1088,7 @@ export default {
   overflow: hidden;
   box-sizing: border-box;
   width: 100%;
+  position: relative;
 }
 
 .goal-card:active {
@@ -806,7 +1118,6 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #FFF4ED;
   border-radius: 20rpx;
 }
 
@@ -844,7 +1155,7 @@ export default {
 
 .goal-progress-text {
   font-size: 24rpx;
-  color: #A23F00;
+  color: #1a1c1a;
   font-weight: 500;
 }
 
@@ -882,6 +1193,278 @@ export default {
 /* Progress Section */
 .goal-progress {
   margin-top: 16rpx;
+}
+
+/* 操作按钮 */
+.goal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 20rpx;
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1px solid #E9E1D8;
+}
+
+.goal-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 16rpx 28rpx;
+  border-radius: var(--radius-pill);
+  font-size: 24rpx;
+  font-weight: 600;
+  min-width: 140rpx;
+}
+
+.goal-action-btn.complete {
+  background: #A23F00;
+  color: #fff;
+}
+
+.goal-action-btn.delay {
+  background: #FFF4ED;
+  color: #A23F00;
+  border: 1px solid #E9E1D8;
+}
+
+.goal-action-btn.ignore {
+  background: #F5F5F5;
+  color: #757575;
+}
+
+.goal-action-icon {
+  font-size: 28rpx;
+}
+
+.goal-action-text {
+  font-size: 24rpx;
+}
+
+/* 操作触发按钮 */
+.goal-action-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64rpx;
+  height: 64rpx;
+  position: absolute;
+  right: 20rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FFF4ED 0%, #FFEBE0 100%);
+  box-shadow: 0 4rpx 12rpx rgba(162, 63, 0, 0.08);
+  border: 1px solid rgba(162, 63, 0, 0.1);
+}
+
+.action-dots {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  align-items: center;
+}
+
+.action-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: #A23F00;
+}
+
+.goal-action-trigger:active {
+  transform: translateY(-50%) scale(0.95);
+  background: linear-gradient(135deg, #FFE8D6 0%, #FFDDD0 100%);
+}
+
+/* 自定义操作菜单 */
+.action-sheet-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 300;
+}
+
+.action-sheet {
+  width: 100%;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 40rpx 40rpx calc(24rpx + env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+
+.action-sheet-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1a1c1a;
+  text-align: center;
+  margin-bottom: 8rpx;
+}
+
+.action-sheet-subtitle {
+  font-size: 22rpx;
+  color: #8B7355;
+  text-align: center;
+  margin-bottom: 28rpx;
+}
+
+/* 预览卡片 */
+.action-preview-card {
+  background: #F5F5F5;
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 28rpx;
+}
+
+.action-preview-icon-wrapper {
+  width: 64rpx;
+  height: 64rpx;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #E9E1D8;
+}
+
+.action-preview-icon {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.action-preview-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.action-preview-status {
+  font-size: 18rpx;
+  color: #8B7355;
+}
+
+.action-preview-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1a1c1a;
+}
+
+.action-preview-time {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4rpx;
+}
+
+.action-preview-time-label {
+  font-size: 18rpx;
+  color: #8B7355;
+}
+
+.action-preview-time-value {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #A23F00;
+}
+
+/* 操作按钮 */
+.action-sheet-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.action-btn-primary {
+  width: 100%;
+  height: 80rpx;
+  background: linear-gradient(135deg, #A23F00 0%, #FA7025 100%);
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  box-shadow: 0 6rpx 20rpx rgba(162, 63, 0, 0.3);
+}
+
+.action-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.action-btn-secondary {
+  width: 100%;
+  height: 80rpx;
+  background: #fff;
+  border: 2rpx solid #E9E1D8;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+
+.action-btn-secondary:active {
+  background: #FAF8F5;
+}
+
+.action-btn-tertiary {
+  width: 100%;
+  height: 80rpx;
+  background: #fff;
+  border: 2rpx solid #FEE2E2;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+
+.action-btn-tertiary .action-btn-icon,
+.action-btn-tertiary .action-btn-label {
+  color: #EF4444;
+}
+
+.action-btn-tertiary:active {
+  background: #FEF2F2;
+}
+
+.action-btn-icon {
+  font-size: 24rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+.action-btn-secondary .action-btn-icon {
+  color: #1a1c1a;
+}
+
+.action-btn-label {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #fff;
+}
+
+.action-btn-secondary .action-btn-label {
+  color: #1a1c1a;
+}
+
+.action-sheet-cancel {
+  font-size: 26rpx;
+  color: #8B7355;
+  text-align: center;
+  padding: 20rpx 0;
+  font-weight: 500;
+}
+
+.action-sheet-cancel:active {
+  color: #A23F00;
 }
 
 .progress-bar {

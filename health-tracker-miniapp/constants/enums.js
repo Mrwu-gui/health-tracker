@@ -1,8 +1,7 @@
 export const REMINDER_TYPE = {
   EXERCISE: 1,
   DIET: 2,
-  SLEEP: 3,
-  MEDICATION: 4
+  SLEEP: 3
 };
 
 export const REMINDER_STATUS = {

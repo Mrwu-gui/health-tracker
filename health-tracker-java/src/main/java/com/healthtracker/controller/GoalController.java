@@ -30,7 +30,7 @@ public class GoalController {
         goal.setTargetValue(request.getTargetValue());
         goal.setCurrentValue(0);
         goal.setPeriod(request.getPeriod());
-        goal.setStartDate(request.getStartDate());
+        goal.setStartDate(request.getStartDate() == null ? java.time.LocalDate.now() : request.getStartDate());
         goal.setEndDate(request.getEndDate());
         goal.setStatus(request.getStatus() == null ? 1 : request.getStatus());
         goal.setAiStrategy(request.getAiStrategy());

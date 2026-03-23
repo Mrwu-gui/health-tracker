@@ -72,9 +72,17 @@ yuanqi:
   appkey: ${YUANQI_APPKEY:}
 
 ai:
+  provider: ${AI_PROVIDER:yuanqi}
   http:
     connect-timeout-seconds: ${AI_HTTP_CONNECT_TIMEOUT_SECONDS:10}
     read-timeout-seconds: ${AI_HTTP_READ_TIMEOUT_SECONDS:60}
+
+dashscope:
+  app-id: ${DASHSCOPE_APP_ID:}
+  api-key: ${DASHSCOPE_API_KEY:}
+  app-base-url: ${DASHSCOPE_APP_BASE_URL:https://dashscope.aliyuncs.com/api/v1/apps}
+  compatible-base-url: ${DASHSCOPE_COMPATIBLE_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+  vision-model: ${DASHSCOPE_VISION_MODEL:qwen3-vl-flash}
 
 tencent:
   asr:

@@ -29,6 +29,15 @@ public class DashscopeAiProvider implements AiProvider {
     @Value("${dashscope.app-base-url:https://dashscope.aliyuncs.com/api/v1/apps}")
     private String appBaseUrl;
 
+    @Value("${dashscope.compatible-base-url:https://dashscope.aliyuncs.com/compatible-mode/v1}")
+    private String compatibleBaseUrl;
+
+    @Value("${dashscope.chat-model:qwen3-vl-flash}")
+    private String chatModel;
+
+    @Value("${dashscope.use-compatible:false}")
+    private boolean useCompatible;
+
     public DashscopeAiProvider(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
@@ -41,15 +50,15 @@ public class DashscopeAiProvider implements AiProvider {
 
     @Override
     public AiProviderResponse chat(AiProviderRequest request) throws Exception {
-        if (appId == null || appId.isBlank()) {
-            throw new IllegalArgumentException("AI 配置缺失");
-        }
         if (request.getImageUrl() != null && !request.getImageUrl().isBlank()) {
             throw new IllegalArgumentException("当前模型暂不支持图片识别");
         }
         String key = (apiKey == null || apiKey.isBlank()) ? System.getenv("DASHSCOPE_API_KEY") : apiKey;
         if (key == null || key.isBlank()) {
             throw new IllegalArgumentException("DASHSCOPE_API_KEY 未配置");
+        }
+        if (useCompatible || appId == null || appId.isBlank()) {
+            return chatCompatible(request, key);
         }
         Map<String, Object> input = new HashMap<>();
         input.put("prompt", request.getPrompt());
@@ -67,6 +76,28 @@ public class DashscopeAiProvider implements AiProvider {
         return new AiProviderResponse(text == null ? "" : text);
     }
 
+    private AiProviderResponse chatCompatible(AiProviderRequest request, String key) throws Exception {
+        if (chatModel == null || chatModel.isBlank()) {
+            throw new IllegalArgumentException("DASHSCOPE_CHAT_MODEL 未配置");
+        }
+        Map<String, Object> message = new HashMap<>();
+        message.put("role", "user");
+        message.put("content", request.getPrompt());
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("model", chatModel);
+        payload.put("messages", new Object[]{message});
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(key);
+
+        String url = compatibleBaseUrl + "/chat/completions";
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+        String text = extractCompatibleText(response.getBody());
+        return new AiProviderResponse(text == null ? "" : text);
+    }
+
     private String extractText(String body) throws Exception {
         if (body == null || body.isBlank()) return "";
         JsonNode root = objectMapper.readTree(body);
@@ -75,5 +106,15 @@ public class DashscopeAiProvider implements AiProvider {
         JsonNode textNode = output.path("text");
         if (textNode.isTextual()) return textNode.asText();
         return "";
+    }
+
+    private String extractCompatibleText(String body) throws Exception {
+        if (body == null || body.isBlank()) return "";
+        JsonNode root = objectMapper.readTree(body);
+        JsonNode choices = root.path("choices");
+        if (!choices.isArray() || choices.isEmpty()) return "";
+        JsonNode message = choices.get(0).path("message");
+        JsonNode content = message.path("content");
+        return content.isTextual() ? content.asText() : "";
     }
 }

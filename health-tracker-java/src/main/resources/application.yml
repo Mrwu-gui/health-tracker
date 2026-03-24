@@ -83,6 +83,8 @@ dashscope:
   api-key: ${DASHSCOPE_API_KEY:}
   app-base-url: ${DASHSCOPE_APP_BASE_URL:https://dashscope.aliyuncs.com/api/v1/apps}
   compatible-base-url: ${DASHSCOPE_COMPATIBLE_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+  chat-model: ${DASHSCOPE_CHAT_MODEL:qwen3-vl-flash}
+  use-compatible: ${DASHSCOPE_USE_COMPATIBLE:false}
   vision-model: ${DASHSCOPE_VISION_MODEL:qwen3-vl-flash}
 
 # tencent asr (disabled)

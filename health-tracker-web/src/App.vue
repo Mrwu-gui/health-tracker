@@ -12,7 +12,7 @@
     <template v-else>
       <aside class="sidebar">
         <div class="sidebar-brand">
-          <span class="logo">智康AI后台</span>
+          <img src="/logo.png" alt="智康AI" class="logo-img" />
         </div>
         <nav class="sidebar-menu">
           <router-link to="/admin/users" class="sidebar-item" :class="{ active: route.path === '/admin/users' }">用户管理</router-link>
@@ -30,6 +30,12 @@
         <router-view />
       </main>
     </template>
+
+    <div class="footer">
+      <a href="https://beian.miit.gov.cn" target="_blank" rel="noopener noreferrer">
+        晋ICP备2026003386号
+      </a>
+    </div>
   </div>
 </template>
 
@@ -66,6 +72,23 @@ body {
 
 .app {
   min-height: 100vh;
+}
+
+.footer {
+  text-align: center;
+  padding: 24px 0 32px;
+  color: #8c8c8c;
+  font-size: 12px;
+}
+
+.footer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: #666;
+  text-decoration: underline;
 }
 
 /* 用户端导航 */
@@ -164,10 +187,9 @@ body {
   border-bottom: 1px solid #333;
 }
 
-.sidebar-brand .logo {
-  font-size: 16px;
-  font-weight: 600;
-  color: #fff;
+.sidebar-brand .logo-img {
+  height: 40px;
+  width: auto;
 }
 
 .sidebar-menu {

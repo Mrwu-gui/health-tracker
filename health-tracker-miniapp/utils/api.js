@@ -1,7 +1,8 @@
-const PRIMARY_BASE_URL =
+const ENV_BASE_URL =
+  (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_API_BASE) ||
   process.env.UNI_APP_BASE_URL ||
-  process.env.VITE_API_BASE ||
-  "http://127.0.0.1:8080";
+  process.env.VITE_API_BASE;
+const PRIMARY_BASE_URL = ENV_BASE_URL || "http://127.0.0.1:8080";
 const FALLBACK_BASE_URL = "";
 export const API_BASE_URL = PRIMARY_BASE_URL;
 export function request(path, method = "GET", data = {}) {

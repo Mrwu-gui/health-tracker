@@ -8,28 +8,28 @@
       <view class="row">
         <view>
           <text class="name">微信订阅消息</text>
-          <text class="desc">运动、睡眠、用药提醒推送</text>
+          <text class="desc">{{ wxReady ? (settings.allowSubscribe ? '已订阅' : '未订阅') : '加载中...' }}</text>
         </view>
         <view class="row-actions">
           <button class="help" @tap="showWxInfo = true">?</button>
-          <button class="btn-dark" @tap="openWxAuth">去微信授权</button>
+          <switch :checked="wxReady ? settings.allowSubscribe : false" @change="toggleWxSubscribe" />
         </view>
       </view>
 
       <view class="row">
         <view>
           <text class="name">健康数据云端同步</text>
-          <text class="desc">支持 PC 端查看与管理</text>
+          <text class="desc">{{ wxReady ? (settings.allowCloudSync ? '已开启' : '已关闭') : '加载中...' }}</text>
         </view>
-        <switch :checked="settings.allowCloudSync" @change="toggle('allowCloudSync', $event)" />
+        <switch :checked="wxReady ? settings.allowCloudSync : false" @change="toggle('allowCloudSync', $event)" />
       </view>
 
       <view class="row">
         <view>
           <text class="name">家庭成员查看权限</text>
-          <text class="desc">允许家人查看关键指标与周报</text>
+          <text class="desc">{{ wxReady ? (settings.allowFamilyShare ? '已开启' : '已关闭') : '加载中...' }}</text>
         </view>
-        <switch :checked="settings.allowFamilyShare" @change="toggle('allowFamilyShare', $event)" />
+        <switch :checked="wxReady ? settings.allowFamilyShare : false" @change="toggle('allowFamilyShare', $event)" />
       </view>
     </view>
 
@@ -40,15 +40,13 @@
       </text>
     </view>
 
-    <button class="primary" @tap="save">保存设置</button>
-
     <view v-if="showWxInfo" class="modal-mask" @tap="showWxInfo = false">
       <view class="modal" @tap.stop>
         <text class="modal-title">订阅消息说明</text>
         <text class="modal-desc">
-          我们会在你允许的范围内发送运动、睡眠与用药提醒。你可随时在微信设置中取消授权。
+          开启后，我们会在你允许的范围内发送运动、睡眠与用药提醒。你可随时在微信设置中取消授权。
         </text>
-        <button class="primary" @tap="showWxInfo = false">我知道了</button>
+        <button class="modal-btn primary" @tap="showWxInfo = false">我知道了</button>
       </view>
     </view>
   </view>
@@ -56,37 +54,83 @@
 
 <script>
 import { request } from "../../utils/api";
+import { TEMPLATE_IDS } from "../../utils/subscribe";
 
 export default {
   data() {
     return {
       settings: {
+        allowSubscribe: false,
         allowCloudSync: true,
         allowFamilyShare: true
       },
-      showWxInfo: false
+      showWxInfo: false,
+      wxReady: false
     };
   },
   onLoad() {
     this.fetchSettings();
+  },
+  onReady() {
+    // 页面准备就绪后再显示开关
   },
   methods: {
     fetchSettings() {
       const userId = uni.getStorageSync("userId") || 1;
       request("/api/privacy/get", "GET", { userId })
         .then((data) => {
+          this.settings.allowSubscribe = data.allowSubscribe === 1;
           this.settings.allowCloudSync = data.allowCloudSync === 1;
           this.settings.allowFamilyShare = data.allowFamilyShare === 1;
         })
-        .catch(() => {});
+        .catch(() => {})
+        .finally(() => {
+          this.wxReady = true;
+        });
     },
     toggle(key, event) {
       this.settings[key] = event.detail.value;
+      this.saveSetting(key);
     },
-    save() {
+    toggleWxSubscribe(event) {
+      if (!this.wxReady) return;
+      const newValue = event.detail.value;
+      if (newValue === this.settings.allowSubscribe) return;
+      if (newValue) {
+        const tmplIds = Object.values(TEMPLATE_IDS).filter(Boolean);
+        if (!tmplIds.length) {
+          this.settings.allowSubscribe = false;
+          uni.showToast({ title: "未配置模板ID", icon: "none" });
+          return;
+        }
+        uni.requestSubscribeMessage({
+          tmplIds,
+          success: (res) => {
+            const accepted = tmplIds.some((id) => res[id] === "accept");
+            if (accepted) {
+              this.settings.allowSubscribe = true;
+              this.saveSetting("allowSubscribe");
+            } else {
+              this.settings.allowSubscribe = false;
+              uni.showToast({ title: "授权失败", icon: "none" });
+            }
+          },
+          fail: () => {
+            this.settings.allowSubscribe = false;
+            uni.showToast({ title: "授权失败", icon: "none" });
+          }
+        });
+      } else {
+        this.settings.allowSubscribe = false;
+        this.saveSetting("allowSubscribe");
+        uni.showToast({ title: "请到微信设置中取消", icon: "none" });
+      }
+    },
+    saveSetting(key) {
       const userId = uni.getStorageSync("userId") || 1;
       request("/api/privacy/update", "POST", {
         userId,
+        allowSubscribe: this.settings.allowSubscribe ? 1 : 0,
         allowCloudSync: this.settings.allowCloudSync ? 1 : 0,
         allowFamilyShare: this.settings.allowFamilyShare ? 1 : 0
       })
@@ -96,9 +140,6 @@ export default {
         .catch((err) => {
           uni.showToast({ title: err.message || "保存失败", icon: "none" });
         });
-    },
-    openWxAuth() {
-      uni.showToast({ title: "请在微信设置中授权", icon: "none" });
     }
   }
 };

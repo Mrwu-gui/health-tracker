@@ -7,9 +7,9 @@
   <style>
     body { font-family: sans-serif; padding: 24px; background: #f5f1eb; }
     .preview { margin: 20px 0; }
-    canvas { display: block; border-radius: 22px; box-shadow: 0 12px 32px rgba(245,158,11,0.35); }
-    button { padding: 12px 24px; font-size: 16px; background: #ea580c; color: #fff; border: none; border-radius: 12px; cursor: pointer; }
-    button:hover { background: #f59e0b; }
+    canvas { display: block; border-radius: 22px; box-shadow: 0 12px 32px rgba(162,63,0,0.35); }
+    button { padding: 12px 24px; font-size: 16px; background: #A23F00; color: #fff; border: none; border-radius: 12px; cursor: pointer; }
+    button:hover { background: #C45200; }
     p { color: #78716c; margin-top: 12px; }
   </style>
 </head>
@@ -44,8 +44,8 @@
 
     // 渐变背景
     const g = ctx.createLinearGradient(0, 0, size, size);
-    g.addColorStop(0, '#f59e0b');
-    g.addColorStop(1, '#ea580c');
+    g.addColorStop(0, '#C45200');
+    g.addColorStop(1, '#8B3400');
     roundRect(0, 0, size, size, radius);
     ctx.fillStyle = g;
     ctx.fill();

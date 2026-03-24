@@ -15,43 +15,71 @@
     },
     {
       "path": "pages/data/index",
-      "style": { "navigationBarTitleText": "分析" }
+      "style": {
+        "navigationBarTitleText": "分析"
+      }
     },
     {
       "path": "pages/ai/index",
-      "style": { "navigationBarTitleText": "智康AI" }
+      "style": {
+        "navigationBarTitleText": "智康AI"
+      }
     },
     {
       "path": "pages/goal/index",
-      "style": { "navigationBarTitleText": "目标" }
+      "style": {
+        "navigationBarTitleText": "目标"
+      }
     },
     {
       "path": "pages/reminders/index",
-      "style": { "navigationBarTitleText": "提醒" }
+      "style": {
+        "navigationBarTitleText": "提醒"
+      }
     },
     {
       "path": "pages/medications/index",
-      "style": { "navigationBarTitleText": "药物管理" }
+      "style": {
+        "navigationBarTitleText": "药物管理"
+      }
     },
     {
       "path": "pages/family/index",
-      "style": { "navigationBarTitleText": "家庭成员" }
+      "style": {
+        "navigationBarTitleText": "家庭成员"
+      }
     },
     {
       "path": "pages/period/index",
-      "style": { "navigationBarTitleText": "经期记录" }
+      "style": {
+        "navigationBarTitleText": "经期记录"
+      }
     },
     {
       "path": "pages/privacy/index",
-      "style": { "navigationBarTitleText": "授权与隐私" }
+      "style": {
+        "navigationBarTitleText": "授权与隐私"
+      }
     },
     {
       "path": "pages/record/index",
-      "style": { "navigationBarTitleText": "快速记录" }
+      "style": {
+        "navigationBarTitleText": "快速记录"
+      }
     },
     {
       "path": "pages/profile/index",
-      "style": { "navigationBarTitleText": "我的" }
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    },
+    {
+      "path": "pages/about/index",
+      "style": {
+        "navigationBarTitleText": "关于我们",
+        "navigationBarBackgroundColor": "#FAF9F6",
+        "navigationBarTextStyle": "black"
+      }
     },
     {
       "path": "pages/login/index",
@@ -70,11 +98,15 @@
     },
     {
       "path": "pages/agreement/user",
-      "style": { "navigationBarTitleText": "用户协议" }
+      "style": {
+        "navigationBarTitleText": "用户协议"
+      }
     },
     {
       "path": "pages/agreement/privacy",
-      "style": { "navigationBarTitleText": "隐私政策" }
+      "style": {
+        "navigationBarTitleText": "隐私政策"
+      }
     }
   ],
   "tabBar": {
@@ -111,14 +143,14 @@
       }
     ]
   },
-	"condition" : {
-		"current": 0,
-		"list": [
-			{
-				"name": "",
-				"path": "",
-				"query": ""
-			}
-		]
-	}
+  "condition": {
+    "current": 0,
+    "list": [
+      {
+        "name": "",
+        "path": "",
+        "query": ""
+      }
+    ]
+  }
 }

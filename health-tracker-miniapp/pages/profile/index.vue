@@ -67,23 +67,13 @@
 
     <!-- 数据与隐私卡片 -->
     <view class="menu-card card">
-      <view class="menu-item" @tap="goReports">
-        <view class="menu-icon icon-r">
-          <image class="icon-img" src="/static/tabbar/report.png" mode="widthFix"></image>
+      <navigator class="menu-item" url="/pages/about/index" hover-class="none">
+        <view class="menu-icon icon-a">
+          <image class="icon-img" src="/static/tabbar/hands.png" mode="widthFix"></image>
         </view>
         <view class="menu-content">
-          <text class="menu-title">报告中心</text>
-          <text class="menu-desc">周报 · 月报 · 导出 PDF</text>
-        </view>
-        <text class="menu-arrow">›</text>
-      </view>
-      <navigator class="menu-item" url="/pages/privacy/index" hover-class="none">
-        <view class="menu-icon icon-s">
-          <image class="icon-img" src="/static/tabbar/shield.png" mode="widthFix"></image>
-        </view>
-        <view class="menu-content">
-          <text class="menu-title">授权与隐私</text>
-          <text class="menu-desc">订阅消息 · 数据同步 · 权限控制</text>
+          <text class="menu-title">关于我们</text>
+          <text class="menu-desc">产品介绍 · 联系我们 · 备案信息</text>
         </view>
         <text class="menu-arrow">›</text>
       </navigator>
@@ -712,6 +702,13 @@ export default {
 	color: #059669;
 }
 
+
+/* 关于我们（icon-a）：淡橙色 */
+.menu-icon.icon-a {
+	border-radius: var(--radius-card);
+	background: #FFE8D6;
+	color: #C45200;
+}
 /* 经期记录（icon-p）：淡粉色 - 保持不变 */
 .menu-icon.icon-p {
 	border-radius: var(--radius-card);

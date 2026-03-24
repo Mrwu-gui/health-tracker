@@ -4,8 +4,10 @@ target/
 *.iml
 *.log
 *.env
+.env*.local
 .DS_Store
 **/application-local.yml
+**/application-dev.yml
 health-tracker-web/node_modules/
 health-tracker-web/dist/
 health-tracker-miniapp/node_modules/

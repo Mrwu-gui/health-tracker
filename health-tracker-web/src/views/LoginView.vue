@@ -1,351 +1,210 @@
 <template>
-  <div class="login-page">
-    <div class="login-card">
-      <div class="login-header">
-        <h1>智康AI</h1>
-        <p>选择登录方式</p>
-      </div>
-
-      <!-- 登录方式切换 -->
-      <div class="login-tabs">
-        <button 
-          :class="{ active: loginType === 'wechat' }" 
-          @click="loginType = 'wechat'"
-        >
-          微信扫码登录
-        </button>
-        <button 
-          :class="{ active: loginType === 'admin' }" 
-          @click="loginType = 'admin'"
-        >
-          后台管理登录
-        </button>
-      </div>
-
-      <!-- 微信扫码登录 -->
-      <div v-if="loginType === 'wechat'" class="wechat-login">
-        <div class="qr-container">
-          <img v-if="qrUrl" :src="qrUrl" alt="微信扫码登录" class="qr-code" />
-          <div v-else class="qr-loading">加载中...</div>
-        </div>
-        <p class="qr-tip">请使用微信扫描二维码登录</p>
-        <p v-if="scanStatus" class="scan-status" :class="scanStatus">
-          {{ scanStatus === 'success' ? '登录成功，正在跳转...' : '扫码成功，请确认' }}
-        </p>
-      </div>
-
-      <!-- 后台账号密码登录 -->
-      <div v-if="loginType === 'admin'" class="admin-login">
-        <div class="form-group">
-          <label>用户名</label>
-          <input 
-            type="text" 
-            v-model="username" 
-            placeholder="请输入用户名" 
-            @keyup.enter="handleAdminLogin"
+  <div class="login-page bg-surface font-body text-on-surface min-h-screen flex items-center justify-center p-6 selection:bg-primary-fixed">
+    <main class="w-full max-w-[1120px] grid md:grid-cols-2 bg-surface-container-lowest rounded-lg overflow-hidden amber-care-shadow min-h-[700px]">
+      <!-- Left Section: Lifestyle Illustration -->
+      <div class="relative hidden md:flex flex-col justify-between p-12 overflow-hidden bg-surface-container">
+        <div class="absolute inset-0 z-0">
+          <div class="absolute inset-0 bg-primary/5 mix-blend-multiply"></div>
+          <img 
+            alt="Lifestyle workspace with soft lighting" 
+            class="w-full h-full object-cover grayscale opacity-30" 
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRgdExs9QniuMgs1hcIjgNi_15jh1AmGgl9w5QwVn9PQtoK9HHiIr1NbBmncUY7pk3r-A4TfcUvZBGlvtdbB_u9HEBR1feu0tke21wGArOST5KZipO3OOlWYYJ16hFEqTzG-keqvT5KHXzrGCJbjZ8DRCcI9tvfacpEbccfTQir63141gUcEKxiBYVa5OhaSF7ewtamGhWOJJOCWV0WRtpiSI4dIB7qZglvCJuK0yeE4qALKDq3BFZbmvAh1yLOiTLAVOWO1OSHb8"
           />
         </div>
-        <div class="form-group">
-          <label>密码</label>
-          <input 
-            type="password" 
-            v-model="password" 
-            placeholder="请输入密码" 
-            @keyup.enter="handleAdminLogin"
-          />
+        <div class="relative z-10">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 amber-gradient rounded-full flex items-center justify-center shadow-lg shadow-primary/20">
+              <span class="material-symbols-outlined text-white text-xl">auto_awesome</span>
+            </div>
+            <span class="font-headline font-extrabold text-2xl tracking-tight text-on-surface">智康AI</span>
+          </div>
         </div>
-        <button class="login-btn" @click="handleAdminLogin" :disabled="logging">
-          {{ logging ? '登录中...' : '登录' }}
-        </button>
-        <p v-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
+        <div class="relative z-10 mt-auto">
+          <h1 class="font-headline text-4xl font-extrabold text-on-surface leading-tight tracking-tight mb-4">
+            开启您的<br/><span class="text-primary">智能健康伴侣</span>
+          </h1>
+          <p class="text-on-surface-variant text-lg max-w-sm leading-relaxed">
+            用 AI 开启您的智慧健康生活，为您提供温馨的全方位守护。
+          </p>
+          <div class="mt-8 flex gap-2">
+            <div class="w-12 h-1.5 bg-primary rounded-full"></div>
+            <div class="w-3 h-1.5 bg-outline-variant/30 rounded-full"></div>
+            <div class="w-3 h-1.5 bg-outline-variant/30 rounded-full"></div>
+          </div>
+        </div>
       </div>
-    </div>
+
+      <!-- Right Section: Login Form -->
+      <div class="flex flex-col items-center justify-center p-8 md:p-16">
+        <div class="w-full max-w-[360px]">
+          <div class="mb-10 text-center md:text-left">
+            <h2 class="font-headline text-3xl font-bold text-on-surface mb-2">欢迎回来</h2>
+            <p class="text-on-surface-variant">请登录您的智康AI账号</p>
+          </div>
+
+          <form class="space-y-6" @submit.prevent="handleLogin">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="username">用户名</label>
+              <div class="relative group">
+                <div class="absolute inset-y-0 left-5 flex items-center pointer-events-none text-on-surface-variant group-focus-within:text-primary transition-colors">
+                  <span class="material-symbols-outlined text-xl">person</span>
+                </div>
+                <input 
+                  v-model="form.username"
+                  class="w-full pl-14 pr-6 py-4 bg-surface-container-low border-0 rounded-full focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all text-on-surface placeholder:text-outline-variant" 
+                  id="username" 
+                  name="username" 
+                  placeholder="请输入您的账号" 
+                  type="text"
+                  :disabled="loading"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-on-surface-variant ml-1" for="password">密码</label>
+              <div class="relative group">
+                <div class="absolute inset-y-0 left-5 flex items-center pointer-events-none text-on-surface-variant group-focus-within:text-primary transition-colors">
+                  <span class="material-symbols-outlined text-xl">lock</span>
+                </div>
+                <input 
+                  v-model="form.password"
+                  class="w-full pl-14 pr-14 py-4 bg-surface-container-low border-0 rounded-full focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all text-on-surface placeholder:text-outline-variant" 
+                  id="password" 
+                  name="password" 
+                  placeholder="请输入您的密码" 
+                  :type="showPassword ? 'text' : 'password'"
+                  :disabled="loading"
+                  required
+                />
+                <button 
+                  type="button"
+                  class="absolute inset-y-0 right-5 flex items-center text-on-surface-variant hover:text-primary transition-colors"
+                  @click="showPassword = !showPassword"
+                >
+                  <span class="material-symbols-outlined text-xl">
+                    {{ showPassword ? 'visibility_off' : 'visibility' }}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div v-if="errorMsg" class="pt-2">
+              <p class="text-sm text-error text-center">{{ errorMsg }}</p>
+            </div>
+
+            <div class="pt-4">
+              <button 
+                class="w-full amber-gradient text-white font-headline font-bold py-5 rounded-full shadow-lg shadow-primary/25 hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed" 
+                type="submit"
+                :disabled="loading"
+              >
+                <span>{{ loading ? '登录中...' : '立即登录' }}</span>
+                <span v-if="!loading" class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              </button>
+            </div>
+
+            <!-- Alternative login options -->
+            <div class="pt-6 text-center space-y-3">
+              <p class="text-sm text-on-surface-variant">其他登录方式</p>
+              <div class="flex justify-center gap-4">
+                <button 
+                  type="button"
+                  class="text-sm text-primary hover:text-primary-fixed-dim transition-colors"
+                  @click="switchToWechat"
+                >
+                  微信扫码登录
+                </button>
+                <span class="text-outline-variant">|</span>
+                <button 
+                  type="button"
+                  class="text-sm text-secondary hover:text-secondary-fixed-dim transition-colors"
+                  @click="switchToAdmin"
+                >
+                  后台管理登录
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <div class="mt-16 text-center">
+            <p class="text-[10px] text-outline font-bold tracking-[0.2em] uppercase opacity-70">
+              ZIKING AI • SECURE PERSONAL HEALTH GATEWAY
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-6 opacity-40 pointer-events-none">
+      <span class="text-xs font-semibold text-on-surface-variant">隐私政策</span>
+      <span class="w-1 h-1 bg-outline-variant rounded-full"></span>
+      <span class="text-xs font-semibold text-on-surface-variant">服务条款</span>
+      <span class="w-1 h-1 bg-outline-variant rounded-full"></span>
+      <span class="text-xs font-semibold text-on-surface-variant">© 2024 智康AI</span>
+    </footer>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch, onUnmounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
-import { getWechatQR, wechatCallback, adminLogin, setToken, setAdminToken, setUserId, setUserInfo } from "../api";
+import { ref, reactive } from "vue";
+import { useRouter } from "vue-router";
+import { userLogin, setToken, setUserId, setUserInfo } from "../api";
 
 const router = useRouter();
-const route = useRoute();
 
-const loginType = ref("wechat");
-const qrUrl = ref("");
-const scanStatus = ref("");
-const pollingTimer = ref(null);
+const form = reactive({
+  username: "",
+  password: ""
+});
 
-const username = ref("");
-const password = ref("");
-const logging = ref(false);
+const showPassword = ref(false);
+const loading = ref(false);
 const errorMsg = ref("");
 
-// 获取微信二维码
-async function fetchQRCode() {
-  try {
-    const data = await getWechatQR();
-    qrUrl.value = data.qrUrl || data.url || data;
-    startPolling();
-  } catch (e) {
-    console.error("获取二维码失败:", e);
-    // mock数据用于演示
-    qrUrl.value = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=wechat_login_demo";
+// 处理普通用户登录
+async function handleLogin() {
+  if (!form.username || !form.password) {
+    errorMsg.value = "请输入用户名和密码";
+    return;
   }
-}
 
-// 轮询检查扫码状态
-function startPolling() {
-  if (pollingTimer.value) clearInterval(pollingTimer.value);
-  
-  pollingTimer.value = setInterval(async () => {
-    // 检查URL是否有code参数（微信回调）
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get("code");
-    
-    if (code) {
-      clearInterval(pollingTimer.value);
-      await handleWechatCallback(code);
-    }
-  }, 2000);
-}
+  loading.value = true;
+  errorMsg.value = "";
 
-// 处理微信回调
-async function handleWechatCallback(code) {
   try {
-    scanStatus.value = "success";
-    const data = await wechatCallback(code);
+    const data = await userLogin(form.username, form.password);
     
     if (data.token) {
       setToken(data.token);
       setUserId(data.userId);
-      setUserInfo(data.user);
-      
-      // 清除URL中的code参数
-      window.history.replaceState({}, "", window.location.pathname);
-      
-      // 跳转首页
-      setTimeout(() => router.push("/"), 1000);
+      setUserInfo(data.user || { username: form.username });
+      router.push("/");
     }
-  } catch (e) {
-    console.error("登录失败:", e);
-    scanStatus.value = "error";
-  }
-}
-
-// 后台登录
-async function handleAdminLogin() {
-  if (!username.value || !password.value) {
-    errorMsg.value = "请输入用户名和密码";
-    return;
-  }
-  
-  logging.value = true;
-  errorMsg.value = "";
-  
-  try {
-    const data = await adminLogin(username.value, password.value);
-    
-    if (data.token) {
-      setAdminToken(data.token);
-      setUserId(data.userId);
-      setUserInfo(data.user);
-      
-      // 跳转管理后台
-      router.push("/admin/users");
-    }
-  } catch (e) {
-    errorMsg.value = e.message || "登录失败，请检查用户名和密码";
+  } catch (error) {
+    errorMsg.value = error.message || "登录失败，请检查用户名和密码";
   } finally {
-    logging.value = false;
+    loading.value = false;
   }
 }
 
-// 监听登录类型切换
-watch(loginType, (type) => {
-  if (type === "wechat") {
-    fetchQRCode();
-  } else {
-    if (pollingTimer.value) clearInterval(pollingTimer.value);
-  }
-});
+// 切换到微信扫码登录
+function switchToWechat() {
+  // 这里可以跳转到微信扫码登录页面或显示二维码
+  // 暂时保持当前页面，可以添加状态切换
+  console.log("切换到微信扫码登录");
+  // 可以在此处添加微信登录逻辑
+}
 
-onMounted(() => {
-  // 检查是否有微信回调的code
-  const urlParams = new URLSearchParams(window.location.search);
-  const code = urlParams.get("code");
-  
-  if (code) {
-    loginType.value = "wechat";
-    handleWechatCallback(code);
-  } else {
-    fetchQRCode();
-  }
-});
-
-onUnmounted(() => {
-  if (pollingTimer.value) clearInterval(pollingTimer.value);
-});
+// 切换到后台管理登录
+function switchToAdmin() {
+  // 可以跳转到专门的管理员登录页面或显示管理员登录表单
+  console.log("切换到后台管理登录");
+  // 可以在此处添加管理员登录逻辑
+}
 </script>
 
 <style scoped>
-.login-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-}
-
-.login-card {
-  width: 420px;
-  background: #fff;
-  border-radius: 16px;
-  padding: 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.login-header {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.login-header h1 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #ff7a45;
-  margin-bottom: 8px;
-}
-
-.login-header p {
-  color: #999;
-  font-size: 14px;
-}
-
-.login-tabs {
-  display: flex;
-  margin-bottom: 32px;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid #e8e8e8;
-}
-
-.login-tabs button {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  background: #fafafa;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.login-tabs button.active {
-  background: #ff7a45;
-  color: #fff;
-}
-
-.login-tabs button:first-child {
-  border-right: 1px solid #e8e8e8;
-}
-
-/* 微信扫码登录 */
-.wechat-login {
-  text-align: center;
-}
-
-.qr-container {
-  width: 200px;
-  height: 200px;
-  margin: 0 auto 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f5f5f5;
-  border-radius: 8px;
-}
-
-.qr-code {
-  width: 180px;
-  height: 180px;
-}
-
-.qr-loading {
-  color: #999;
-}
-
-.qr-tip {
-  color: #666;
-  font-size: 14px;
-}
-
-.scan-status {
-  margin-top: 16px;
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-.scan-status.success {
-  background: #f6ffed;
-  color: #52c41a;
-}
-
-/* 后台登录 */
-.admin-login {
-  padding: 0 20px;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  color: #333;
-  font-size: 14px;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #d9d9d9;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #ff7a45;
-}
-
-.login-btn {
-  width: 100%;
-  padding: 14px;
-  background: #ff7a45;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.login-btn:hover:not(:disabled) {
-  background: #ff9a75;
-}
-
-.login-btn:disabled {
-  background: #d9d9d9;
-  cursor: not-allowed;
-}
-
-.error-msg {
-  margin-top: 16px;
-  color: #ff4d4f;
-  font-size: 14px;
-  text-align: center;
-}
+/* 组件特定样式已在Tailwind中定义 */
 </style>

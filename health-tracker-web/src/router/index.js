@@ -8,12 +8,18 @@ import RemindersView from "../views/RemindersView.vue";
 import MedicationsView from "../views/MedicationsView.vue";
 import FamilyView from "../views/FamilyView.vue";
 import LoginView from "../views/LoginView.vue";
+import DashboardView from "../views/DashboardView.vue";
+import ReportsView from "../views/ReportsView.vue";
+import GoalsView from "../views/GoalsView.vue";
+import RecordsView from "../views/RecordsView.vue";
+import SettingsView from "../views/SettingsView.vue";
 
 // 管理端页面
 import AdminUsersView from "../views/admin/AdminUsersView.vue";
 import AdminLogsView from "../views/admin/AdminLogsView.vue";
 import AdminAILogsView from "../views/admin/AdminAILogsView.vue";
 import AdminSubscribeTasksView from "../views/admin/AdminSubscribeTasksView.vue";
+import AdminTasksView from "../views/admin/AdminTasksView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -29,6 +35,12 @@ const router = createRouter({
     {
       path: "/",
       name: "home",
+      component: HomeView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: "/dashboard",
+      name: "dashboard",
       component: HomeView,
       meta: { requiresAuth: true }
     },
@@ -56,6 +68,30 @@ const router = createRouter({
       component: FamilyView,
       meta: { requiresAuth: true }
     },
+    {
+      path: "/reports",
+      name: "reports",
+      component: ReportsView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: "/goals",
+      name: "goals",
+      component: GoalsView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: "/records",
+      name: "records",
+      component: RecordsView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: "/settings",
+      name: "settings",
+      component: SettingsView,
+      meta: { requiresAuth: true }
+    },
 
     // ========== 管理端（需要管理员登录）==========
     {
@@ -80,6 +116,12 @@ const router = createRouter({
       path: "/admin/subscribe-tasks",
       name: "admin-subscribe-tasks",
       component: AdminSubscribeTasksView,
+      meta: { requiresAdminAuth: true }
+    },
+    {
+      path: "/admin/tasks",
+      name: "admin-tasks",
+      component: AdminTasksView,
       meta: { requiresAdminAuth: true }
     }
   ]

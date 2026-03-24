@@ -7,28 +7,21 @@
         <div class="icon">👟</div>
         <div class="info">
           <span class="label">本周总步数</span>
-          <span class="value">56,043</span>
+          <span class="value">{{ summary.steps }}</span>
         </div>
       </div>
       <div class="summary-card">
         <div class="icon">😴</div>
         <div class="info">
           <span class="label">平均睡眠</span>
-          <span class="value">7.1小时</span>
+          <span class="value">{{ summary.avgSleep }}</span>
         </div>
       </div>
       <div class="summary-card">
         <div class="icon">🔥</div>
         <div class="info">
           <span class="label">平均热量</span>
-          <span class="value">1,943 kcal</span>
-        </div>
-      </div>
-      <div class="summary-card">
-        <div class="icon">❤️</div>
-        <div class="info">
-          <span class="label">平均心率</span>
-          <span class="value">72 bpm</span>
+          <span class="value">{{ summary.avgCalories }} kcal</span>
         </div>
       </div>
     </div>
@@ -98,10 +91,58 @@
 </template>
 
 <script setup>
-import { mockData } from "../mock/data";
+import { ref, onMounted } from "vue";
+import { getStatisticsOverview, getStatisticsTrend, getUserId } from "../api";
 
-const weeklySteps = mockData.weeklySteps;
-const weeklySleep = mockData.weeklySleep;
+const weeklySteps = ref([]);
+const weeklySleep = ref([]);
+const summary = ref({
+  steps: "0",
+  avgSleep: "0小时",
+  avgCalories: 0,
+  avgHeartRate: "--"
+});
+
+function average(values) {
+  if (!values || values.length === 0) return 0;
+  const total = values.reduce((acc, item) => acc + (Number(item) || 0), 0);
+  return total / values.length;
+}
+
+function toNumber(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
+}
+
+async function loadReport() {
+  const userId = getUserId();
+  try {
+    const [overview, trend] = await Promise.all([
+      getStatisticsOverview(userId, "week"),
+      getStatisticsTrend(userId, "week")
+    ]);
+
+    const stepsSeries = trend?.series?.steps || [];
+    const sleepSeries = trend?.series?.sleep || [];
+    const dietSeries = trend?.series?.diet || [];
+
+    weeklySteps.value = stepsSeries.map(item => toNumber(item.value));
+    weeklySleep.value = sleepSeries.map(item => toNumber(item.value));
+
+    const avgSleepHours = average(weeklySleep.value);
+    const avgCalories = Math.round(average(dietSeries.map(item => toNumber(item.value))));
+
+    summary.value = {
+      steps: overview?.steps ? Number(overview.steps).toLocaleString() : "0",
+      avgSleep: avgSleepHours ? `${avgSleepHours.toFixed(1)}小时` : "0小时",
+      avgCalories: avgCalories || 0
+    };
+  } catch (error) {
+    console.error("加载健康报告失败", error);
+  }
+}
+
+onMounted(loadReport);
 </script>
 
 <style scoped>
@@ -112,7 +153,7 @@ const weeklySleep = mockData.weeklySleep;
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin-bottom: 32px;
 }

@@ -62,6 +62,25 @@ export async function logout() {
 
 // ========== 用户端 API ==========
 
+// 账号密码登录（用户）
+export async function userLogin(username, password) {
+  return request(`${API_BASE}/user/login`, {
+    method: "POST",
+    body: JSON.stringify({ username, password }),
+  });
+}
+
+export async function getUserProfile(userId) {
+  return request(`${API_BASE}/user/profile?userId=${userId}`);
+}
+
+export async function updateUserProfile(payload) {
+  return request(`${API_BASE}/user/profile/update`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 // 获取今日健康评分
 export async function getTodayScore(userId) {
   return request(`${API_BASE}/score/today?userId=${userId}`);
@@ -85,9 +104,35 @@ export async function getStatisticsTrend(userId, period = "week") {
   return request(`${API_BASE}/statistics/trend?userId=${userId}&period=${period}`);
 }
 
+// 获取综合记录摘要
+export async function getRecordSummary(userId) {
+  return request(`${API_BASE}/records/summary?userId=${userId}`);
+}
+
 // 获取提醒列表
 export async function getReminderList(userId) {
   return request(`${API_BASE}/reminder/list?userId=${userId}`);
+}
+
+export async function addReminder(payload) {
+  return request(`${API_BASE}/reminder/add`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateReminder(payload) {
+  return request(`${API_BASE}/reminder/update`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateReminderStatus(payload) {
+  return request(`${API_BASE}/reminder/status`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 // 获取用药列表
@@ -108,6 +153,42 @@ export async function getFamilyList(userId) {
 // 获取目标列表
 export async function getGoalList(userId, period = "day") {
   return request(`${API_BASE}/goal/list?userId=${userId}&period=${period}`);
+}
+
+// 饮食记录
+export async function getDietList(userId, date) {
+  return request(`${API_BASE}/diet/list?userId=${userId}&date=${date}`);
+}
+
+// 运动记录
+export async function getExerciseList(userId, date) {
+  return request(`${API_BASE}/exercise/list?userId=${userId}&date=${date}`);
+}
+
+// 睡眠记录
+export async function getSleepList(userId, date) {
+  return request(`${API_BASE}/sleep/list?userId=${userId}&date=${date}`);
+}
+
+// 体重记录
+export async function getWeightList(userId, date) {
+  return request(`${API_BASE}/weight/list?userId=${userId}&date=${date}`);
+}
+
+// 饮水记录（date 可选）
+export async function getWaterList(userId, date = "") {
+  const query = date ? `?userId=${userId}&date=${date}` : `?userId=${userId}`;
+  return request(`${API_BASE}/water/list${query}`);
+}
+
+// 经期记录
+export async function getPeriodList(userId) {
+  return request(`${API_BASE}/period/list?userId=${userId}`);
+}
+
+// 健康指标记录
+export async function getHealthRecordList(userId, date) {
+  return request(`${API_BASE}/health-record/list?userId=${userId}&date=${date}`);
 }
 
 // ========== 管理端 API ==========

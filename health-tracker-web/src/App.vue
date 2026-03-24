@@ -5,26 +5,7 @@
 
     <!-- 用户端布局 -->
     <template v-else-if="!isAdminPage">
-      <header class="navbar">
-        <div class="navbar-brand">
-          <span class="logo">智康AI</span>
-        </div>
-        <nav class="navbar-menu">
-          <router-link to="/" class="nav-item" :class="{ active: route.path === '/' }">首页</router-link>
-          <router-link to="/analysis" class="nav-item" :class="{ active: route.path === '/analysis' }">数据分析</router-link>
-          <router-link to="/reminders" class="nav-item" :class="{ active: route.path === '/reminders' }">提醒</router-link>
-          <router-link to="/medications" class="nav-item" :class="{ active: route.path === '/medications' }">用药</router-link>
-          <router-link to="/family" class="nav-item" :class="{ active: route.path === '/family' }">家人</router-link>
-        </nav>
-        <div class="navbar-user">
-          <span class="user-name">{{ userInfo?.nickname || '用户' }}</span>
-          <router-link to="/admin/users" class="admin-link" v-if="!isAdminPage">管理后台</router-link>
-          <a class="logout-link" @click="handleLogout">退出</a>
-        </div>
-      </header>
-      <main class="main-content">
-        <router-view />
-      </main>
+      <router-view />
     </template>
 
     <!-- 管理端布局 -->
@@ -38,6 +19,7 @@
           <router-link to="/admin/logs/system" class="sidebar-item" :class="{ active: route.path === '/admin/logs/system' }">系统日志</router-link>
           <router-link to="/admin/logs/ai" class="sidebar-item" :class="{ active: route.path === '/admin/logs/ai' }">AI调用日志</router-link>
           <router-link to="/admin/subscribe-tasks" class="sidebar-item" :class="{ active: route.path === '/admin/subscribe-tasks' }">订阅任务</router-link>
+          <router-link to="/admin/tasks" class="sidebar-item" :class="{ active: route.path === '/admin/tasks' }">任务管理</router-link>
         </nav>
         <div class="sidebar-footer">
           <router-link to="/" class="back-home">返回用户端</router-link>

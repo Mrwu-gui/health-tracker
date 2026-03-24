@@ -1,93 +1,224 @@
 <template>
-  <div class="home">
-    <h1 class="page-title">今日健康概览</h1>
-
-    <!-- 健康评分 -->
-    <div class="score-card">
-      <div class="score-circle">
-        <svg viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="45" fill="none" stroke="#fff0eb" stroke-width="8" />
-          <circle cx="50" cy="50" r="45" fill="none" stroke="#ff7a45" stroke-width="8" 
-            :stroke-dasharray="`${score.score * 2.83} 283`" stroke-linecap="round" 
-            transform="rotate(-90 50 50)" />
-        </svg>
-        <div class="score-value">
-          <span class="number">{{ score.score }}</span>
-          <span class="label">健康评分</span>
+  <div class="text-on-surface bg-background min-h-screen">
+    <!-- SideNavBar Shell -->
+    <aside class="fixed left-0 top-0 h-full flex flex-col p-4 w-64 bg-surface-container/70 backdrop-blur-xl shadow-[20px_0_40px_rgba(86,67,55,0.04)] z-50">
+      <div class="flex items-center gap-3 px-2 mb-8">
+        <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center">
+          <span class="material-symbols-outlined text-white">health_and_safety</span>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-primary font-headline tracking-wider">智康AI</h1>
+          <p class="text-[10px] text-on-surface-variant/70 uppercase tracking-widest">智能健康管理助手</p>
         </div>
       </div>
-      <div class="score-level">{{ score.level }}</div>
-      <div class="score-factors">
-        <div class="factor" v-for="item in score.factors" :key="item.name">
-          <span class="factor-name">{{ item.name }}</span>
-          <div class="factor-bar">
-            <div class="factor-fill" :style="{ width: item.value + '%' }"></div>
+      <nav class="flex-1 space-y-1 overflow-y-auto pr-2">
+        <!-- Active Item: 首页 -->
+        <router-link 
+          to="/" 
+          class="flex items-center gap-3 px-4 py-3 bg-primary-container/20 text-primary font-bold font-headline text-sm tracking-tight rounded-full transition-all duration-300"
+          active-class="bg-primary-container/20 text-primary"
+          exact
+        >
+          <span class="material-symbols-outlined">home</span>
+          <span>首页</span>
+        </router-link>
+        <router-link 
+          to="/analysis" 
+          class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all duration-300 font-body text-sm font-medium tracking-tight rounded-full"
+          active-class="bg-primary-container/20 text-primary"
+        >
+          <span class="material-symbols-outlined">insights</span>
+          <span>数据分析</span>
+        </router-link>
+        <router-link 
+          to="/goals" 
+          class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all duration-300 font-body text-sm font-medium tracking-tight rounded-full"
+          active-class="bg-primary-container/20 text-primary"
+        >
+          <span class="material-symbols-outlined">track_changes</span>
+          <span>目标管理</span>
+        </router-link>
+        <router-link 
+          to="/records" 
+          class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all duration-300 font-body text-sm font-medium tracking-tight rounded-full"
+          active-class="bg-primary-container/20 text-primary"
+        >
+          <span class="material-symbols-outlined">restaurant</span>
+          <span>饮食记录</span>
+        </router-link>
+        <router-link 
+          to="/medications" 
+          class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all duration-300 font-body text-sm font-medium tracking-tight rounded-full"
+          active-class="bg-primary-container/20 text-primary"
+        >
+          <span class="material-symbols-outlined">medication</span>
+          <span>用药管理</span>
+        </router-link>
+      </nav>
+      <div class="pt-4 mt-4 border-t border-surface-container">
+        <router-link 
+          to="/settings" 
+          class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all duration-300 font-body text-sm font-medium tracking-tight rounded-full"
+          active-class="bg-primary-container/20 text-primary"
+        >
+          <span class="material-symbols-outlined">account_circle</span>
+          <span>个人中心</span>
+        </router-link>
+      </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="ml-64 flex flex-col min-h-screen">
+      <!-- TopNavBar Shell -->
+      <header class="fixed top-0 right-0 left-64 h-16 bg-surface/70 backdrop-blur-md z-40 flex justify-between items-center px-8">
+        <div class="flex items-center gap-4">
+          <h2 class="text-lg font-black text-primary font-headline">今日健康概览</h2>
+          <div class="h-4 w-px bg-outline-variant/30 mx-2"></div>
+          <nav class="flex gap-6">
+            <a class="text-primary font-bold border-b-2 border-primary py-1 font-body text-base transition-all" href="#">今日统计</a>
+            <a class="text-on-surface-variant hover:text-primary py-1 font-body text-base transition-all" href="#">近期趋势</a>
+          </nav>
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="relative group">
+            <input class="bg-surface-container-low border-none rounded-full py-2 px-4 pl-10 text-sm focus:ring-2 focus:ring-primary-container w-64 transition-all" placeholder="搜索健康记录..." type="text"/>
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
           </div>
-          <span class="factor-value">{{ item.value }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 核心指标 -->
-    <div class="stats-grid">
-      <div class="stat-card clickable" @click="goToAnalysis('steps')">
-        <div class="stat-icon steps">👟</div>
-        <div class="stat-info">
-          <span class="stat-label">步数</span>
-          <span class="stat-value">{{ overview.steps.toLocaleString() }}</span>
-          <span class="stat-target">目标: {{ overview.stepsTarget.toLocaleString() }}</span>
-        </div>
-        <div class="stat-progress">
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: overview.stepsPercent + '%' }"></div>
+          <div class="flex items-center gap-2">
+            <button class="p-2 text-on-surface-variant hover:text-primary transition-all rounded-full hover:bg-surface-container">
+              <span class="material-symbols-outlined">notifications</span>
+            </button>
+            <button class="p-2 text-on-surface-variant hover:text-primary transition-all rounded-full hover:bg-surface-container">
+              <span class="material-symbols-outlined">settings</span>
+            </button>
+            <div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden ml-2 border-2 border-primary-container/20">
+              <img 
+                alt="User Avatar" 
+                class="w-full h-full object-cover" 
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmOvqFJaOYRBgohIV6rJjqFslRNMSfeSLgN7ymuoJ9_UNk3zdSAhIKYmpxuU8YnAyHLEXNQSaTKFnT7Pq5ggPNn4ssQWacKaM3H2HsUaoRIVuXRnDlCVbijMs_C_FlH7Y25YooGCqgPkzk5KlX1jdh7nGwVwNjPeHe8JnXIf5Un5P7ZfV0iINpQ5PW-bpupGQM-PD--I1ZI6hJxmq_f4yuz6-so6-eS2Ymau_ObSykat3Gqtxi-t-wXLXcOg6q4budHT1-5WaQVkk"
+              />
+            </div>
           </div>
-          <span>{{ overview.stepsPercent }}%</span>
         </div>
-      </div>
+      </header>
 
-      <div class="stat-card clickable" @click="goToAnalysis('sleep')">
-        <div class="stat-icon sleep">😴</div>
-        <div class="stat-info">
-          <span class="stat-label">睡眠</span>
-          <span class="stat-value">{{ overview.sleep }}</span>
-          <span class="stat-target">目标: {{ overview.sleepTarget }}小时</span>
-        </div>
-        <div class="stat-progress">
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: overview.sleepPercent + '%' }"></div>
+      <!-- Content Canvas -->
+      <main class="mt-16 p-8 pb-20 space-y-8 max-w-[1400px]">
+        <!-- 健康评分 -->
+        <div class="bg-surface rounded-2xl p-8 shadow-amber-care">
+          <div class="flex items-center gap-8">
+            <div class="relative w-40 h-40">
+              <svg viewBox="0 0 100 100" class="w-full h-full">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(230, 126, 34, 0.1)" stroke-width="8" />
+                <circle cx="50" cy="50" r="45" fill="none" stroke="#A23F00" stroke-width="8" 
+                  :stroke-dasharray="`${score.score * 2.83} 283`" stroke-linecap="round" 
+                  transform="rotate(-90 50 50)" />
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-4xl font-bold text-primary font-headline">{{ score.score }}</span>
+                <span class="text-sm text-on-surface-variant mt-1">健康评分</span>
+              </div>
+            </div>
+            <div class="flex-1">
+              <div class="mb-4">
+                <h3 class="text-xl font-bold text-primary font-headline">{{ score.level }}</h3>
+                <p class="text-on-surface-variant mt-1">根据您的健康数据评估</p>
+              </div>
+              <div class="space-y-3">
+                <div class="factor" v-for="item in score.factors" :key="item.name">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm text-on-surface-variant">{{ item.name }}</span>
+                    <span class="text-sm font-medium text-on-surface">{{ item.value }}%</span>
+                  </div>
+                  <div class="h-2 bg-surface-container rounded-full overflow-hidden">
+                    <div class="h-full bg-primary rounded-full" :style="{ width: item.value + '%' }"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <span>{{ overview.sleepPercent }}%</span>
         </div>
-      </div>
 
-      <div class="stat-card clickable" @click="goToAnalysis('weight')">
-        <div class="stat-icon weight">⚖️</div>
-        <div class="stat-info">
-          <span class="stat-label">体重</span>
-          <span class="stat-value">{{ overview.weight }}</span>
-          <span class="stat-target">健康范围</span>
+        <!-- 核心指标 -->
+        <div class="grid grid-cols-4 gap-6">
+          <div class="bg-surface rounded-2xl p-6 shadow-amber-care hover:shadow-xl transition-shadow duration-300 cursor-pointer" @click="goToAnalysis('steps')">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="w-12 h-12 bg-primary-container/20 rounded-xl flex items-center justify-center mb-4">
+                  <span class="material-symbols-outlined text-primary">directions_walk</span>
+                </div>
+                <p class="text-sm text-on-surface-variant mb-1">步数</p>
+                <p class="text-2xl font-bold text-on-surface font-headline">{{ overview.steps.toLocaleString() }}</p>
+                <p class="text-xs text-on-surface-variant mt-2">目标: {{ overview.stepsTarget.toLocaleString() }}</p>
+              </div>
+              <div class="text-right">
+                <div class="text-lg font-bold text-primary">{{ overview.stepsPercent }}%</div>
+                <div class="h-2 w-16 bg-surface-container rounded-full overflow-hidden mt-2">
+                  <div class="h-full bg-primary rounded-full" :style="{ width: overview.stepsPercent + '%' }"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-surface rounded-2xl p-6 shadow-amber-care hover:shadow-xl transition-shadow duration-300 cursor-pointer" @click="goToAnalysis('sleep')">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="w-12 h-12 bg-secondary-container/20 rounded-xl flex items-center justify-center mb-4">
+                  <span class="material-symbols-outlined text-secondary">bedtime</span>
+                </div>
+                <p class="text-sm text-on-surface-variant mb-1">睡眠</p>
+                <p class="text-2xl font-bold text-on-surface font-headline">{{ overview.sleep }}小时</p>
+                <p class="text-xs text-on-surface-variant mt-2">目标: {{ overview.sleepTarget }}小时</p>
+              </div>
+              <div class="text-right">
+                <div class="text-lg font-bold text-secondary">{{ overview.sleepPercent }}%</div>
+                <div class="h-2 w-16 bg-surface-container rounded-full overflow-hidden mt-2">
+                  <div class="h-full bg-secondary rounded-full" :style="{ width: overview.sleepPercent + '%' }"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-surface rounded-2xl p-6 shadow-amber-care hover:shadow-xl transition-shadow duration-300 cursor-pointer" @click="goToAnalysis('weight')">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="w-12 h-12 bg-tertiary-container/20 rounded-xl flex items-center justify-center mb-4">
+                  <span class="material-symbols-outlined text-tertiary">monitor_weight</span>
+                </div>
+                <p class="text-sm text-on-surface-variant mb-1">体重</p>
+                <p class="text-2xl font-bold text-on-surface font-headline">{{ overview.weight }}kg</p>
+                <p class="text-xs text-on-surface-variant mt-2">健康范围</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-surface rounded-2xl p-6 shadow-amber-care hover:shadow-xl transition-shadow duration-300 cursor-pointer" @click="goToAnalysis('diet')">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="w-12 h-12 bg-error-container/20 rounded-xl flex items-center justify-center mb-4">
+                  <span class="material-symbols-outlined text-error">local_fire_department</span>
+                </div>
+                <p class="text-sm text-on-surface-variant mb-1">饮食热量</p>
+                <p class="text-2xl font-bold text-on-surface font-headline">{{ overview.calories.toLocaleString() }}</p>
+                <p class="text-xs text-on-surface-variant mt-2">千卡</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="stat-card clickable" @click="goToAnalysis('diet')">
-        <div class="stat-icon calories">🔥</div>
-        <div class="stat-info">
-          <span class="stat-label">饮食热量</span>
-          <span class="stat-value">{{ overview.calories.toLocaleString() }}</span>
-          <span class="stat-target">千卡</span>
+        <!-- AI 解读 -->
+        <div class="bg-surface rounded-2xl p-8 shadow-amber-care">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-primary-container/20 rounded-full flex items-center justify-center">
+              <span class="material-symbols-outlined text-primary">smart_toy</span>
+            </div>
+            <h3 class="text-xl font-bold text-on-surface font-headline">AI 健康解读</h3>
+          </div>
+          <div class="bg-surface-container rounded-xl p-6">
+            <p class="text-on-surface leading-relaxed">{{ aiAnalysis }}</p>
+          </div>
         </div>
-      </div>
-    </div>
-
-    <!-- AI 解读 -->
-    <div class="ai-card">
-      <div class="ai-header">
-        <span class="ai-icon">🤖</span>
-        <span class="ai-title">AI 健康解读</span>
-      </div>
-      <div class="ai-content">
-        {{ aiAnalysis }}
-      </div>
+      </main>
     </div>
   </div>
 </template>
@@ -95,259 +226,99 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { mockData } from "../mock/data";
-import { getUserId, getTodayScore, getStatisticsOverview, getAIAnalysis } from "../api";
+import { getUserId, getStatisticsOverview, getAIAnalysis, getGoalList } from "../api";
 
 const router = useRouter();
 
-const score = ref(mockData.todayScore);
-const overview = ref(mockData.overview);
-const aiAnalysis = ref(mockData.aiAnalysis);
+const score = ref({
+  score: 0,
+  level: "暂无",
+  factors: [
+    { name: "步数", value: 0 },
+    { name: "睡眠", value: 0 },
+    { name: "饮食", value: 0 },
+    { name: "体重", value: 0 }
+  ]
+});
+const overview = ref({
+  steps: 0,
+  stepsTarget: 10000,
+  stepsPercent: 0,
+  sleep: "0小时",
+  sleepTarget: 8,
+  sleepPercent: 0,
+  weight: "--",
+  calories: 0
+});
+const aiAnalysis = ref("暂无分析结果");
 
 const goToAnalysis = (type) => {
   window.location.href = `/analysis?type=${type}`;
 };
 
+function buildScore(metrics) {
+  const stepScore = metrics.stepsPercent || 0;
+  const sleepScore = metrics.sleepPercent || 0;
+  const dietScore = metrics.calories > 0 ? Math.min(100, Math.round(80 - Math.abs(metrics.calories - 2000) / 30)) : 0;
+  const weightScore = metrics.weight !== "--" ? 80 : 0;
+  const total = Math.round((stepScore + sleepScore + dietScore + weightScore) / 4);
+  return {
+    score: total,
+    level: total >= 85 ? "优秀" : total >= 70 ? "良好" : total >= 50 ? "一般" : "需改善",
+    factors: [
+      { name: "步数", value: stepScore },
+      { name: "睡眠", value: sleepScore },
+      { name: "饮食", value: dietScore },
+      { name: "体重", value: weightScore }
+    ]
+  };
+}
+
 onMounted(async () => {
   const userId = getUserId();
   try {
-    const [scoreData, overviewData, aiData] = await Promise.all([
-      getTodayScore(userId),
+    const [overviewData, goals, aiData] = await Promise.all([
       getStatisticsOverview(userId, "day"),
+      getGoalList(userId, "day"),
       getAIAnalysis([{ role: "user", content: "分析今日健康状态" }])
     ]);
-    if (scoreData) score.value = scoreData;
-    if (overviewData) overview.value = overviewData;
+
+    const goalList = Array.isArray(goals) ? goals : [];
+    const stepsGoal = goalList.find(item => item.goalType === 1);
+    const sleepGoal = goalList.find(item => item.goalType === 4);
+
+    const stepsTarget = stepsGoal?.targetValue || 10000;
+    const stepsValue = Number(overviewData?.stepsToday || overviewData?.steps || 0);
+    const stepsPercent = stepsTarget ? Math.min(100, Math.round((stepsValue / stepsTarget) * 100)) : 0;
+
+    const sleepMinutes = Number(overviewData?.sleepMinutesToday || 0);
+    const sleepHours = sleepMinutes ? (sleepMinutes / 60).toFixed(1) : "0";
+    const sleepTarget = sleepGoal?.targetValue || 8;
+    const sleepPercent = sleepTarget ? Math.min(100, Math.round((sleepHours / sleepTarget) * 100)) : 0;
+
+    const caloriesValue = Number(overviewData?.calories || 0);
+    const weightValue = overviewData?.weight ?? "--";
+
+    const mapped = {
+      steps: stepsValue,
+      stepsTarget,
+      stepsPercent,
+      sleep: `${sleepHours}小时`,
+      sleepTarget,
+      sleepPercent,
+      weight: weightValue === "" ? "--" : weightValue,
+      calories: caloriesValue
+    };
+
+    overview.value = mapped;
+    score.value = buildScore(mapped);
     if (aiData) aiAnalysis.value = aiData;
   } catch (e) {
-    console.log("使用mock数据");
+    console.log("加载首页数据失败", e);
   }
 });
 </script>
 
 <style scoped>
-.home {
-  max-width: 1200px;
-}
-
-.page-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 24px;
-  color: #333;
-}
-
-/* 评分卡片 */
-.score-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 32px;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  display: flex;
-  align-items: center;
-  gap: 40px;
-}
-
-.score-circle {
-  position: relative;
-  width: 140px;
-  height: 140px;
-}
-
-.score-circle svg {
-  width: 100%;
-  height: 100%;
-}
-
-.score-value {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-}
-
-.score-value .number {
-  display: block;
-  font-size: 36px;
-  font-weight: 700;
-  color: #ff7a45;
-}
-
-.score-value .label {
-  font-size: 12px;
-  color: #999;
-}
-
-.score-level {
-  font-size: 20px;
-  font-weight: 600;
-  color: #52c41a;
-}
-
-.score-factors {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.factor {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.factor-name {
-  width: 40px;
-  font-size: 14px;
-  color: #666;
-}
-
-.factor-bar {
-  flex: 1;
-  height: 8px;
-  background: #f0f0f0;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.factor-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #ff7a45, #ffa85c);
-  border-radius: 4px;
-}
-
-.factor-value {
-  width: 30px;
-  text-align: right;
-  font-size: 14px;
-  color: #333;
-}
-
-/* 统计卡片 */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-bottom: 24px;
-}
-
-.stat-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.stat-card.clickable {
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.stat-card.clickable:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(255, 122, 69, 0.15);
-}
-
-.stat-icon {
-  font-size: 28px;
-  margin-bottom: 12px;
-}
-
-.stat-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #999;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: 600;
-  color: #333;
-}
-
-.stat-target {
-  font-size: 12px;
-  color: #bbb;
-}
-
-.stat-progress {
-  margin-top: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 6px;
-  background: #f0f0f0;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: #ff7a45;
-  border-radius: 3px;
-}
-
-.stat-progress span {
-  font-size: 13px;
-  color: #ff7a45;
-  font-weight: 500;
-}
-
-/* AI 解读 */
-.ai-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.ai-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.ai-icon {
-  font-size: 24px;
-}
-
-.ai-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-}
-
-.ai-content {
-  font-size: 15px;
-  line-height: 1.8;
-  color: #666;
-}
-
-@media (max-width: 1100px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .score-card {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .score-factors {
-    width: 100%;
-  }
-}
+/* 保留样式为空，因为使用Tailwind CSS类 */
 </style>

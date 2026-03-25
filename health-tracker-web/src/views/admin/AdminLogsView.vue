@@ -47,7 +47,6 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { mockData } from "../../mock/data";
 import { getSystemLogs } from "../../api";
 
 const level = ref("");
@@ -58,7 +57,8 @@ async function loadLogs() {
     const data = await getSystemLogs(level.value, 200);
     if (data) logs.value = data;
   } catch (e) {
-    logs.value = mockData.systemLogs;
+    console.error("加载系统日志失败", e);
+    logs.value = [];
   }
 }
 

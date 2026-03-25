@@ -13,6 +13,8 @@ import ReportsView from "../views/ReportsView.vue";
 import GoalsView from "../views/GoalsView.vue";
 import RecordsView from "../views/RecordsView.vue";
 import SettingsView from "../views/SettingsView.vue";
+import PrivacyPolicyView from "../views/PrivacyPolicyView.vue";
+import UserAgreementView from "../views/UserAgreementView.vue";
 
 // 管理端页面
 import AdminUsersView from "../views/admin/AdminUsersView.vue";
@@ -20,6 +22,7 @@ import AdminLogsView from "../views/admin/AdminLogsView.vue";
 import AdminAILogsView from "../views/admin/AdminAILogsView.vue";
 import AdminSubscribeTasksView from "../views/admin/AdminSubscribeTasksView.vue";
 import AdminTasksView from "../views/admin/AdminTasksView.vue";
+import AdminLoginView from "../views/admin/AdminLoginView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -29,6 +32,16 @@ const router = createRouter({
       path: "/login",
       name: "login",
       component: LoginView
+    },
+    {
+      path: "/privacy-policy",
+      name: "privacy-policy",
+      component: PrivacyPolicyView
+    },
+    {
+      path: "/user-agreement",
+      name: "user-agreement",
+      component: UserAgreementView
     },
 
     // ========== 用户端（需要登录）==========
@@ -95,6 +108,11 @@ const router = createRouter({
 
     // ========== 管理端（需要管理员登录）==========
     {
+      path: "/admin/login",
+      name: "admin-login",
+      component: AdminLoginView
+    },
+    {
       path: "/admin/users",
       name: "admin-users",
       component: AdminUsersView,
@@ -130,7 +148,7 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, _from, next) => {
   // 登录页直接放行
-  if (to.name === "login") {
+  if (to.name === "login" || to.name === "admin-login" || to.name === "privacy-policy" || to.name === "user-agreement") {
     next();
     return;
   }
@@ -138,7 +156,7 @@ router.beforeEach((to, _from, next) => {
   // 管理端需要管理员登录
   if (to.meta.requiresAdminAuth) {
     if (!isAdminLoggedIn()) {
-      next("/login");
+      next("/admin/login");
       return;
     }
   }

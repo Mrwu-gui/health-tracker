@@ -1,15 +1,7 @@
 <template>
   <div class="app">
-    <!-- 登录页单独显示 -->
-    <router-view v-if="route.path === '/login'" />
-
-    <!-- 用户端布局 -->
-    <template v-else-if="!isAdminPage">
-      <router-view />
-    </template>
-
     <!-- 管理端布局 -->
-    <template v-else>
+    <template v-if="isAdminPage">
       <aside class="sidebar">
         <div class="sidebar-brand">
           <img src="/logo.png" alt="智康AI" class="logo-img" />
@@ -31,25 +23,33 @@
       </main>
     </template>
 
-    <div class="footer">
-      <a href="https://beian.miit.gov.cn" target="_blank" rel="noopener noreferrer">
-        晋ICP备2026003386号
-      </a>
-    </div>
+    <!-- 用户端/登录页：避免重复卸载重建，减少输入闪烁 -->
+    <router-view v-else />
+
+    <footer class="footer">
+      <p class="footer-links">
+        <router-link to="/privacy-policy">隐私政策</router-link>
+        <span class="footer-separator">|</span>
+        <router-link to="/user-agreement">用户协议</router-link>
+        <span class="footer-separator">|</span>
+        <a href="https://beian.miit.gov.cn" target="_blank" rel="noopener noreferrer">
+          晋ICP备2026003386号-1
+        </a>
+      </p>
+      <p class="footer-copy">© 2026 智康AI</p>
+    </footer>
   </div>
 </template>
 
 <script setup>
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { logout, getUserInfo, isAdminLoggedIn } from "./api";
+import { logout, isAdminLoggedIn } from "./api";
 
 const route = useRoute();
 const router = useRouter();
 
-const userInfo = computed(() => getUserInfo());
-
-const isAdminPage = computed(() => route.path.startsWith("/admin"));
+const isAdminPage = computed(() => route.path.startsWith("/admin") && route.path !== "/admin/login");
 
 function handleLogout() {
   logout();
@@ -79,6 +79,22 @@ body {
   padding: 24px 0 32px;
   color: #8c8c8c;
   font-size: 12px;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.footer-separator {
+  color: #bdbdbd;
+}
+
+.footer-copy {
+  margin-top: 8px;
 }
 
 .footer a {

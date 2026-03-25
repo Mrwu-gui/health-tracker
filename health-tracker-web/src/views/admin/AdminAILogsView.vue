@@ -45,7 +45,6 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { mockData } from "../../mock/data";
 import { getAILogs } from "../../api";
 
 const logs = ref([]);
@@ -55,7 +54,8 @@ async function loadLogs() {
     const data = await getAILogs(200);
     if (data) logs.value = data;
   } catch (e) {
-    logs.value = mockData.aiLogs;
+    console.error("加载AI日志失败", e);
+    logs.value = [];
   }
 }
 

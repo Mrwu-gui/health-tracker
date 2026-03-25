@@ -353,7 +353,7 @@ function toggleNotifications() {
 }
 
 function goToProfile() {
-  router.push('/profile')
+  router.push('/settings')
 }
 
 function calcPercentage(current, target) {

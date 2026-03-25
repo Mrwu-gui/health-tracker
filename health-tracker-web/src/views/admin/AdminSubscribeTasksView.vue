@@ -61,7 +61,6 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { mockData } from "../../mock/data";
 import { getSubscribeTasks } from "../../api";
 
 const status = ref("");
@@ -79,7 +78,8 @@ async function loadTasks() {
     const data = await getSubscribeTasks(status.value, userId.value, 200);
     if (data) tasks.value = data;
   } catch (e) {
-    tasks.value = mockData.subscribeTasks;
+    console.error("加载订阅任务失败", e);
+    tasks.value = [];
   }
 }
 

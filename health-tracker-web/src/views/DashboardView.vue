@@ -75,8 +75,8 @@
           <h2 class="text-lg font-black text-orange-900 dark:text-orange-100 headline-font">概览</h2>
           <div class="h-4 w-px bg-stone-200 mx-2"></div>
           <nav class="flex gap-6">
-            <a class="text-orange-700 font-bold border-b-2 border-orange-700 py-1 font-manrope text-base transition-all" href="#">今日统计</a>
-            <a class="text-stone-500 hover:text-orange-600 py-1 font-manrope text-base transition-all" href="#">近期趋势</a>
+            <button type="button" class="text-orange-700 font-bold border-b-2 border-orange-700 py-1 font-manrope text-base transition-all">今日统计</button>
+            <button type="button" class="text-stone-500 hover:text-orange-600 py-1 font-manrope text-base transition-all">近期趋势</button>
           </nav>
         </div>
         <div class="flex items-center gap-6">

@@ -75,8 +75,8 @@
           <h2 class="text-lg font-black text-primary font-headline">今日健康概览</h2>
           <div class="h-4 w-px bg-outline-variant/30 mx-2"></div>
           <nav class="flex gap-6">
-            <a class="text-primary font-bold border-b-2 border-primary py-1 font-body text-base transition-all" href="#">今日统计</a>
-            <a class="text-on-surface-variant hover:text-primary py-1 font-body text-base transition-all" href="#">近期趋势</a>
+            <button type="button" class="text-primary font-bold border-b-2 border-primary py-1 font-body text-base transition-all">今日统计</button>
+            <button type="button" class="text-on-surface-variant hover:text-primary py-1 font-body text-base transition-all">近期趋势</button>
           </nav>
         </div>
         <div class="flex items-center gap-6">
@@ -253,7 +253,7 @@ const overview = ref({
 const aiAnalysis = ref("暂无分析结果");
 
 const goToAnalysis = (type) => {
-  window.location.href = `/analysis?type=${type}`;
+  router.push({ path: "/analysis", query: { type } });
 };
 
 function buildScore(metrics) {

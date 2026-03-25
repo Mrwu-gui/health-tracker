@@ -45,7 +45,6 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { mockData } from "../../mock/data";
 import { getAdminUsers } from "../../api";
 
 const keyword = ref("");
@@ -56,7 +55,8 @@ async function loadUsers() {
     const data = await getAdminUsers(keyword.value, 200);
     if (data) users.value = data;
   } catch (e) {
-    users.value = mockData.adminUsers;
+    console.error("加载用户列表失败", e);
+    users.value = [];
   }
 }
 

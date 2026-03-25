@@ -30,7 +30,6 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { mockData } from "../mock/data";
 import { getUserId, getFamilyList } from "../api";
 
 const families = ref([]);
@@ -47,7 +46,8 @@ onMounted(async () => {
     const data = await getFamilyList(userId);
     if (data) families.value = data;
   } catch (e) {
-    families.value = mockData.families;
+    console.error("加载家人列表失败", e);
+    families.value = [];
   }
 });
 </script>

@@ -59,6 +59,12 @@
       <button @click="toggleNotifications" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant">
         <span class="material-symbols-outlined">notifications</span>
       </button>
+      <button
+        @click="handleLogout"
+        class="px-4 py-2 rounded-full text-sm font-semibold text-error border border-error/30 hover:bg-error/10 transition-colors"
+      >
+        退出登录
+      </button>
       <div class="h-8 w-8 rounded-full bg-orange-100 overflow-hidden ml-2 cursor-pointer" @click="goToProfile">
         <img 
           alt="User Avatar" 
@@ -95,7 +101,7 @@
                   <input 
                     v-model="profile.name"
                     class="w-full px-5 py-4 bg-surface-container-low border-0 rounded-full focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all text-on-surface placeholder:text-outline-variant" 
-                    placeholder="李娜"
+                    placeholder="请输入姓名"
                   />
                 </div>
                 <div>
@@ -103,7 +109,7 @@
                   <input 
                     v-model="profile.age"
                     class="w-full px-5 py-4 bg-surface-container-low border-0 rounded-full focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all text-on-surface placeholder:text-outline-variant" 
-                    placeholder="30"
+                    placeholder="请输入年龄"
                     type="number"
                   />
                 </div>
@@ -114,7 +120,7 @@
                   <input 
                     v-model="profile.height"
                     class="w-full px-5 py-4 bg-surface-container-low border-0 rounded-full focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all text-on-surface placeholder:text-outline-variant" 
-                    placeholder="175"
+                    placeholder="请输入身高"
                     type="number"
                   />
                 </div>
@@ -123,7 +129,7 @@
                   <input 
                     v-model="profile.weight"
                     class="w-full px-5 py-4 bg-surface-container-low border-0 rounded-full focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all text-on-surface placeholder:text-outline-variant" 
-                    placeholder="70.5"
+                    placeholder="请输入体重"
                     type="number"
                   />
                 </div>
@@ -204,7 +210,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getUserProfile, updateUserProfile, getUserId } from '../api'
+import { getUserProfile, updateUserProfile, getUserId, logout } from '../api'
 
 const router = useRouter()
 
@@ -228,7 +234,12 @@ function toggleNotifications() {
 }
 
 function goToProfile() {
-  router.push('/profile')
+  router.push('/settings')
+}
+
+function handleLogout() {
+  logout()
+  router.replace('/login')
 }
 
 async function loadProfile() {

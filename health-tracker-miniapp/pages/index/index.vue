@@ -23,9 +23,6 @@
             <view class="metric-mini-icon metric-mini-icon-steps">
               <image class="metric-mini-icon-img" src="/static/tabbar/sport.png" mode="aspectFit" />
             </view>
-            <view v-if="stepsDelta !== 0" class="metric-diff-badge pill" :class="stepsDeltaIsUp ? 'diff-up' : 'diff-down'">
-              <text class="diff-badge-text">{{ stepsDeltaIsUp ? '↑' : '↓' }}{{ Math.abs(stepsDelta) > 999 ? (Math.abs(stepsDelta)/1000).toFixed(1)+'k' : Math.abs(stepsDelta) }}</text>
-            </view>
           </view>
           <text class="metric-mini-value">{{ stepsNum > 999 ? (stepsNum/1000).toFixed(1)+'k' : stepsNum }}</text>
           <text class="metric-mini-label">步数</text>
@@ -36,9 +33,6 @@
           <view class="metric-mini-top">
             <view class="metric-mini-icon metric-mini-icon-sleep">
               <image class="metric-mini-icon-img" src="/static/tabbar/sleep.png" mode="aspectFit" />
-            </view>
-            <view v-if="sleepDeltaMinutes !== 0" class="metric-diff-badge pill" :class="sleepDeltaMinutes > 0 ? 'diff-up' : 'diff-down'">
-              <text class="diff-badge-text">{{ sleepDeltaMinutes > 0 ? '↑' : '↓' }}{{ Math.abs(sleepDiffHours) }}h</text>
             </view>
           </view>
           <text class="metric-mini-value">{{ sleepDisplay }}</text>
@@ -51,9 +45,6 @@
             <view class="metric-mini-icon metric-mini-icon-weight">
               <image class="metric-mini-icon-img" src="/static/tabbar/weight.png" mode="aspectFit" />
             </view>
-            <view v-if="weightDelta !== 0 && overview.weight" class="metric-diff-badge pill" :class="weightDelta > 0 ? 'diff-up' : 'diff-down'">
-              <text class="diff-badge-text">{{ weightDelta > 0 ? '↑' : '↓' }}{{ Math.abs(weightDelta).toFixed(1) }}</text>
-            </view>
           </view>
           <text class="metric-mini-value">{{ overview.weight ? overview.weight : '--' }}</text>
           <text class="metric-mini-label">体重(kg)</text>
@@ -64,9 +55,6 @@
           <view class="metric-mini-top">
             <view class="metric-mini-icon metric-mini-icon-diet">
               <image class="metric-mini-icon-img" src="/static/tabbar/food.png" mode="aspectFit" />
-            </view>
-            <view v-if="dietDeltaCalories !== 0 && dietCaloriesToday > 0" class="metric-diff-badge pill" :class="dietDeltaCalories > 0 ? 'diff-up' : 'diff-down'">
-              <text class="diff-badge-text">{{ dietDeltaCalories > 0 ? '↑' : '↓' }}{{ Math.abs(dietDeltaCalories) > 999 ? (Math.abs(dietDeltaCalories)/1000).toFixed(1)+'k' : Math.abs(dietDeltaCalories) }}</text>
             </view>
           </view>
           <text class="metric-mini-value">{{ dietCaloriesToday > 0 ? dietCaloriesToday : '--' }}</text>
@@ -428,7 +416,13 @@ export default {
       try {
         const data = await request("/api/statistics/overview", "GET", { userId, period: "day" });
         if (data) {
-          this.overview.steps = data.steps != null ? String(data.steps) : this.overview.steps;
+          const todayStr = this.formatDate(new Date());
+          if (data.steps != null) {
+            const stepsValue = Number(data.steps || 0);
+            if (stepsValue > 0) {
+              this.overview.steps = String(stepsValue);
+            }
+          }
           this.overview.sleep = data.sleep || this.overview.sleep;
           this.overview.dietCount = `已记录 ${data.dietCount || 0} 餐`;
           const stepsNum = parseInt(this.overview.steps, 10) || 0;
@@ -479,10 +473,6 @@ export default {
       try {
         const sleepListToday = await request("/api/sleep/list", "GET", { userId, date: todayStr });
         let raw = Array.isArray(sleepListToday) ? sleepListToday : Array.isArray(sleepListToday?.records) ? sleepListToday.records : Array.isArray(sleepListToday?.list) ? sleepListToday.list : [];
-        if (raw.length === 0) {
-          const sleepListYesterday = await request("/api/sleep/list", "GET", { userId, date: yesterdayStr });
-          raw = Array.isArray(sleepListYesterday) ? sleepListYesterday : Array.isArray(sleepListYesterday?.records) ? sleepListYesterday.records : Array.isArray(sleepListYesterday?.list) ? sleepListYesterday.list : [];
-        }
         if (raw.length > 0) {
           const latest = raw.reduce((acc, item) => {
             const end = this.parseDateTime(item.endTime) || this.parseDateTime(item.startTime);
@@ -498,11 +488,10 @@ export default {
               const minutes = Math.max(0, Math.round((end - start) / 60000));
               this.overview.sleep = this.formatMinutes(minutes);
             }
-            const recordDate = latest.item.recordDate || (latest.item.startTime ? latest.item.startTime.slice(0, 10) : "");
-            if (recordDate && recordDate !== todayStr) {
-              this.sleepDeltaMinutes = 0;
-            }
           }
+        } else {
+          this.sleepRecord = null;
+          this.overview.sleep = "0小时0分";
         }
       } catch (err) { this.sleepRecord = null; }
 
@@ -678,14 +667,21 @@ export default {
           success: werun => {
             request("/api/auth/mini/werun", "POST", { code, encryptedData: werun.encryptedData, iv: werun.iv }).then(data => {
               if (data?.steps) {
-                const steps = String(data.steps);
+                const steps = String(data.latestSteps || data.steps);
+                const latestDate = data.latestDate || "";
                 this.overview.steps = steps;
                 uni.setStorageSync("steps", steps);
-                const today = new Date();
-                const key = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
-                uni.setStorageSync("stepsSyncDate", key);
+                if (latestDate) {
+                  const today = new Date();
+                  const todayKey = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+                  if (latestDate === this.formatDate(today)) {
+                    uni.setStorageSync("stepsSyncDate", todayKey);
+                  }
+                }
                 uni.showToast({ title: "已同步步数", icon: "success" });
-                this.fetchOverview();
+                if (latestDate && latestDate === this.formatDate(new Date())) {
+                  this.fetchOverview();
+                }
               } else {
                 uni.showToast({ title: "未获取到步数", icon: "none" });
               }

@@ -14,6 +14,7 @@ import com.healthtracker.service.UserService;
 import com.healthtracker.service.WeChatCryptoService;
 import com.healthtracker.service.WeChatService;
 import com.healthtracker.service.WeRunRecordService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,6 +48,10 @@ public class AuthController {
     private final CaptchaService captchaService;
     private final com.healthtracker.config.SmsProperties smsProperties;
     private final JwtService jwtService;
+    private final ObjectMapper objectMapper;
+
+    @Value("${weixin.werun.debug:false}")
+    private boolean weRunDebug;
 
     public AuthController(UserService userService,
                           WeChatService weChatService,
@@ -55,7 +61,8 @@ public class AuthController {
                           SmsCodeService smsCodeService,
                           CaptchaService captchaService,
                           com.healthtracker.config.SmsProperties smsProperties,
-                          JwtService jwtService) {
+                          JwtService jwtService,
+                          ObjectMapper objectMapper) {
         this.userService = userService;
         this.weChatService = weChatService;
         this.weChatCryptoService = weChatCryptoService;
@@ -65,6 +72,7 @@ public class AuthController {
         this.captchaService = captchaService;
         this.smsProperties = smsProperties;
         this.jwtService = jwtService;
+        this.objectMapper = objectMapper;
     }
 
     @PostMapping("/mini/login")
@@ -140,12 +148,22 @@ public class AuthController {
             throw new IllegalArgumentException("微信会话已过期");
         }
         Map<String, Object> payload = weChatCryptoService.decrypt(sessionKey, request.getEncryptedData(), request.getIv());
+        if (weRunDebug) {
+            try {
+                log.info("Mini werun payload userId={} payload={}", userId, objectMapper.writeValueAsString(payload));
+            } catch (Exception ex) {
+                log.warn("Mini werun payload serialize failed userId={}", userId, ex);
+            }
+        }
         Object listObj = payload.get("stepInfoList");
+        System.out.println("****************:" + listObj.toString());
         if (!(listObj instanceof List)) {
             throw new IllegalArgumentException("微信步数数据为空");
         }
         List<Map<String, Object>> list = (List<Map<String, Object>>) listObj;
         int lastSteps = 0;
+        long latestTimestamp = 0L;
+        int latestSteps = 0;
         for (Map<String, Object> item : list) {
             Number timestamp = (Number) item.get("timestamp");
             Number step = (Number) item.get("step");
@@ -157,10 +175,21 @@ public class AuthController {
                 .toLocalDate();
             weRunRecordService.upsert(userId, date, step.intValue());
             lastSteps = step.intValue();
+            if (timestamp.longValue() >= latestTimestamp) {
+                latestTimestamp = timestamp.longValue();
+                latestSteps = step.intValue();
+            }
         }
         Map<String, Object> body = new HashMap<>();
         body.put("steps", lastSteps);
         body.put("count", list.size());
+        if (latestTimestamp > 0) {
+            LocalDate latestDate = Instant.ofEpochSecond(latestTimestamp)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+            body.put("latestSteps", latestSteps);
+            body.put("latestDate", latestDate.toString());
+        }
         log.info("Mini werun sync done userId={} steps={} count={}", userId, lastSteps, list.size());
         return body;
     }

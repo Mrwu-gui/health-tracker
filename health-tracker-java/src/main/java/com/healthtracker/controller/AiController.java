@@ -54,6 +54,13 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RestController
 @RequestMapping("/api/ai")
 public class AiController {
+    private static final String MEDICAL_GUARD_RESPONSE = String.join("\n",
+        "这类问题涉及疾病判断或用药建议，为了您的安全，我无法提供具体用药指导。🙏",
+        "建议您尽快咨询专业医生或就医确认，并遵医嘱处理。"
+    );
+
+    private static final String MEDICAL_KEYWORDS_REGEX =
+        "(?i).*(用药|吃药|药物|药品|药名|用量|剂量|处方|开药|抗生素|消炎药|止痛药|布洛芬|对乙酰氨基酚|阿司匹林|头孢|治疗|诊断|病因|症状|疾病|发烧|疼痛|头痛|感染|就医|医生|挂号|药效|副作用|过敏|mg|毫克|剂型|疗程).*";
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
     private final AiProviderRouter aiProviderRouter;
@@ -145,7 +152,7 @@ public class AiController {
             && request.getImageUrl() != null && !request.getImageUrl().isBlank()) {
             messageToSend = "请识别图片内容";
         }
-        
+
         AiProviderRequest providerRequest = new AiProviderRequest();
         providerRequest.setUserId(userIdLong);
         providerRequest.setUserIdentity(wxOpenid == null || wxOpenid.isBlank() ? userId : wxOpenid);
@@ -161,6 +168,10 @@ public class AiController {
 
         String content = providerResponse == null ? "" : providerResponse.getContent();
         content = stripGoalBlock(content);
+        if ((messageToSend != null && messageToSend.matches(MEDICAL_KEYWORDS_REGEX))
+            || (content != null && content.matches(MEDICAL_KEYWORDS_REGEX))) {
+            content = MEDICAL_GUARD_RESPONSE;
+        }
 
         if (store && userIdLong != null) {
             AiChatMessage assistantMsg = new AiChatMessage();

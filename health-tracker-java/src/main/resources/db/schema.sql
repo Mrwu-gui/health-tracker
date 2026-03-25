@@ -1,239 +1,254 @@
-CREATE TABLE IF NOT EXISTS `user` (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  username VARCHAR(32) UNIQUE COMMENT 'Login username',
-  password VARCHAR(128) COMMENT 'Password hash',
-  phone VARCHAR(20) UNIQUE COMMENT 'Phone number',
-  wx_openid VARCHAR(64) UNIQUE COMMENT 'WeChat openid',
-  wx_unionid VARCHAR(64) COMMENT 'WeChat unionid',
-  wx_phone VARCHAR(20) COMMENT 'WeChat bound phone',
-  wx_nickname VARCHAR(64) COMMENT 'WeChat nickname',
-  wx_avatar VARCHAR(255) COMMENT 'WeChat avatar url',
-  sex VARCHAR(8) COMMENT 'Gender',
-  age INT COMMENT 'Age',
-  height INT COMMENT 'Height (cm)',
-  weight DOUBLE COMMENT 'Weight (kg)',
-  systolic INT COMMENT 'Systolic blood pressure',
-  diastolic INT COMMENT 'Diastolic blood pressure',
-  heart_rate INT COMMENT 'Heart rate',
-  created_at DATETIME COMMENT 'Created time'
-) COMMENT='User profile';
+CREATE TABLE `ai_chat_message` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint NOT NULL COMMENT 'User id',
+  `role` varchar(16) NOT NULL COMMENT 'Role (user/assistant)',
+  `content_text` text COMMENT 'Plain text',
+  `content_json` text COMMENT 'Raw content json',
+  `created_at` datetime NOT NULL COMMENT 'Created time',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=59 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AI chat messages';
 
-CREATE TABLE IF NOT EXISTS privacy_settings (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL UNIQUE COMMENT 'User id',
-  allow_subscribe TINYINT NOT NULL DEFAULT 1 COMMENT 'Allow subscribe messages',
-  allow_cloud_sync TINYINT NOT NULL DEFAULT 1 COMMENT 'Allow cloud sync',
-  allow_family_share TINYINT NOT NULL DEFAULT 1 COMMENT 'Allow family share',
-  created_at DATETIME COMMENT 'Created time',
-  updated_at DATETIME COMMENT 'Updated time'
-) COMMENT='Privacy settings';
+CREATE TABLE `ai_vision_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL,
+  `type` varchar(32) NOT NULL,
+  `image_url` varchar(512) DEFAULT NULL,
+  `payload_json` text,
+  `created_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_ai_vision_user` (`user_id`),
+  KEY `idx_ai_vision_created` (`created_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS family_member (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL COMMENT 'Owner user id',
-  name VARCHAR(64) NOT NULL COMMENT 'Name',
-  relation VARCHAR(32) COMMENT 'Relation',
-  age INT COMMENT 'Age',
-  condition_text VARCHAR(64) COMMENT 'Condition/notes',
-  role VARCHAR(16) COMMENT 'Role label',
-  status TINYINT NOT NULL DEFAULT 1 COMMENT 'Status (0=未授权,1=已授权)',
-  avatar VARCHAR(255) COMMENT 'Avatar url',
-  created_at DATETIME COMMENT 'Created time'
-) COMMENT='Family members';
+CREATE TABLE `diet_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint NOT NULL COMMENT 'User id',
+  `meal_type` varchar(32) NOT NULL COMMENT 'Meal type',
+  `food_name` varchar(64) NOT NULL COMMENT 'Food name',
+  `calories` int NOT NULL COMMENT 'Calories',
+  `protein` double DEFAULT NULL COMMENT 'Protein (g)',
+  `carbs` double DEFAULT NULL COMMENT 'Carbs (g)',
+  `fat` double DEFAULT NULL COMMENT 'Fat (g)',
+  `note` varchar(255) DEFAULT NULL COMMENT 'Notes',
+  `date` date NOT NULL COMMENT 'Record date',
+  `photo_url` varchar(255) DEFAULT NULL COMMENT '饮食图片URL',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=133 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Diet records';
 
-CREATE TABLE IF NOT EXISTS exercise_record (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL COMMENT 'User id',
-  type VARCHAR(32) NOT NULL COMMENT 'Exercise type',
-  steps INT COMMENT 'Steps',
-  duration INT NOT NULL COMMENT 'Duration (minutes)',
-  calories INT NOT NULL COMMENT 'Calories',
-  date DATE NOT NULL COMMENT 'Record date'
-) COMMENT='Exercise records';
+CREATE TABLE `exercise_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint NOT NULL COMMENT 'User id',
+  `type` varchar(32) NOT NULL COMMENT 'Exercise type',
+  `steps` int DEFAULT NULL COMMENT 'Steps',
+  `duration` int NOT NULL COMMENT 'Duration (minutes)',
+  `calories` int NOT NULL COMMENT 'Calories',
+  `date` date NOT NULL COMMENT 'Record date',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Exercise records';
 
-CREATE TABLE IF NOT EXISTS diet_record (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL COMMENT 'User id',
-  meal_type VARCHAR(32) NOT NULL COMMENT 'Meal type',
-  food_name VARCHAR(64) NOT NULL COMMENT 'Food name',
-  calories INT NOT NULL COMMENT 'Calories',
-  protein DOUBLE COMMENT 'Protein (g)',
-  carbs DOUBLE COMMENT 'Carbs (g)',
-  fat DOUBLE COMMENT 'Fat (g)',
-  note VARCHAR(255) COMMENT 'Notes',
-  date DATE NOT NULL COMMENT 'Record date'
-) COMMENT='Diet records';
+CREATE TABLE `family_member` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint NOT NULL COMMENT 'Owner user id',
+  `name` varchar(64) NOT NULL COMMENT 'Name',
+  `relation` varchar(32) DEFAULT NULL COMMENT 'Relation',
+  `age` int DEFAULT NULL COMMENT 'Age',
+  `condition_text` varchar(64) DEFAULT NULL COMMENT 'Condition/notes',
+  `role` varchar(16) DEFAULT NULL COMMENT 'Role label',
+  `status` tinyint NOT NULL DEFAULT '1' COMMENT 'Status (0=未授权,1=已授权)',
+  `avatar` varchar(255) DEFAULT NULL COMMENT 'Avatar url',
+  `created_at` datetime DEFAULT NULL COMMENT 'Created time',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Family members';
 
-CREATE TABLE IF NOT EXISTS water_record (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL COMMENT 'User id',
-  ml INT NOT NULL COMMENT 'Water intake (ml)',
-  drink_time DATETIME NOT NULL COMMENT 'Drink time',
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Created time'
-) COMMENT='Water records';
+CREATE TABLE `file_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint DEFAULT NULL COMMENT 'User id',
+  `type` varchar(32) DEFAULT NULL COMMENT 'File type',
+  `original_name` varchar(255) DEFAULT NULL COMMENT 'Original file name',
+  `file_name` varchar(255) DEFAULT NULL COMMENT 'Stored file name',
+  `file_path` varchar(512) DEFAULT NULL COMMENT 'Local file path',
+  `file_url` varchar(512) DEFAULT NULL COMMENT 'Public URL',
+  `file_size` bigint DEFAULT NULL COMMENT 'File size',
+  `content_type` varchar(128) DEFAULT NULL COMMENT 'Content type',
+  `created_at` datetime NOT NULL COMMENT 'Created time',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='File records';
 
-CREATE TABLE IF NOT EXISTS sleep_record (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL COMMENT 'User id',
-  start_time DATETIME NOT NULL COMMENT 'Sleep start time',
-  end_time DATETIME NOT NULL COMMENT 'Sleep end time',
-  record_date DATE NOT NULL COMMENT 'Record date',
-  deep_sleep_minutes INT COMMENT 'Deep sleep minutes',
-  light_sleep_minutes INT COMMENT 'Light sleep minutes',
-  quality VARCHAR(16) COMMENT 'Sleep quality',
-  routine VARCHAR(32) COMMENT 'Routine label'
-) COMMENT='Sleep records';
+CREATE TABLE `goal` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint NOT NULL COMMENT 'User id',
+  `goal_type` int NOT NULL COMMENT 'Goal type (int)',
+  `target_value` int NOT NULL COMMENT 'Target value',
+  `current_value` int NOT NULL COMMENT 'Current value',
+  `period` varchar(16) NOT NULL COMMENT 'Period (day/week)',
+  `start_date` date DEFAULT NULL COMMENT '开始日期',
+  `end_date` date DEFAULT NULL COMMENT '结束日期',
+  `status` tinyint DEFAULT '1' COMMENT '状态(1:进行中, 2:已达成, 3:放弃)',
+  `ai_strategy` text COMMENT 'AI生成的执行策略/建议描述',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Goals';
 
-CREATE TABLE IF NOT EXISTS weight_record (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL COMMENT 'User id',
-  weight DOUBLE NOT NULL COMMENT 'Weight (kg)',
-  bmi DOUBLE COMMENT 'BMI',
-  date DATE NOT NULL COMMENT 'Record date'
-) COMMENT='Weight records';
+CREATE TABLE `health_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint NOT NULL COMMENT 'User id',
+  `systolic` int DEFAULT NULL COMMENT 'Systolic blood pressure',
+  `diastolic` int DEFAULT NULL COMMENT 'Diastolic blood pressure',
+  `heart_rate` int DEFAULT NULL COMMENT 'Heart rate',
+  `date` date NOT NULL COMMENT 'Record date',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=68 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Blood pressure/heart rate records';
 
-CREATE TABLE IF NOT EXISTS period_record (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL COMMENT 'User id',
-  start_date DATE NOT NULL COMMENT 'Period start date',
-  end_date DATE NOT NULL COMMENT 'Period end date',
-  flow INT COMMENT 'Flow level (int)',
-  note VARCHAR(255) COMMENT 'Notes',
-  created_at DATETIME COMMENT 'Created time'
-) COMMENT='Period records';
+CREATE TABLE `medication` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint NOT NULL COMMENT 'User id',
+  `drug_name` varchar(64) NOT NULL COMMENT 'Drug name',
+  `dosage` varchar(32) NOT NULL COMMENT 'Dosage',
+  `frequency` varchar(32) NOT NULL COMMENT 'Frequency',
+  `remind_time` varchar(16) DEFAULT NULL COMMENT 'Remind time (yyyy-MM-dd HH:mm)',
+  `stock` int DEFAULT NULL COMMENT 'Stock',
+  `stock_threshold` int DEFAULT NULL COMMENT 'Low stock threshold',
+  `start_date` date NOT NULL COMMENT 'Start date',
+  `end_date` date DEFAULT NULL COMMENT 'End date',
+  `notes` varchar(255) DEFAULT NULL COMMENT 'Notes',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Medication list';
 
-CREATE TABLE IF NOT EXISTS health_record (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL COMMENT 'User id',
-  systolic INT COMMENT 'Systolic blood pressure',
-  diastolic INT COMMENT 'Diastolic blood pressure',
-  heart_rate INT COMMENT 'Heart rate',
-  date DATE NOT NULL COMMENT 'Record date'
-) COMMENT='Blood pressure/heart rate records';
+CREATE TABLE `medication_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint NOT NULL COMMENT 'User id',
+  `medication_id` bigint NOT NULL COMMENT 'Medication id',
+  `date` date NOT NULL COMMENT 'Date',
+  `time` time NOT NULL COMMENT 'Time',
+  `status` tinyint NOT NULL COMMENT 'Status (0=未服,1=已服,2=漏服)',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Medication intake records';
 
-CREATE TABLE IF NOT EXISTS goal (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL COMMENT 'User id',
-  goal_type INT NOT NULL COMMENT 'Goal type (int)',
-  target_value INT NOT NULL COMMENT 'Target value',
-  current_value INT NOT NULL COMMENT 'Current value',
-  period VARCHAR(16) NOT NULL COMMENT 'Period (day/week)',
-  start_date DATE COMMENT 'Start date',
-  end_date DATE COMMENT 'End date',
-  status TINYINT DEFAULT 1 COMMENT 'Status (1=进行中,2=已达成,3=放弃)',
-  ai_strategy TEXT COMMENT 'AI strategy/notes'
-) COMMENT='Goals';
+CREATE TABLE `period_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint NOT NULL COMMENT 'User id',
+  `start_date` date NOT NULL COMMENT 'Period start date',
+  `end_date` date NOT NULL COMMENT 'Period end date',
+  `flow` int DEFAULT NULL COMMENT 'Flow level (int)',
+  `note` varchar(255) DEFAULT NULL COMMENT 'Notes',
+  `created_at` datetime DEFAULT NULL COMMENT 'Created time',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Period records';
 
-CREATE TABLE IF NOT EXISTS medication (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL COMMENT 'User id',
-  drug_name VARCHAR(64) NOT NULL COMMENT 'Drug name',
-  dosage VARCHAR(32) NOT NULL COMMENT 'Dosage',
-  frequency VARCHAR(32) NOT NULL COMMENT 'Frequency',
-  remind_time VARCHAR(16) COMMENT 'Remind time (yyyy-MM-dd HH:mm)',
-  stock INT COMMENT 'Stock',
-  stock_threshold INT COMMENT 'Low stock threshold',
-  start_date DATE NOT NULL COMMENT 'Start date',
-  end_date DATE COMMENT 'End date',
-  notes VARCHAR(255) COMMENT 'Notes'
-) COMMENT='Medication list';
+CREATE TABLE `privacy_settings` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint NOT NULL COMMENT 'User id',
+  `allow_subscribe` tinyint NOT NULL DEFAULT '1' COMMENT 'Allow subscribe messages',
+  `allow_cloud_sync` tinyint NOT NULL DEFAULT '1' COMMENT 'Allow cloud sync',
+  `allow_family_share` tinyint NOT NULL DEFAULT '1' COMMENT 'Allow family share',
+  `created_at` datetime DEFAULT NULL COMMENT 'Created time',
+  `updated_at` datetime DEFAULT NULL COMMENT 'Updated time',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Privacy settings';
 
-CREATE TABLE IF NOT EXISTS medication_record (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL COMMENT 'User id',
-  medication_id BIGINT NOT NULL COMMENT 'Medication id',
-  date DATE NOT NULL COMMENT 'Date',
-  time TIME NOT NULL COMMENT 'Time',
-  status TINYINT NOT NULL COMMENT 'Status (0=未服,1=已服,2=漏服)'
-) COMMENT='Medication intake records';
+CREATE TABLE `reminder` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint NOT NULL COMMENT 'User id',
+  `title` varchar(64) NOT NULL COMMENT 'Title',
+  `type` int NOT NULL COMMENT 'Type (1=运动,2=饮食,3=睡眠,4=用药)',
+  `content` varchar(255) DEFAULT NULL COMMENT 'Content',
+  `remind_time` datetime DEFAULT NULL COMMENT 'Remind time',
+  `status` tinyint NOT NULL DEFAULT '0' COMMENT 'Status (0=未提醒,1=已提醒)',
+  `created_at` datetime DEFAULT NULL COMMENT 'Created time',
+  `source_type` tinyint DEFAULT '0' COMMENT '来源(0:手动设置, 1:AI补救自动生成)',
+  `related_record_id` bigint DEFAULT NULL COMMENT '关联的数据记录ID(如饮食记录ID)',
+  `finish_time` datetime DEFAULT NULL COMMENT '实际完成时间',
+  `priority` tinyint DEFAULT '1' COMMENT '优先级(1:普通, 2:重要, 3:紧急)',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Reminders';
 
-CREATE TABLE IF NOT EXISTS sms_code (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  phone VARCHAR(20) NOT NULL COMMENT 'Phone',
-  code VARCHAR(8) NOT NULL COMMENT 'SMS code',
-  created_at DATETIME NOT NULL COMMENT 'Created time',
-  expires_at DATETIME NOT NULL COMMENT 'Expires time',
-  used TINYINT NOT NULL DEFAULT 0 COMMENT 'Used flag'
-) COMMENT='SMS codes';
+CREATE TABLE `sleep_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint NOT NULL COMMENT 'User id',
+  `start_time` datetime NOT NULL COMMENT 'Sleep start time',
+  `end_time` datetime NOT NULL COMMENT 'Sleep end time',
+  `deep_sleep_minutes` int DEFAULT NULL COMMENT 'Deep sleep minutes',
+  `light_sleep_minutes` int DEFAULT NULL COMMENT 'Light sleep minutes',
+  `quality` varchar(16) DEFAULT NULL COMMENT 'Sleep quality',
+  `routine` varchar(32) DEFAULT NULL COMMENT 'Routine label',
+  `record_date` date NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_sleep_record_user_date` (`user_id`,`record_date`)
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Sleep records';
 
-CREATE TABLE IF NOT EXISTS reminder (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL COMMENT 'User id',
-  title VARCHAR(64) NOT NULL COMMENT 'Title',
-  type INT NOT NULL COMMENT 'Type (1=运动,2=饮食,3=睡眠,4=用药)',
-  content VARCHAR(255) COMMENT 'Content',
-  remind_time DATETIME COMMENT 'Remind time',
-  status TINYINT NOT NULL DEFAULT 0 COMMENT 'Status (0=未提醒,1=已提醒)',
-  source_type TINYINT DEFAULT 0 COMMENT 'Source (0=手动,1=AI生成)',
-  related_record_id BIGINT COMMENT 'Related record id',
-  finish_time DATETIME COMMENT 'Finish time',
-  priority TINYINT DEFAULT 1 COMMENT 'Priority (1=普通,2=重要,3=紧急)',
-  created_at DATETIME COMMENT 'Created time'
-) COMMENT='Reminders';
+CREATE TABLE `sms_code` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `phone` varchar(20) NOT NULL COMMENT 'Phone',
+  `code` varchar(8) NOT NULL COMMENT 'SMS code',
+  `created_at` datetime NOT NULL COMMENT 'Created time',
+  `expires_at` datetime NOT NULL COMMENT 'Expires time',
+  `used` tinyint NOT NULL DEFAULT '0' COMMENT 'Used flag',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='SMS codes';
 
-CREATE TABLE IF NOT EXISTS we_run_record (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL COMMENT 'User id',
-  record_date DATE NOT NULL COMMENT 'Date',
-  steps INT NOT NULL COMMENT 'Steps',
-  created_at DATETIME NOT NULL COMMENT 'Created time',
-  UNIQUE KEY uk_user_date (user_id, record_date)
-) COMMENT='WeRun steps';
+CREATE TABLE `subscribe_task` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint NOT NULL COMMENT 'User id',
+  `openid` varchar(64) NOT NULL COMMENT 'WeChat openid',
+  `template_id` varchar(128) NOT NULL COMMENT 'Template id',
+  `page` varchar(128) DEFAULT NULL COMMENT 'Target page',
+  `data_json` text COMMENT 'Template data json',
+  `send_time` datetime NOT NULL COMMENT 'Send time',
+  `status` tinyint NOT NULL DEFAULT '0' COMMENT 'Status (0=待发送,1=已发送,2=失败)',
+  `response` text COMMENT 'Send response',
+  `created_at` datetime NOT NULL COMMENT 'Created time',
+  `sent_at` datetime DEFAULT NULL COMMENT 'Sent time',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Subscribe message tasks';
 
-CREATE TABLE IF NOT EXISTS subscribe_task (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL COMMENT 'User id',
-  openid VARCHAR(64) NOT NULL COMMENT 'WeChat openid',
-  template_id VARCHAR(128) NOT NULL COMMENT 'Template id',
-  page VARCHAR(128) COMMENT 'Target page',
-  data_json TEXT COMMENT 'Template data json',
-  send_time DATETIME NOT NULL COMMENT 'Send time',
-  status TINYINT NOT NULL DEFAULT 0 COMMENT 'Status (0=待发送,1=已发送,2=失败)',
-  response TEXT COMMENT 'Send response',
-  created_at DATETIME NOT NULL COMMENT 'Created time',
-  sent_at DATETIME COMMENT 'Sent time'
-) COMMENT='Subscribe message tasks';
+CREATE TABLE `user` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `username` varchar(32) DEFAULT NULL COMMENT 'Login username',
+  `password` varchar(128) DEFAULT NULL COMMENT 'Password hash',
+  `phone` varchar(20) DEFAULT NULL COMMENT 'Phone number',
+  `wx_openid` varchar(64) DEFAULT NULL COMMENT 'WeChat openid',
+  `wx_unionid` varchar(64) DEFAULT NULL COMMENT 'WeChat unionid',
+  `wx_phone` varchar(20) DEFAULT NULL COMMENT 'WeChat bound phone',
+  `wx_nickname` varchar(64) DEFAULT NULL COMMENT 'WeChat nickname',
+  `wx_avatar` varchar(255) DEFAULT NULL COMMENT 'WeChat avatar url',
+  `sex` varchar(8) DEFAULT NULL COMMENT 'Gender',
+  `age` int DEFAULT NULL COMMENT 'Age',
+  `height` int DEFAULT NULL COMMENT 'Height (cm)',
+  `weight` double DEFAULT NULL COMMENT 'Weight (kg)',
+  `systolic` int DEFAULT NULL COMMENT 'Systolic blood pressure',
+  `diastolic` int DEFAULT NULL COMMENT 'Diastolic blood pressure',
+  `heart_rate` int DEFAULT NULL COMMENT 'Heart rate',
+  `created_at` datetime DEFAULT NULL COMMENT 'Created time',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `phone` (`phone`),
+  UNIQUE KEY `wx_openid` (`wx_openid`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='User profile';
 
-CREATE TABLE IF NOT EXISTS ai_chat_message (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT NOT NULL COMMENT 'User id',
-  role VARCHAR(16) NOT NULL COMMENT 'Role (user/assistant)',
-  content_text TEXT COMMENT 'Plain text',
-  content_json TEXT COMMENT 'Raw content json',
-  created_at DATETIME NOT NULL COMMENT 'Created time'
-) COMMENT='AI chat messages';
+CREATE TABLE `water_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL,
+  `ml` int NOT NULL COMMENT '摄入毫升数',
+  `drink_time` datetime NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='饮水记录';
 
-CREATE TABLE IF NOT EXISTS system_log (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  level VARCHAR(16) NOT NULL COMMENT 'Level',
-  module VARCHAR(64) COMMENT 'Module',
-  path VARCHAR(128) COMMENT 'Request path',
-  method VARCHAR(16) COMMENT 'HTTP method',
-  message VARCHAR(255) COMMENT 'Message',
-  detail TEXT COMMENT 'Detail',
-  created_at DATETIME NOT NULL COMMENT 'Created time'
-) COMMENT='System logs';
+CREATE TABLE `we_run_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint NOT NULL COMMENT 'User id',
+  `record_date` date NOT NULL COMMENT 'Date',
+  `steps` int NOT NULL COMMENT 'Steps',
+  `created_at` datetime NOT NULL COMMENT 'Created time',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_date` (`user_id`,`record_date`)
+) ENGINE=InnoDB AUTO_INCREMENT=74 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='WeRun steps';
 
-CREATE TABLE IF NOT EXISTS ai_log (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT COMMENT 'User id',
-  wx_openid VARCHAR(64) COMMENT 'WeChat openid',
-  request_text TEXT COMMENT 'Request text',
-  response_text TEXT COMMENT 'Response text',
-  status TINYINT NOT NULL DEFAULT 0 COMMENT 'Status (0=success,1=fail)',
-  error TEXT COMMENT 'Error message',
-  created_at DATETIME NOT NULL COMMENT 'Created time'
-) COMMENT='AI logs';
-
-CREATE TABLE IF NOT EXISTS file_record (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Primary key',
-  user_id BIGINT COMMENT 'User id',
-  type VARCHAR(32) COMMENT 'File type',
-  original_name VARCHAR(255) COMMENT 'Original file name',
-  file_name VARCHAR(255) COMMENT 'Stored file name',
-  file_path VARCHAR(512) COMMENT 'Local file path',
-  file_url VARCHAR(512) COMMENT 'Public URL',
-  file_size BIGINT COMMENT 'File size',
-  content_type VARCHAR(128) COMMENT 'Content type',
-  created_at DATETIME NOT NULL COMMENT 'Created time'
-) COMMENT='File records';
+CREATE TABLE `weight_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `user_id` bigint NOT NULL COMMENT 'User id',
+  `weight` double NOT NULL COMMENT 'Weight (kg)',
+  `bmi` double DEFAULT NULL COMMENT 'BMI',
+  `date` date NOT NULL COMMENT 'Record date',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Weight records';

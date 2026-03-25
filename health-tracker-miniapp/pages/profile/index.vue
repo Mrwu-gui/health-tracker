@@ -178,11 +178,6 @@
         </view>
       </view>
     </view>
-
-    <text v-if="message" class="status">{{ message }}</text>
-    <text v-if="loading" class="status">加载中...</text>
-    <text v-if="error" class="status error">{{ error }}</text>
-
     <!-- 性别选择器 -->
     <view v-if="showSexPicker" class="picker-mask" @tap="showSexPicker = false">
       <view class="picker-sheet" @tap.stop>

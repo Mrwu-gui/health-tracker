@@ -249,7 +249,7 @@
 
         <!-- 错误状态 -->
         <view v-else-if="aiError" class="ai-error">
-          <text class="error-icon">⚠️</text>
+          <image class="error-icon" src="/static/tabbar/error.png" mode="aspectFit"></image>
           <text class="error-text">{{ aiError }}</text>
           <view class="error-retry pill" @tap="fetchAiInsight(true)">
             <text class="error-retry-text">点击重试</text>
@@ -1414,7 +1414,8 @@ page {
 }
 
 .error-icon {
-  font-size: 36rpx;
+  width: 32rpx;
+  height: 32rpx;
 }
 
 .error-text {

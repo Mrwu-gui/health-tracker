@@ -46,7 +46,7 @@
 
       <!-- 空状态 -->
       <view v-else class="empty-state">
-        <text class="empty-icon">📝</text>
+        <image class="empty-icon" src="/static/tabbar/doc-fail.png" mode="aspectFit"></image>
         <text class="empty-text">暂无记录</text>
         <text class="empty-hint">拍照或上传图片识别食物</text>
       </view>
@@ -370,6 +370,7 @@ export default {
     const initial = uni.getStorageSync("aiInitialMessage");
     if (initial && typeof initial === "string" && initial.trim()) {
       uni.removeStorageSync("aiInitialMessage");
+      this.currentTab = 1; // 自动切换到AI对话Tab
       this.sendMessageWithText(initial.trim());
     }
   },
@@ -1016,9 +1017,11 @@ export default {
 }
 
 .empty-icon {
-  font-size: 96rpx;
-  opacity: 0.6;
+  width: 160rpx;  /* 调整图片宽度（建议值） */
+  height: 160rpx;  /* 调整图片高度（建议值） */
+  opacity: 0.8;    /* 调整透明度 */
 }
+
 
 .empty-text {
   font-size: 28rpx;

@@ -17,10 +17,6 @@
             <image class="feature-icon" src="/static/tabbar/history_s.png" mode="aspectFit" />
             <text class="feature-text">记录用药历史</text>
           </view>
-          <view class="feature-item">
-            <image class="feature-icon" src="/static/tabbar/tips_s.png" mode="aspectFit" />
-            <text class="feature-text">智能健康建议</text>
-          </view>
         </view>
 
         <button class="empty-add-btn pill" @tap="openAdd">
@@ -32,19 +28,6 @@
 
     <!-- 有数据时的页面 -->
     <view v-else class="page">
-      <!-- AI 建议卡片 -->
-      <view v-if="aiLoadingSuggestion" class="ai-tip-card card">
-        <text class="ai-tip-text">✨ 智康正在分析您的用药情况...</text>
-      </view>
-      <view v-else-if="aiSuggestion" class="ai-suggestion-card card" @tap="aiSuggestionExpanded = !aiSuggestionExpanded">
-        <view class="ai-suggestion-head">
-          <image class="ai-suggestion-icon" src="/static/tabbar/tips.png" mode="aspectFit" />
-          <text class="ai-suggestion-title">智康建议</text>
-          <text class="ai-suggestion-arrow">{{ aiSuggestionExpanded ? '收起' : '展开' }}</text>
-        </view>
-        <text v-if="aiSuggestionExpanded" class="ai-suggestion-text">{{ aiSuggestion }}</text>
-      </view>
-
       <!-- 今日用药标题 -->
       <view class="section-header">
         <text class="section-title">今日用药</text>
@@ -246,9 +229,6 @@ export default {
     return {
       todayMeds: [],
       hasAnyMedication: false,
-      aiSuggestion: "",
-      aiSuggestionExpanded: false,
-      aiLoadingSuggestion: false,
       showModal: false,
       saving: false,
       editingId: null,
@@ -630,7 +610,6 @@ export default {
           uni.showToast({ title: "已保存", icon: "success" });
           this.closeModal();
           this.fetchMeds();
-          if (!this.editingId) this.fetchAiSuggestionForMedication(payload);
         })
         .catch((err) => {
           uni.showToast({ title: err.message || "保存失败", icon: "none" });
@@ -639,20 +618,6 @@ export default {
           this.saving = false;
         });
     },
-    fetchAiSuggestionForMedication(payload) {
-      this.aiLoadingSuggestion = true;
-      this.aiSuggestionExpanded = false;
-      const prompt = `用户刚添加了药物：${payload.drugName} ${payload.dosage}，用法 ${payload.frequency || "未填"}，提醒时间 ${payload.remindTime || "未设置"}。请用 1～3 句话给出简要的用药提醒或健康建议，语气亲切。`;
-      const userId = uni.getStorageSync("userId") || 1;
-      request("/api/ai/chat", "POST", { userId, message: prompt, store: false })
-        .then((res) => {
-          if (res && res.content) this.aiSuggestion = String(res.content).trim();
-        })
-        .catch(() => {})
-        .finally(() => {
-          this.aiLoadingSuggestion = false;
-        });
-    }
   }
 };
 </script>
@@ -748,60 +713,6 @@ export default {
 .add-today-arrow {
   font-size: 40rpx;
   color: rgba(255, 255, 255, 0.6);
-}
-
-/* AI 建议卡片 */
-.ai-tip-card {
-  background: linear-gradient(135deg, #FEF3C7 0%, #FEF9C3 100%);
-  border: 2rpx solid #FDE68A;
-}
-
-.ai-tip-text {
-  font-size: 24rpx;
-  color: #92400E;
-  font-weight: 500;
-}
-
-.ai-suggestion-card {
-  background: #fff;
-  border: 1px solid #E9E1D8;
-  padding: 24rpx;
-}
-
-.ai-suggestion-head {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.ai-suggestion-icon {
-  width: 40rpx;
-  height: 40rpx;
-}
-
-.ai-suggestion-title {
-  flex: 1;
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #A23F00;
-}
-
-.ai-suggestion-arrow {
-  font-size: 24rpx;
-  color: #8B7355;
-  padding: 4rpx 16rpx;
-  background: #FAF8F5;
-  border-radius: 20rpx;
-}
-
-.ai-suggestion-text {
-  font-size: 26rpx;
-  line-height: 1.7;
-  color: #564337;
-  margin-top: 16rpx;
-  padding-top: 16rpx;
-  border-top: 1px solid #FAF8F5;
-  display: block;
 }
 
 /* Section Header */

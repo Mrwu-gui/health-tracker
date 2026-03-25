@@ -57,7 +57,7 @@
 
       <!-- 备案信息 -->
       <view class="footer">
-        <text class="icp">晋ICP备2026003386号</text>
+        <text class="icp">晋ICP备2026003386号-1</text>
       </view>
     </view>
   </view>

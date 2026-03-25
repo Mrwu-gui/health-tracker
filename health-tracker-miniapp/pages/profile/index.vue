@@ -118,7 +118,7 @@
                   <text class="avatar-placeholder-text">{{ (bodyForm.nickname || '?').slice(0, 1) }}</text>
                 </view>
                 <view class="avatar-camera">
-                  <text class="camera-icon">📷</text>
+                  <image class="camera-icon" src="/static/tabbar/camera_s.png" mode="aspectFit"></image>
                 </view>
               </button>
               <text class="avatar-tip">点击更换头像</text>
@@ -127,13 +127,13 @@
             <!-- 基本信息表单 -->
             <view class="form-section-edit">
               <view class="form-field card-white">
-                <text class="form-field-label">昵称</text>
-                <input class="form-field-input" type="nickname" v-model="bodyForm.nickname" placeholder="请输入昵称" />
+                <text class="form-field-label">昵称<text class="required">*</text></text>
+                <input class="form-field-input" type="text" v-model="bodyForm.nickname" placeholder="请输入昵称（必填）" />
               </view>
               <view class="form-field card-white" @tap="showSexPicker = true">
-                <text class="form-field-label">性别</text>
+                <text class="form-field-label">性别<text class="required">*</text></text>
                 <view class="form-field-select">
-                  <text :class="{ 'placeholder': !bodyForm.sex }">{{ bodyForm.sex || '请选择' }}</text>
+                  <text :class="{ 'placeholder': !bodyForm.sex }">{{ bodyForm.sex || '请选择（必填）' }}</text>
                   <text class="select-arrow">▼</text>
                 </view>
               </view>
@@ -254,6 +254,7 @@ export default {
   onLoad() {
   },
   onShow() {
+    this.showBodyModal = false;
     const pages = getCurrentPages();
     const page = pages[pages.length - 1];
     if (page && typeof page.getTabBar === "function") {
@@ -266,6 +267,9 @@ export default {
     }
     this.fetchProfile();
     this.loadLocalProfile();
+  },
+  onHide() {
+    this.showBodyModal = false;
   },
   methods: {
     uploadAvatarFile(filePath) {
@@ -320,6 +324,12 @@ export default {
       this.loading = true;
       this.error = "";
       this.message = "";
+      const timeoutId = setTimeout(() => {
+        if (this.loading) {
+          this.loading = false;
+          if (!this.error) this.error = "获取资料失败";
+        }
+      }, 8000);
       const userId = uni.getStorageSync("userId") || 1;
       request("/api/user/profile", "GET", { userId })
         .then((data) => {
@@ -354,6 +364,7 @@ export default {
           this.error = "获取资料失败";
         })
         .finally(() => {
+          clearTimeout(timeoutId);
           this.loading = false;
         });
     },
@@ -418,35 +429,35 @@ export default {
       const diastolic = toInt(this.bodyForm.diastolic);
       const heartRate = toInt(this.bodyForm.heartRate);
       if (!this.bodyForm.nickname) {
-        this.message = "请输入用户名";
+        uni.showToast({ title: "请输入昵称", icon: "none" });
         return;
       }
       if (!this.bodyForm.sex) {
-        this.message = "请选择性别";
+        uni.showToast({ title: "请选择性别", icon: "none" });
         return;
       }
       if (age !== null && (age < 1 || age > 120)) {
-        this.message = "年龄需在 1-120 之间";
+        uni.showToast({ title: "年龄需在 1-120 之间", icon: "none" });
         return;
       }
       if (height !== null && (height < 50 || height > 250)) {
-        this.message = "身高需在 50-250 之间";
+        uni.showToast({ title: "身高需在 50-250 之间", icon: "none" });
         return;
       }
       if (weight !== null && (weight < 20 || weight > 300)) {
-        this.message = "体重需在 20-300 之间";
+        uni.showToast({ title: "体重需在 20-300 之间", icon: "none" });
         return;
       }
       if (systolic !== null && (systolic < 60 || systolic > 250)) {
-        this.message = "收缩压需在 60-250 之间";
+        uni.showToast({ title: "收缩压需在 60-250 之间", icon: "none" });
         return;
       }
       if (diastolic !== null && (diastolic < 40 || diastolic > 150)) {
-        this.message = "舒张压需在 40-150 之间";
+        uni.showToast({ title: "舒张压需在 40-150 之间", icon: "none" });
         return;
       }
       if (heartRate !== null && (heartRate < 40 || heartRate > 200)) {
-        this.message = "心率需在 40-200 之间";
+        uni.showToast({ title: "心率需在 40-200 之间", icon: "none" });
         return;
       }
       this.bodySaving = true;
@@ -1073,7 +1084,8 @@ export default {
 }
 
 .camera-icon {
-  font-size: 24rpx;
+  width: 24rpx;
+  height: 24rpx;
 }
 
 .avatar-tip {
@@ -1108,6 +1120,11 @@ export default {
   font-weight: 500;
   width: 120rpx;
   flex-shrink: 0;
+}
+
+.required {
+  color: #ef4444;
+  margin-left: 4rpx;
 }
 
 .form-field-input {

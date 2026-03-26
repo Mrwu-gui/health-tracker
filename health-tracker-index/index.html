@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>智康AI - 官方网站</title>
+  <link rel="icon" href="./assets/favicon.png" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-surface-variant": "#564337",
+            "surface-variant": "#e3e2e0",
+            "on-secondary-fixed": "#2b1700",
+            "surface-container-low": "#f4f3f1",
+            "on-error-container": "#93000a",
+            "inverse-primary": "#ffb595",
+            "on-tertiary-fixed": "#00210c",
+            "tertiary-fixed": "#6bfe9c",
+            "secondary": "#865300",
+            "primary-fixed": "#ffdbcd",
+            "primary-fixed-dim": "#ffb595",
+            "on-secondary-fixed-variant": "#663e00",
+            "surface": "#faf9f6",
+            "secondary-fixed": "#ffddb9",
+            "surface-bright": "#faf9f6",
+            "tertiary-container": "#00b05c",
+            "on-surface": "#1a1c1a",
+            "surface-container-highest": "#e3e2e0",
+            "primary-container": "#fa7025",
+            "surface-container-high": "#e9e8e5",
+            "on-primary-container": "#591f00",
+            "surface-tint": "#a23f00",
+            "on-primary": "#ffffff",
+            "outline-variant": "#dcc1b1",
+            "on-secondary-container": "#694000",
+            "on-error": "#ffffff",
+            "surface-dim": "#dbdad7",
+            "on-primary-fixed": "#351000",
+            "inverse-surface": "#2f312f",
+            "inverse-on-surface": "#f2f1ee",
+            "surface-container-lowest": "#ffffff",
+            "secondary-container": "#fea520",
+            "surface-container": "#efeeeb",
+            "on-background": "#1a1c1a",
+            "on-primary-fixed-variant": "#7c2e00",
+            "error-container": "#ffdad6",
+            "tertiary": "#006d37",
+            "outline": "#897365",
+            "on-tertiary-container": "#003a1a",
+            "on-tertiary-fixed-variant": "#005228",
+            "secondary-fixed-dim": "#ffb961",
+            "on-secondary": "#ffffff",
+            "error": "#ba1a1a",
+            "primary": "#a23f00",
+            "background": "#faf9f6",
+            "on-tertiary": "#ffffff",
+            "tertiary-fixed-dim": "#4ae183"
+          },
+          fontFamily: {
+            "headline": ["Manrope"],
+            "body": ["Inter"],
+            "label": ["Inter"]
+          },
+          borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"}
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #faf9f6; color: #1a1c1a; }
+    .font-manrope { font-family: 'Manrope', sans-serif; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .glass-effect { backdrop-filter: blur(20px); background: rgba(250, 249, 246, 0.7); }
+    .footer { text-align: center; padding: 24px 0 32px; color: #8c8c8c; font-size: 12px; }
+    .footer-links { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .footer-separator { color: #bdbdbd; }
+    .footer-copy { margin-top: 8px; }
+    .footer a { color: inherit; text-decoration: none; }
+    .footer a:hover { color: #666; text-decoration: underline; }
+  </style>
+</head>
+<body class="selection:bg-primary-container/30">
+  <!-- TopAppBar Removed -->
+
+  <main>
+    <!-- Hero Section -->
+    <section class="relative px-6 md:px-12 py-16 md:py-24 max-w-screen-2xl mx-auto grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+      <div class="space-y-6 md:space-y-8">
+        <h1 class="text-4xl sm:text-5xl md:text-7xl font-extrabold font-manrope text-on-surface leading-[1.15] tracking-tight">
+          智康AI：您的<br /><span class="text-primary">智能健康守护者</span>
+        </h1>
+        <p class="text-lg md:text-xl text-on-surface-variant max-w-lg leading-relaxed">
+          自律不再孤单，AI 让每一步都更有温度。帮助您更轻松地记录与坚持。
+        </p>
+        <div class="flex flex-wrap gap-3 md:gap-4 items-center">
+          <a href="#qr" class="bg-primary text-on-primary px-6 md:px-10 py-4 md:py-5 rounded-full font-bold text-base md:text-lg hover:opacity-90 transition-all shadow-xl shadow-primary/20">立即体验</a>
+          <a href="#features" class="bg-surface-container-low text-primary px-6 md:px-10 py-4 md:py-5 rounded-full font-bold text-base md:text-lg hover:bg-surface-container-high transition-all">查看功能</a>
+        </div>
+      </div>
+      <div class="relative flex justify-center" id="qr">
+        <div class="relative p-8 md:p-12 bg-white rounded-xl shadow-2xl border border-outline-variant/20 group">
+          <div class="absolute -inset-4 bg-primary/5 rounded-[3rem] md:rounded-[4rem] -z-10 rotate-3"></div>
+          <div class="w-48 h-48 md:w-64 md:h-64 bg-surface-container-low flex items-center justify-center rounded-lg border-2 border-dashed border-outline-variant overflow-hidden">
+            <img src="./assets/miniapp-qrcode.jpg" alt="智康AI 小程序体验码" class="w-full h-full object-contain" />
+          </div>
+          <div class="mt-6 text-center">
+            <p class="text-xs md:text-sm font-bold text-primary tracking-widest uppercase">扫描上方二维码</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feature Highlights -->
+    <section id="features" class="px-6 md:px-12 py-16 md:py-24 max-w-screen-2xl mx-auto">
+      <div class="mb-12 md:mb-16 text-center">
+        <h2 class="text-3xl md:text-4xl font-extrabold font-manrope mb-4">全方位健康关怀</h2>
+        <div class="h-1.5 w-24 bg-primary mx-auto rounded-full"></div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div class="bg-surface-container-low p-8 md:p-10 rounded-xl hover:translate-y-[-6px] transition-transform duration-500">
+          <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+            <span class="material-symbols-outlined text-primary text-3xl">history_edu</span>
+          </div>
+          <h3 class="text-xl md:text-2xl font-bold mb-3">轻松记录</h3>
+          <p class="text-on-surface-variant leading-relaxed">记录步数、睡眠、体重与饮食，让健康数据更清晰。</p>
+        </div>
+        <div class="bg-surface-container-lowest p-8 md:p-10 rounded-xl shadow-sm border border-outline-variant/10 hover:translate-y-[-6px] transition-transform duration-500">
+          <div class="w-14 h-14 bg-secondary/10 rounded-full flex items-center justify-center mb-6">
+            <span class="material-symbols-outlined text-secondary text-3xl">auto_awesome</span>
+          </div>
+          <h3 class="text-xl md:text-2xl font-bold mb-3">AI 温暖建议</h3>
+          <p class="text-on-surface-variant leading-relaxed">基于您的记录提供贴心建议，帮助您持续改善生活习惯。</p>
+        </div>
+        <div class="bg-surface-container-low p-8 md:p-10 rounded-xl hover:translate-y-[-6px] transition-transform duration-500">
+          <div class="w-14 h-14 bg-tertiary/10 rounded-full flex items-center justify-center mb-6">
+            <span class="material-symbols-outlined text-tertiary text-3xl">track_changes</span>
+          </div>
+          <h3 class="text-xl md:text-2xl font-bold mb-3">目标管理</h3>
+          <p class="text-on-surface-variant leading-relaxed">设定健康小目标，持续追踪并看到自己的变化。</p>
+        </div>
+        <div class="bg-surface-container-lowest p-8 md:p-10 rounded-xl shadow-sm border border-outline-variant/10 hover:translate-y-[-6px] transition-transform duration-500">
+          <div class="w-14 h-14 bg-primary-container/10 rounded-full flex items-center justify-center mb-6">
+            <span class="material-symbols-outlined text-primary-container text-3xl">notifications_active</span>
+          </div>
+          <h3 class="text-xl md:text-2xl font-bold mb-3">健康提醒</h3>
+          <p class="text-on-surface-variant leading-relaxed">运动、饮食、睡眠提醒，让习惯更容易坚持。</p>
+        </div>
+        <div class="bg-surface-container-low p-8 md:p-10 rounded-xl hover:translate-y-[-6px] transition-transform duration-500">
+          <div class="w-14 h-14 bg-on-secondary-fixed-variant/10 rounded-full flex items-center justify-center mb-6">
+            <span class="material-symbols-outlined text-on-secondary-fixed-variant text-3xl">trending_up</span>
+          </div>
+          <h3 class="text-xl md:text-2xl font-bold mb-3">趋势分析</h3>
+          <p class="text-on-surface-variant leading-relaxed">查看近7天/30天趋势，理解自己的变化节奏。</p>
+        </div>
+        <div class="bg-surface-container-lowest p-8 md:p-10 rounded-xl shadow-sm border border-outline-variant/10 hover:translate-y-[-6px] transition-transform duration-500">
+          <div class="w-14 h-14 bg-tertiary-container/10 rounded-full flex items-center justify-center mb-6">
+            <span class="material-symbols-outlined text-tertiary-container text-3xl">verified_user</span>
+          </div>
+          <h3 class="text-xl md:text-2xl font-bold mb-3">数据安全</h3>
+          <p class="text-on-surface-variant leading-relaxed">多重安全机制保护数据，仅用于健康分析与建议。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI Advice Display Area -->
+    <section id="about" class="bg-surface-container-low py-16 md:py-24 px-6 md:px-12 overflow-hidden">
+      <div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center gap-10 md:gap-16">
+        <div class="md:w-1/2 space-y-5 md:space-y-6">
+          <div class="inline-flex items-center space-x-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-bold">
+            <span class="material-symbols-outlined text-sm">smart_toy</span>
+            <span>AI 对话示例</span>
+          </div>
+          <h2 class="text-3xl md:text-4xl font-extrabold font-manrope">像对话一样简单<br/>更懂你的节奏</h2>
+          <p class="text-base md:text-lg text-on-surface-variant">智康AI 关注你的记录与日常节奏，为你提供更温暖、更可执行的建议。</p>
+        </div>
+        <div class="md:w-1/2 w-full max-w-xl">
+          <div class="bg-[#FCFBF9] rounded-3xl shadow-2xl p-6 md:p-8 space-y-6 border border-outline-variant/10">
+            <div class="flex items-center justify-end gap-3">
+              <div class="bg-primary text-on-primary px-5 py-3 rounded-3xl rounded-tr-none shadow-md">
+                <p class="font-medium">午睡睡多久合适？</p>
+              </div>
+              <div class="w-10 h-10 bg-surface-container-highest rounded-full flex items-center justify-center text-on-surface-variant text-sm font-bold shrink-0">我</div>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 shadow-lg shadow-primary/20">智</div>
+              <div class="bg-white p-6 rounded-3xl rounded-tl-none border border-outline-variant/20 shadow-sm space-y-4 max-w-[90%]">
+                <div class="space-y-3">
+                  <p class="text-on-surface leading-relaxed">您好！😊 午睡时间建议控制在 <span class="font-bold">20-30分钟</span> 左右，这样能更好恢复精力。</p>
+                  <p class="text-on-surface leading-relaxed">如果时间允许，也可以尝试 <span class="font-bold">60-90分钟</span> 的完整睡眠周期，但记得别太久哦。</p>
+                </div>
+                <div class="pt-4 border-t border-outline-variant/10 space-y-2">
+                  <p class="font-bold text-primary text-sm">健康小贴士：</p>
+                  <ul class="text-sm text-on-surface-variant space-y-2">
+                    <li class="flex gap-2"><span>-</span> <span>午睡后轻微活动几分钟，能更快清醒。</span></li>
+                    <li class="flex gap-2"><span>-</span> <span>根据作息灵活调整时间，逐步找到适合自己的节奏。</span></li>
+                  </ul>
+                </div>
+                <p class="text-xs text-on-surface-variant/70 leading-relaxed italic">建议仅供参考，如有身体不适请咨询专业医生。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Health Data Cards Area -->
+    <section class="px-6 md:px-12 py-16 md:py-24 max-w-screen-2xl mx-auto">
+      <div class="text-center mb-12 md:mb-16">
+        <h2 class="text-3xl md:text-4xl font-extrabold font-manrope">洞察身体的每一个信号</h2>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white p-6 md:p-8 rounded-xl border border-outline-variant/20 shadow-sm">
+          <div class="flex justify-between items-start mb-5">
+            <span class="material-symbols-outlined text-primary text-3xl">directions_walk</span>
+            <span class="text-xs font-bold text-tertiary bg-tertiary/10 px-2 py-1 rounded">进行中</span>
+          </div>
+          <div class="text-3xl md:text-4xl font-bold font-manrope mb-2">8,432</div>
+          <div class="text-on-surface-variant text-sm mb-6">今日步数 (步)</div>
+          <div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+            <div class="bg-primary h-full rounded-full" style="width: 84%"></div>
+          </div>
+        </div>
+        <div class="bg-white p-6 md:p-8 rounded-xl border border-outline-variant/20 shadow-sm">
+          <div class="flex justify-between items-start mb-5">
+            <span class="material-symbols-outlined text-secondary text-3xl">bedtime</span>
+            <span class="text-xs font-bold text-secondary bg-secondary/10 px-2 py-1 rounded">状态佳</span>
+          </div>
+          <div class="text-3xl md:text-4xl font-bold font-manrope mb-2">7h 45m</div>
+          <div class="text-on-surface-variant text-sm mb-6">昨晚睡眠</div>
+          <div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+            <div class="bg-secondary h-full rounded-full" style="width: 92%"></div>
+          </div>
+        </div>
+        <div class="bg-white p-6 md:p-8 rounded-xl border border-outline-variant/20 shadow-sm">
+          <div class="flex justify-between items-start mb-5">
+            <span class="material-symbols-outlined text-on-primary-fixed-variant text-3xl">monitor_weight</span>
+            <span class="text-xs font-bold text-on-surface-variant bg-surface-container-high px-2 py-1 rounded">较上周 -0.5kg</span>
+          </div>
+          <div class="text-3xl md:text-4xl font-bold font-manrope mb-2">68.2</div>
+          <div class="text-on-surface-variant text-sm mb-6">当前体重 (kg)</div>
+          <div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+            <div class="bg-on-primary-fixed-variant h-full rounded-full" style="width: 100%"></div>
+          </div>
+        </div>
+        <div class="bg-white p-6 md:p-8 rounded-xl border border-outline-variant/20 shadow-sm">
+          <div class="flex justify-between items-start mb-5">
+            <span class="material-symbols-outlined text-tertiary text-3xl">restaurant</span>
+            <span class="text-xs font-bold text-tertiary bg-tertiary/10 px-2 py-1 rounded">营养均衡</span>
+          </div>
+          <div class="text-3xl md:text-4xl font-bold font-manrope mb-2">1,850</div>
+          <div class="text-on-surface-variant text-sm mb-6">今日摄入 (kcal)</div>
+          <div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+            <div class="bg-tertiary h-full rounded-full" style="width: 75%"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trust & Compliance -->
+    <section class="px-6 md:px-12 py-16 md:py-24 max-w-4xl mx-auto text-center">
+      <div class="bg-primary/5 p-8 md:p-12 rounded-xl border border-primary/10">
+        <h2 class="text-2xl md:text-3xl font-extrabold font-manrope mb-6">安心守护说明</h2>
+        <div class="space-y-4 text-on-surface-variant text-base md:text-lg leading-relaxed text-left">
+          <p class="flex items-start">
+            <span class="material-symbols-outlined text-primary mr-3 shrink-0">verified</span>
+            <span><strong>隐私保护：</strong> 采用多重安全措施保护数据，仅用于健康分析与功能改进。</span>
+          </p>
+          <p class="flex items-start">
+            <span class="material-symbols-outlined text-primary mr-3 shrink-0">description</span>
+            <span><strong>数据用途：</strong> 数据不会用于广告推送或对外共享，所有内容仅服务于您的健康管理。</span>
+          </p>
+          <p class="flex items-start">
+            <span class="material-symbols-outlined text-secondary mr-3 shrink-0">warning</span>
+            <span><strong>非医疗声明：</strong> 智康AI 提供的建议仅供参考，不作为诊断或治疗依据。如有身体不适，请咨询专业医疗机构。</span>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="px-6 md:px-12 py-16 md:py-24 max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-extrabold font-manrope text-center mb-12 md:mb-16">常见问题 FAQ</h2>
+      <div class="space-y-4">
+        <details class="group bg-white rounded-lg shadow-sm">
+          <summary class="flex justify-between items-center p-6 cursor-pointer list-none">
+            <span class="text-lg md:text-xl font-bold">需要绑定设备吗？</span>
+            <span class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
+          </summary>
+          <div class="p-6 pt-0 text-on-surface-variant leading-relaxed">
+            不必须。您可以手动记录，也可以根据小程序提示选择可用的同步方式。
+          </div>
+        </details>
+        <details class="group bg-white rounded-lg shadow-sm">
+          <summary class="flex justify-between items-center p-6 cursor-pointer list-none">
+            <span class="text-lg md:text-xl font-bold">AI 建议可靠吗？</span>
+            <span class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
+          </summary>
+          <div class="p-6 pt-0 text-on-surface-variant leading-relaxed">
+            AI 建议基于您的记录生成，主要用于帮助改善生活习惯，非医疗建议。
+          </div>
+        </details>
+        <details class="group bg-white rounded-lg shadow-sm">
+          <summary class="flex justify-between items-center p-6 cursor-pointer list-none">
+            <span class="text-lg md:text-xl font-bold">是否收费？</span>
+            <span class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
+          </summary>
+          <div class="p-6 pt-0 text-on-surface-variant leading-relaxed">
+            当前核心功能免费开放，后续可能提供增值功能，届时会明确说明。
+          </div>
+        </details>
+        <details class="group bg-white rounded-lg shadow-sm">
+          <summary class="flex justify-between items-center p-6 cursor-pointer list-none">
+            <span class="text-lg md:text-xl font-bold">数据会丢失吗？</span>
+            <span class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
+          </summary>
+          <div class="p-6 pt-0 text-on-surface-variant leading-relaxed">
+            数据会进行云端保存，只要使用同一账号即可找回历史记录。
+          </div>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p class="footer-links">
+      <a href="https://health.datewell.xyz/privacy-policy" target="_blank" rel="noopener noreferrer">隐私政策</a>
+      <span class="footer-separator">|</span>
+      <a href="https://health.datewell.xyz/user-agreement" target="_blank" rel="noopener noreferrer">用户协议</a>
+      <span class="footer-separator">|</span>
+      <a href="https://beian.miit.gov.cn" target="_blank" rel="noopener noreferrer">晋ICP备2026003386号-1</a>
+    </p>
+    <p class="footer-copy">© 2026 智康AI</p>
+  </footer>
+</body>
+</html>

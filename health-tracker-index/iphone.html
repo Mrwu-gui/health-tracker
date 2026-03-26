@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-surface-variant": "#564337",
+              "surface-variant": "#e3e2e0",
+              "on-secondary-fixed": "#2b1700",
+              "surface-container-low": "#f4f3f1",
+              "on-error-container": "#93000a",
+              "inverse-primary": "#ffb595",
+              "on-tertiary-fixed": "#00210c",
+              "tertiary-fixed": "#6bfe9c",
+              "secondary": "#865300",
+              "primary-fixed": "#ffdbcd",
+              "primary-fixed-dim": "#ffb595",
+              "on-secondary-fixed-variant": "#663e00",
+              "surface": "#faf9f6",
+              "secondary-fixed": "#ffddb9",
+              "surface-bright": "#faf9f6",
+              "tertiary-container": "#00b05c",
+              "on-surface": "#1a1c1a",
+              "surface-container-highest": "#e3e2e0",
+              "primary-container": "#fa7025",
+              "surface-container-high": "#e9e8e5",
+              "on-primary-container": "#591f00",
+              "surface-tint": "#a23f00",
+              "on-primary": "#ffffff",
+              "outline-variant": "#dcc1b1",
+              "on-secondary-container": "#694000",
+              "on-error": "#ffffff",
+              "surface-dim": "#dbdad7",
+              "on-primary-fixed": "#351000",
+              "inverse-surface": "#2f312f",
+              "inverse-on-surface": "#f2f1ee",
+              "surface-container-lowest": "#ffffff",
+              "secondary-container": "#fea520",
+              "surface-container": "#efeeeb",
+              "on-background": "#1a1c1a",
+              "on-primary-fixed-variant": "#7c2e00",
+              "error-container": "#ffdad6",
+              "tertiary": "#006d37",
+              "outline": "#897365",
+              "on-tertiary-container": "#003a1a",
+              "on-tertiary-fixed-variant": "#005228",
+              "secondary-fixed-dim": "#ffb961",
+              "on-secondary": "#ffffff",
+              "error": "#ba1a1a",
+              "primary": "#a23f00",
+              "background": "#faf9f6",
+              "on-tertiary": "#ffffff",
+              "tertiary-fixed-dim": "#4ae183"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        background-color: #faf9f6;
+        color: #1a1c1a;
+        font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .glass-effect {
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+      .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#faf9f6]/70 dark:bg-[#1a1c1a]/70 backdrop-blur-xl shadow-[0_20px_40px_rgba(86,67,55,0.06)] flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#a23f00] dark:text-[#fa7025]" data-icon="menu">menu</span>
+<span class="font-['Manrope'] font-black text-xl text-[#a23f00] dark:text-[#fa7025] tracking-widest">智康AI</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#a23f00] dark:text-[#fa7025]" data-icon="account_circle">account_circle</span>
+</div>
+</header>
+<main class="pt-24 px-6 pb-12 overflow-x-hidden">
+<!-- Hero Section -->
+<section class="relative mb-16">
+<div class="flex flex-col gap-6 items-start">
+<div class="inline-flex px-4 py-1.5 bg-primary-container/10 rounded-full border border-primary-container/20">
+<span class="text-primary text-xs font-bold tracking-wider">PREMIUM AI CARE</span>
+</div>
+<h1 class="font-headline font-extrabold text-4xl leading-tight tracking-tight text-on-surface">
+                    智康AI：您的<br/>
+<span class="text-primary bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">智能健康守护者</span>
+</h1>
+<p class="font-body text-on-surface-variant leading-relaxed opacity-80">
+                    自律不再孤单，AI 让每一步都充满温度。连接数据，感知生活。
+                </p>
+<div class="w-full flex flex-col gap-4 mt-4">
+<button class="w-full py-5 bg-primary text-on-primary rounded-full font-bold shadow-lg shadow-primary/20 active:scale-95 transition-transform">
+                        立即开启健康之旅
+                    </button>
+<div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-xl">
+<div class="w-16 h-16 bg-white rounded-lg flex items-center justify-center p-2 shadow-sm">
+<div class="w-full h-full border-2 border-dashed border-outline-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-outline-variant scale-75" data-icon="qr_code_2">qr_code_2</span>
+</div>
+</div>
+<div>
+<p class="font-bold text-sm text-on-surface">小程序体验</p>
+<p class="text-xs text-on-surface-variant">扫码即刻开启智能关怀</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Abstract background shape -->
+<div class="absolute -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10"></div>
+</section>
+<!-- Healthy Data Display (The Core Stats) -->
+<section class="mb-16">
+<h2 class="font-headline font-bold text-xl mb-6 flex items-center gap-2">
+<span class="w-1.5 h-6 bg-primary rounded-full"></span>
+                今日实时概览
+            </h2>
+<div class="bento-grid">
+<!-- Steps -->
+<div class="p-5 bg-surface-container-lowest rounded-xl shadow-[0_10px_30px_rgba(86,67,55,0.04)] flex flex-col gap-3">
+<div class="flex justify-between items-center">
+<span class="material-symbols-outlined text-primary" data-icon="directions_walk">directions_walk</span>
+<span class="text-[10px] font-bold text-tertiary uppercase">Active</span>
+</div>
+<div class="mt-2">
+<span class="text-2xl font-black font-headline">8,432</span>
+<span class="text-xs text-on-surface-variant block">步数总计</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary w-[84%] h-full rounded-full"></div>
+</div>
+</div>
+<!-- Sleep -->
+<div class="p-5 bg-surface-container-lowest rounded-xl shadow-[0_10px_30px_rgba(86,67,55,0.04)] flex flex-col gap-3">
+<div class="flex justify-between items-center">
+<span class="material-symbols-outlined text-secondary" data-icon="bedtime">bedtime</span>
+</div>
+<div class="mt-2">
+<span class="text-2xl font-black font-headline">7h 20m</span>
+<span class="text-xs text-on-surface-variant block">睡眠时长</span>
+</div>
+<div class="flex gap-1">
+<div class="h-1 w-full bg-secondary-container rounded-full opacity-30"></div>
+<div class="h-1 w-full bg-secondary-container rounded-full opacity-60"></div>
+<div class="h-1 w-full bg-secondary-container rounded-full"></div>
+</div>
+</div>
+<!-- Weight -->
+<div class="p-5 bg-surface-container-lowest rounded-xl shadow-[0_10px_30px_rgba(86,67,55,0.04)] flex flex-col gap-3">
+<div class="flex justify-between items-center">
+<span class="material-symbols-outlined text-outline" data-icon="monitor_weight">monitor_weight</span>
+</div>
+<div class="mt-2">
+<span class="text-2xl font-black font-headline">64.5</span>
+<span class="text-xs text-on-surface-variant block">当前体重 (kg)</span>
+</div>
+<span class="text-[10px] text-tertiary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]" data-icon="trending_down">trending_down</span>
+                        较上周 -0.5kg
+                    </span>
+</div>
+<!-- Diet -->
+<div class="p-5 bg-surface-container-lowest rounded-xl shadow-[0_10px_30px_rgba(86,67,55,0.04)] flex flex-col gap-3">
+<div class="flex justify-between items-center">
+<span class="material-symbols-outlined text-primary-container" data-icon="restaurant">restaurant</span>
+</div>
+<div class="mt-2">
+<span class="text-2xl font-black font-headline">1,680</span>
+<span class="text-xs text-on-surface-variant block">摄入热量 (kcal)</span>
+</div>
+<div class="text-[10px] text-on-surface-variant">剩余 420 kcal</div>
+</div>
+</div>
+</section>
+<!-- AI Advice Section -->
+<section class="mb-16">
+<div class="bg-primary/5 rounded-xl p-6 border border-primary/10 relative overflow-hidden">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-on-primary text-xl" data-icon="smart_toy" data-weight="fill">smart_toy</span>
+</div>
+<h2 class="font-headline font-bold text-lg text-primary">AI 智能建议</h2>
+</div>
+<div class="flex flex-col gap-6 relative z-10">
+<!-- User Message -->
+<div class="flex items-start gap-3 self-end max-w-[85%]">
+<div class="bg-[#8A3300] text-white p-3 px-5 rounded-2xl rounded-br-none text-sm shadow-sm">
+                        午睡睡多久合适？
+                    </div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-[10px] font-bold shrink-0">我</div>
+</div>
+<!-- AI Response -->
+<div class="flex items-start gap-3 max-w-[95%]">
+<div class="w-8 h-8 rounded-full bg-[#8A3300] flex items-center justify-center text-[10px] font-bold text-white shrink-0">智</div>
+<div class="bg-white p-4 rounded-2xl rounded-tl-none shadow-md border border-outline-variant/10 text-[13px] leading-relaxed text-on-surface">
+<p class="mb-3">您好！😊 午睡时间建议控制在 <strong class="font-bold">20-30分钟</strong> 左右，这样既能快速恢复精力，又避免进入深度睡眠导致醒来后更疲惫（称为“睡眠惰性”）。如果时间允许，也可以尝试 <strong class="font-bold">60-90分钟</strong> 的完整睡眠周期（覆盖一个睡眠周期），但记得别超过1小时哦！✨</p>
+<div class="mt-4 pt-4 border-t border-dashed border-outline-variant/30">
+<p class="font-bold text-primary mb-2">健康小贴士：</p>
+<ul class="space-y-2 text-on-surface-variant">
+<li class="flex gap-2"><span>-</span> <span>午睡后活动5分钟（比如伸展或走动），能帮助身体更快清醒。</span></li>
+<li class="flex gap-2"><span>-</span> <span>重点：根据您的作息调整（如晚上睡眠充足者，午睡可短些；睡眠不足者，可稍长但别超45分钟）。</span></li>
+</ul>
+</div>
+<p class="mt-4 text-[11px] text-on-surface-variant italic">请记住，这些建议仅供参考，如有特殊健康问题，建议咨询专业医生哦！🌟 保持好状态，您值得拥有活力满满的一天！😁</p>
+</div>
+</div>
+</div>
+<!-- Decorative Circle -->
+<div class="absolute -bottom-10 -left-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl"></div>
+</div>
+</section>
+<!-- Features Bento -->
+<section class="mb-16">
+<div class="text-center mb-10">
+<h2 class="font-headline font-extrabold text-2xl mb-2">核心功能亮点</h2>
+<p class="text-on-surface-variant text-sm">为您提供全方位的健康管理闭环</p>
+</div>
+<div class="grid grid-cols-1 gap-4">
+<!-- Feature 1 -->
+<div class="flex gap-4 items-center p-5 bg-surface-container-low rounded-xl group transition-all">
+<div class="w-12 h-12 flex-shrink-0 bg-white rounded-full flex items-center justify-center text-primary shadow-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">轻松记录</h3>
+<p class="text-xs text-on-surface-variant mt-1">极简交互，随时随地留存生活点滴</p>
+</div>
+</div>
+<!-- Feature 2 -->
+<div class="flex gap-4 items-center p-5 bg-surface-container-low rounded-xl group transition-all">
+<div class="w-12 h-12 flex-shrink-0 bg-white rounded-full flex items-center justify-center text-secondary shadow-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">AI建议</h3>
+<p class="text-xs text-on-surface-variant mt-1">基于大模型的个性化健康生活指南</p>
+</div>
+</div>
+<!-- Feature 3 -->
+<div class="flex gap-4 items-center p-5 bg-surface-container-low rounded-xl group transition-all">
+<div class="w-12 h-12 flex-shrink-0 bg-white rounded-full flex items-center justify-center text-tertiary shadow-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="ads_click">ads_click</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">目标管理</h3>
+<p class="text-xs text-on-surface-variant mt-1">科学拆解任务，助您达成自律目标</p>
+</div>
+</div>
+<!-- Feature 4 -->
+<div class="flex gap-4 items-center p-5 bg-surface-container-low rounded-xl group transition-all">
+<div class="w-12 h-12 flex-shrink-0 bg-white rounded-full flex items-center justify-center text-primary-container shadow-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">健康提醒</h3>
+<p class="text-xs text-on-surface-variant mt-1">贴心陪伴，不错过每一个关键节点</p>
+</div>
+</div>
+<!-- Feature 5 -->
+<div class="flex gap-4 items-center p-5 bg-surface-container-low rounded-xl group transition-all">
+<div class="w-12 h-12 flex-shrink-0 bg-white rounded-full flex items-center justify-center text-on-surface shadow-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">趋势分析</h3>
+<p class="text-xs text-on-surface-variant mt-1">多维图表，掌握身体动态变化的秘密</p>
+</div>
+</div>
+<!-- Feature 6 -->
+<div class="flex gap-4 items-center p-5 bg-surface-container-low rounded-xl group transition-all">
+<div class="w-12 h-12 flex-shrink-0 bg-white rounded-full flex items-center justify-center text-tertiary-container shadow-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="gpp_good">gpp_good</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">数据安全</h3>
+<p class="text-xs text-on-surface-variant mt-1">端到端加密，您的健康隐私仅您可见</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Safety Declaration -->
+<section class="mb-16 p-6 bg-surface-container-high rounded-xl">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-secondary" data-icon="verified_user">verified_user</span>
+<h2 class="font-headline font-bold text-lg">安心承诺</h2>
+</div>
+<div class="space-y-4">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-secondary scale-75" data-icon="shield">shield</span>
+<p class="text-xs text-on-surface-variant leading-relaxed"><strong class="text-on-surface">隐私保护：</strong>所有数据均通过行业级标准加密存储，严禁向任何第三方披露个人健康隐私。</p>
+</div>
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-secondary scale-75" data-icon="data_usage">data_usage</span>
+<p class="text-xs text-on-surface-variant leading-relaxed"><strong class="text-on-surface">数据用途：</strong>数据仅用于驱动 AI 模型为您提供个性化生活建议，助力健康提升。</p>
+</div>
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-error scale-75" data-icon="error_outline">error_outline</span>
+<p class="text-xs text-on-surface-variant leading-relaxed"><strong class="text-on-surface">非医疗声明：</strong>智康AI 提供的是生活方式改进建议，并非医疗诊断。如有身体不适请务必寻求专业医疗机构帮助。</p>
+</div>
+</div>
+</section>
+<!-- FAQ Section -->
+<section class="mb-16">
+<h2 class="font-headline font-extrabold text-2xl mb-8 text-center">常见问题</h2>
+<div class="space-y-4">
+<details class="group bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden border border-outline-variant/5">
+<summary class="flex justify-between items-center p-5 cursor-pointer list-none">
+<span class="font-bold text-sm text-on-surface">如何绑定第三方设备数据？</span>
+<span class="material-symbols-outlined group-open:rotate-180 transition-transform" data-icon="expand_more">expand_more</span>
+</summary>
+<div class="px-5 pb-5 text-xs text-on-surface-variant leading-relaxed">
+                        您可以在“设置-数据连接”中，授权关联 Apple Health、微信运动等主流健康平台，我们会自动为您同步相关数据。
+                    </div>
+</details>
+<details class="group bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden border border-outline-variant/5">
+<summary class="flex justify-between items-center p-5 cursor-pointer list-none">
+<span class="font-bold text-sm text-on-surface">AI 建议真的准确吗？</span>
+<span class="material-symbols-outlined group-open:rotate-180 transition-transform" data-icon="expand_more">expand_more</span>
+</summary>
+<div class="px-5 pb-5 text-xs text-on-surface-variant leading-relaxed">
+                        智康AI 结合了海量健康知识库与您的个人生活习惯数据。它主要侧重于生活习惯的微调，是您健康管理的好伙伴，而非严谨的医疗工具。
+                    </div>
+</details>
+<details class="group bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden border border-outline-variant/5">
+<summary class="flex justify-between items-center p-5 cursor-pointer list-none">
+<span class="font-bold text-sm text-on-surface">数据存储是否安全？</span>
+<span class="material-symbols-outlined group-open:rotate-180 transition-transform" data-icon="expand_more">expand_more</span>
+</summary>
+<div class="px-5 pb-5 text-xs text-on-surface-variant leading-relaxed">
+                        我们采用金融级加密存储协议，所有生物特征及健康行为数据均进行脱敏处理，确保您的隐私万无一失。
+                    </div>
+</details>
+<details class="group bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden border border-outline-variant/5">
+<summary class="flex justify-between items-center p-5 cursor-pointer list-none">
+<span class="font-bold text-sm text-on-surface">服务是否收费？</span>
+<span class="material-symbols-outlined group-open:rotate-180 transition-transform" data-icon="expand_more">expand_more</span>
+</summary>
+<div class="px-5 pb-5 text-xs text-on-surface-variant leading-relaxed">
+                        基础记录与趋势分析功能永久免费。高级 AI 私人订制建议与深度健康报告目前处于公测阶段，暂不收取任何费用。
+                    </div>
+</details>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full rounded-t-[3rem] bg-[#f4f3f1] dark:bg-[#1a1c1a] flex flex-col items-center py-10 px-8 gap-4 w-full">
+<div class="flex gap-6 mb-2">
+<a class="text-[#564337]/70 dark:text-[#dbdad7]/70 text-sm hover:text-[#a23f00] transition-colors" href="#">隐私协议</a>
+<a class="text-[#564337]/70 dark:text-[#dbdad7]/70 text-sm hover:text-[#a23f00] transition-colors" href="#">服务协议</a>
+<a class="text-[#564337]/70 dark:text-[#dbdad7]/70 text-sm hover:text-[#a23f00] transition-colors" href="mailto:928578564@qq.com">联系我们</a>
+</div>
+<div class="text-[#865300] dark:text-[#e67e22] font-['Inter'] text-sm leading-relaxed text-center opacity-80">
+<p>© 2024 智康AI 版权所有</p>
+<p class="mt-1">晋ICP备2026003386号-1</p>
+<p class="mt-2 font-medium">Email: 928578564@qq.com</p>
+</div>
+</footer>
+<!-- FAB for direct access -->
+<div class="fixed bottom-8 right-6 z-40">
+<button class="w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-2xl" data-icon="rocket_launch" data-weight="fill">rocket_launch</span>
+</button>
+</div>
+</body></html>

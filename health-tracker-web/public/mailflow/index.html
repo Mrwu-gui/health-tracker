@@ -1,0 +1,2730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 邮件秒清 - 智能邮件清空助手</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ========== S1: CSS RESET & VARIABLES ========== */
+:root {
+  --navy: #1a2332;
+  --navy-deep: #0f1923;
+  --navy-mid: #1e3a5f;
+  --navy-light: #2a4a6b;
+  --blue: #3b82f6;
+  --blue-light: #60a5fa;
+  --teal: #0d7377;
+  --bg-start: #f0f4f8;
+  --bg-end: #e8eef4;
+  --card-bg: #ffffff;
+  --card-shadow: 0 1px 3px rgba(26,35,50,0.06), 0 6px 16px rgba(26,35,50,0.04);
+  --card-shadow-hover: 0 2px 8px rgba(26,35,50,0.1), 0 12px 28px rgba(26,35,50,0.07);
+  --card-radius: 14px;
+  --text-primary: #1a2332;
+  --text-secondary: #5a6a7e;
+  --text-muted: #8a96a6;
+  --border: #e2e8f0;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --sidebar-w: 240px;
+  --topnav-h: 56px;
+  --bottomtab-h: 72px;
+  --font-display: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-body: 'DM Sans', 'Noto Sans SC', 'PingFang SC', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body {
+  font-family: var(--font-body);
+  background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+button { cursor: pointer; border: none; font-family: inherit; }
+input, textarea { font-family: inherit; border: none; outline: none; }
+a { text-decoration: none; color: inherit; }
+.hidden { display: none !important; }
+.view-inner { display: none; }
+.view-inner.active { display: block; }
+
+/* ========== S2: LAYOUT - SHELL, SIDEBAR, TOPNAV ========== */
+#app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+#sidebar {
+  width: var(--sidebar-w);
+  background: var(--card-bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  padding: 24px 16px;
+}
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+  margin-bottom: 8px;
+}
+.sidebar-logo .logo-icon {
+  width: 36px; height: 36px;
+  background: var(--navy);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 14px;
+}
+.sidebar-logo-text { font-weight: 700; font-size: 15px; letter-spacing: -0.3px; }
+.sidebar-concierge {
+  padding: 12px 8px;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px;
+}
+.concierge-avatar {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--navy), var(--blue));
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 16px;
+}
+.concierge-info { font-size: 13px; }
+.concierge-info strong { display: block; font-size: 14px; }
+.concierge-info span { color: var(--success); font-size: 11px; font-weight: 600; letter-spacing: 1px; }
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.sidebar-nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px; border-radius: 10px;
+  font-size: 14px; color: var(--text-secondary);
+  transition: all 0.2s; cursor: pointer; font-weight: 500;
+}
+.sidebar-nav-item:hover { background: var(--bg-start); color: var(--text-primary); }
+.sidebar-nav-item.active {
+  background: var(--navy);
+  color: #fff;
+  font-weight: 600;
+}
+.sidebar-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+.sidebar-bottom { margin-top: auto; display: flex; flex-direction: column; gap: 4px; }
+.sidebar-clear-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px; font-weight: 600;
+  color: var(--text-primary);
+  transition: all 0.2s;
+  margin-bottom: 12px;
+}
+.sidebar-clear-btn:hover { border-color: var(--navy); background: var(--bg-start); }
+.sidebar-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 14px; font-size: 13px;
+  color: var(--text-muted); cursor: pointer;
+  border-radius: 8px; transition: all 0.2s;
+}
+.sidebar-link:hover { color: var(--text-primary); background: var(--bg-start); }
+.sidebar-link svg { width: 16px; height: 16px; }
+
+#main-area {
+  flex: 1;
+  margin-left: var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+#topnav {
+  height: var(--topnav-h);
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  position: sticky; top: 0; z-index: 50;
+}
+.topnav-tabs { display: flex; gap: 28px; }
+.topnav-tab {
+  font-size: 14px; font-weight: 500;
+  color: var(--text-muted);
+  padding: 16px 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer; transition: all 0.2s;
+}
+.topnav-tab:hover { color: var(--text-primary); }
+.topnav-tab.active {
+  color: var(--text-primary);
+  font-weight: 600;
+  border-bottom-color: var(--navy);
+}
+.topnav-right { display: flex; align-items: center; gap: 16px; }
+.topnav-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.2s;
+  color: var(--text-secondary);
+}
+.topnav-icon:hover { background: var(--bg-start); }
+.topnav-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy), var(--blue));
+  border: 2px solid var(--border);
+}
+#view-container {
+  flex: 1;
+  padding: 32px;
+  max-width: 1200px;
+  width: 100%;
+}
+
+/* ========== S3: BOTTOM TAB BAR (MOBILE) ========== */
+#bottom-tabs {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: var(--bottomtab-h);
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-around;
+  z-index: 200;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.btab {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 8px 16px; cursor: pointer;
+  color: var(--text-muted); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.5px; transition: all 0.2s;
+  border-radius: 12px; position: relative;
+}
+.btab svg { width: 22px; height: 22px; }
+.btab.active { color: var(--navy); }
+.btab.center-tab {
+  background: var(--navy);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 16px;
+  margin-top: -20px;
+  box-shadow: 0 4px 16px rgba(26,35,50,0.25);
+}
+.btab.center-tab.active { background: var(--navy); color: #fff; }
+
+/* ========== S4: VIEW - ONBOARDING ========== */
+#view-onboarding {
+  min-height: 100vh;
+  background: linear-gradient(170deg, #f6f9fc 0%, #e8eef6 50%, #dde6f0 100%);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 48px 24px 40px;
+  position: relative; overflow: hidden;
+}
+#view-onboarding::before {
+  content: '';
+  position: absolute; top: -40%; right: -20%;
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.ob-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 40px;
+}
+.ob-header-icon {
+  width: 32px; height: 32px;
+  background: var(--navy);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.ob-header-text { font-size: 16px; font-weight: 700; color: var(--navy); letter-spacing: -0.3px; }
+.ob-badge {
+  display: inline-block;
+  padding: 6px 20px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.7);
+  margin-bottom: 24px;
+}
+.ob-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5vw, 42px);
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.3;
+  color: var(--navy);
+  margin-bottom: 16px;
+  letter-spacing: -1px;
+}
+.ob-subtitle {
+  font-size: 15px;
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 520px;
+  line-height: 1.7;
+  margin-bottom: 48px;
+}
+.ob-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 780px;
+  width: 100%;
+  margin-bottom: 56px;
+}
+.ob-feature-card {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  padding: 28px 24px;
+  box-shadow: var(--card-shadow);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.ob-feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--card-shadow-hover);
+}
+.ob-feature-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+  font-size: 20px;
+}
+.ob-feature-icon.lightning { background: #e8f0fe; color: var(--navy-mid); }
+.ob-feature-icon.draft { background: #e8f4f0; color: var(--teal); }
+.ob-feature-icon.task { background: #f0e8fe; color: #6d28d9; }
+.ob-feature-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: var(--navy); }
+.ob-feature-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+.ob-bind-section {
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 40px;
+}
+.ob-bind-section.ob-bind-compact {
+  padding: 20px 24px;
+  margin-bottom: 28px;
+  border-radius: 14px;
+}
+.ob-bind-compact .ob-bind-icon {
+  width: 38px; height: 38px;
+  margin-bottom: 10px;
+}
+.ob-bind-compact .ob-bind-title { font-size: 16px; margin-bottom: 4px; }
+.ob-bind-compact .ob-bind-desc { font-size: 12px; margin-bottom: 16px; }
+.ob-bind-compact .ob-bind-btn { padding: 12px; font-size: 14px; border-radius: 10px; }
+.ob-bind-icon {
+  width: 52px; height: 52px;
+  background: var(--navy);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px; color: #fff; font-size: 22px;
+}
+.ob-bind-title { font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.ob-bind-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 28px; }
+.ob-bind-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 16px;
+  background: var(--navy);
+  color: #fff;
+  border-radius: 12px;
+  font-size: 15px; font-weight: 600;
+  transition: all 0.3s;
+  letter-spacing: 0.3px;
+}
+.ob-bind-btn:hover { background: var(--navy-mid); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,35,50,0.25); }
+.ob-bind-btn svg { width: 20px; height: 20px; }
+.ob-providers {
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px; flex-wrap: wrap;
+  margin-top: 20px;
+}
+.ob-provider {
+  font-size: 11px; color: var(--text-muted);
+  display: flex; align-items: center; gap: 5px;
+  font-weight: 500; letter-spacing: 0.3px;
+}
+.ob-provider::before {
+  content: ''; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--text-muted);
+}
+.ob-footer { font-size: 12px; color: var(--text-muted); letter-spacing: 1px; }
+.ob-footer a { color: inherit; text-decoration: none; }
+.ob-footer a:hover { text-decoration: underline; }
+.ob-footer-sep { margin: 0 8px; color: var(--text-muted); }
+
+/* ========== S5: VIEW - AI PROCESSING ========== */
+.proc-header h1 {
+  font-family: var(--font-display);
+  font-size: 28px; font-weight: 700;
+  color: var(--navy); margin-bottom: 8px;
+}
+.proc-header p { font-size: 14px; color: var(--text-secondary); margin-bottom: 32px; }
+.proc-command-box {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  padding: 24px;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 16px;
+  position: relative;
+  border: 2px solid transparent;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.proc-command-top { display: flex; align-items: flex-start; gap: 14px; }
+.proc-cmd-icon {
+  width: 40px; height: 40px; flex-shrink: 0;
+  background: var(--navy);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+}
+.proc-textarea-wrap { flex: 1; position: relative; }
+.proc-textarea {
+  width: 100%; min-height: 44px; resize: none;
+  font-size: 14px; color: var(--text-primary);
+  background: transparent; line-height: 1.6;
+}
+.proc-textarea::placeholder { color: var(--text-muted); }
+.proc-cmd-bottom {
+  display: flex; align-items: center; justify-content: flex-end;
+  margin-top: 8px; gap: 12px;
+}
+.proc-cmd-hint { font-size: 12px; color: var(--text-muted); }
+.proc-send-btn {
+  width: 44px; height: 44px;
+  background: var(--navy);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; transition: all 0.2s;
+}
+.proc-send-btn:hover { background: var(--navy-mid); transform: scale(1.05); }
+.proc-pills {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+.proc-pill {
+  padding: 8px 18px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-size: 13px; color: var(--text-secondary);
+  background: var(--card-bg);
+  transition: all 0.2s; cursor: pointer;
+}
+.proc-pill:hover { border-color: var(--navy); color: var(--navy); background: #f0f4f8; }
+.proc-content { display: flex; gap: 24px; }
+.proc-main { flex: 1; min-width: 0; }
+.proc-side { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
+.proc-status-card {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  padding: 28px;
+  box-shadow: var(--card-shadow);
+}
+.proc-status-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.proc-status-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 16px; font-weight: 700;
+}
+.proc-status-title .dot {
+  width: 8px; height: 8px;
+  background: var(--blue);
+  border-radius: 50%;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+.proc-pct {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px; font-weight: 600;
+  color: var(--navy);
+}
+.proc-task-label {
+  font-size: 13px; color: var(--text-secondary);
+  margin-bottom: 28px;
+}
+.proc-progress-track {
+  height: 4px;
+  background: var(--border);
+  border-radius: 4px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.proc-progress-fill {
+  height: 100%;
+  background: var(--navy);
+  border-radius: 4px;
+  transition: width 1s ease;
+  width: 0%;
+}
+.proc-steps {
+  display: flex; justify-content: space-between;
+  margin-bottom: 28px;
+}
+.proc-step {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  transition: color 0.3s;
+}
+.proc-step.done { color: var(--navy); }
+.proc-step.current { color: var(--blue); }
+.proc-checklist { display: flex; flex-direction: column; gap: 14px; }
+.proc-check-item {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: var(--text-secondary);
+}
+.proc-check-item .ci-icon {
+  width: 20px; height: 20px; flex-shrink: 0;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+}
+.ci-icon.done { background: #dcfce7; color: var(--success); }
+.ci-icon.loading { background: #e0e7ff; color: var(--blue); animation: spin 1s linear infinite; }
+.ci-icon.pending { background: var(--bg-start); color: var(--text-muted); }
+.proc-eff-card {
+  background: var(--navy);
+  border-radius: var(--card-radius);
+  padding: 24px;
+  color: #fff;
+  position: relative; overflow: hidden;
+}
+.proc-eff-card::after {
+  content: ''; position: absolute;
+  right: -20px; bottom: -20px;
+  width: 100px; height: 100px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+}
+.proc-eff-label { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
+.proc-eff-value { font-size: 42px; font-weight: 700; margin-bottom: 8px; line-height: 1; }
+.proc-eff-desc { font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.5; }
+.proc-insight-card {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  padding: 24px;
+  box-shadow: var(--card-shadow);
+}
+.proc-insight-icon {
+  width: 32px; height: 32px;
+  background: #ede9fe;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 12px; color: #7c3aed; font-size: 14px;
+}
+.proc-insight-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+.proc-insight-text { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px; }
+.proc-insight-link {
+  font-size: 13px; color: var(--blue);
+  font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+}
+.proc-insight-link:hover { text-decoration: underline; }
+
+/* ========== S6: VIEW - AI STATUS / RESULTS ========== */
+.stat-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 28px;
+}
+.stat-header h1 {
+  font-family: var(--font-display);
+  font-size: 28px; font-weight: 700; color: var(--navy);
+}
+.stat-header p { font-size: 14px; color: var(--text-secondary); margin-top: 6px; }
+.stat-engine-badge {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 18px;
+  border: 1px solid #d1fae5;
+  border-radius: 100px;
+  font-size: 12px; font-weight: 600;
+  color: #059669; background: #ecfdf5;
+  white-space: nowrap;
+}
+.stat-engine-badge::before {
+  content: ''; width: 7px; height: 7px;
+  background: #10b981; border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 36px;
+}
+.stat-card {
+  border-radius: var(--card-radius);
+  padding: 24px;
+  position: relative; overflow: hidden;
+}
+.stat-card.white { background: var(--card-bg); box-shadow: var(--card-shadow); }
+.stat-card.navy { background: var(--navy-mid); color: #fff; }
+.stat-card.dark { background: var(--navy); color: #fff; }
+.stat-card-label {
+  font-size: 12px;
+  margin-bottom: 12px;
+  opacity: 0.7;
+}
+.stat-card-value {
+  font-size: 48px; font-weight: 700; line-height: 1;
+  display: flex; align-items: baseline; gap: 4px;
+}
+.stat-card-unit { font-size: 16px; font-weight: 500; opacity: 0.8; }
+.stat-content { display: flex; gap: 24px; }
+.stat-main { flex: 1; min-width: 0; }
+.stat-side { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
+.stat-section-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 17px; font-weight: 700;
+  margin-bottom: 20px; color: var(--navy);
+}
+.stat-section-title svg { width: 20px; height: 20px; }
+.email-card {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  margin-bottom: 16px;
+  box-shadow: var(--card-shadow);
+  border-left: 4px solid transparent;
+  transition: all 0.3s;
+  overflow: hidden;
+}
+.email-card:hover { box-shadow: var(--card-shadow-hover); }
+.email-card.high { border-left-color: var(--danger); }
+.email-card.medium { border-left-color: var(--warning); }
+.email-card.low { border-left-color: var(--text-muted); }
+.email-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+.email-card-header:hover { background: #f8fafc; }
+.email-card-left {
+  display: flex; align-items: center; gap: 12px;
+}
+.email-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: #fff; font-weight: 600;
+}
+.email-avatar.red { background: #fecaca; color: #dc2626; }
+.email-avatar.yellow { background: #fef3c7; color: #d97706; }
+.email-avatar.gray { background: #e5e7eb; color: #6b7280; }
+.email-title { font-size: 15px; font-weight: 600; }
+.email-from { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.priority-badge {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1px;
+}
+.priority-badge.high { background: #fee2e2; color: #dc2626; }
+.priority-badge.medium { background: #fef3c7; color: #d97706; }
+.priority-badge.low { background: #f3f4f6; color: #6b7280; }
+.priority-badge.deleted { background: #fee2e2; color: #dc2626; }
+.email-card-right { display: flex; align-items: center; gap: 8px; }
+.email-chevron {
+  width: 20px; height: 20px;
+  color: var(--text-muted);
+  transition: transform 0.3s;
+  flex-shrink: 0;
+}
+.email-card.expanded .email-chevron { transform: rotate(180deg); }
+.email-card-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, padding 0.35s ease;
+  padding: 0 20px;
+}
+.email-card.expanded .email-card-body {
+  max-height: 1200px;
+  padding: 0 20px 20px 20px;
+  overflow: visible;
+}
+.email-summary-preview {
+  font-size: 12px; color: var(--text-muted);
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
+}
+.email-summary {
+  font-size: 13px; color: var(--text-secondary);
+  line-height: 1.7; margin-bottom: 16px;
+}
+.email-summary strong { color: var(--navy); }
+.email-draft {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.email-draft-label {
+  font-size: 11px; font-weight: 600;
+  color: var(--blue); margin-bottom: 8px;
+}
+.email-draft-text {
+  font-size: 13px; color: var(--text-secondary);
+  line-height: 1.6; font-style: italic;
+}
+.email-draft-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: #fff;
+  resize: vertical;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.email-draft-textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+.email-draft-textarea:disabled {
+  background: #f1f5f9;
+  cursor: not-allowed;
+}
+.email-reply-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.email-send-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.email-send-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px;
+  background: var(--navy);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 13px; font-weight: 600;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+}
+.email-send-btn:hover { background: var(--navy-mid); }
+.email-send-btn:disabled { cursor: not-allowed; }
+.email-send-btn svg { width: 14px; height: 14px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.email-send-btn .spin { animation: spin 0.8s linear infinite; }
+
+.todo-card {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  padding: 24px;
+  box-shadow: var(--card-shadow);
+}
+.todo-card-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.todo-card-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 15px; font-weight: 700;
+}
+.todo-badge {
+  padding: 3px 10px;
+  background: var(--navy);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.todo-list { display: flex; flex-direction: column; gap: 14px; }
+.todo-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  cursor: pointer;
+}
+.todo-check {
+  width: 20px; height: 20px; flex-shrink: 0;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; margin-top: 1px;
+}
+.todo-item.done .todo-check {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+.todo-text { font-size: 13px; font-weight: 500; }
+.todo-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.todo-sync-btn {
+  width: 100%; padding: 12px;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px; font-weight: 600;
+  color: var(--text-primary);
+  transition: all 0.2s;
+  margin-top: 16px;
+}
+.todo-sync-btn:hover { border-color: var(--navy); background: var(--bg-start); }
+/* Report Card */
+.report-card {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  border-left: 4px solid var(--blue);
+}
+.report-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.report-card-header:hover { background: #f8fafc; }
+.report-chevron { color: var(--text-muted); transition: transform 0.3s; }
+.report-card.collapsed .report-chevron { transform: rotate(-90deg); }
+.report-card-body {
+  padding: 0 20px 20px 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.9;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  overflow: hidden;
+}
+.report-card.collapsed .report-card-body {
+  max-height: 0;
+  padding: 0 20px;
+}
+.report-card-body h2 { font-size: 14px; font-weight: 700; color: var(--navy); margin: 16px 0 8px 0; }
+.report-card-body h2:first-child { margin-top: 0; }
+.report-card-body strong { color: var(--navy); }
+
+/* Filter Tabs */
+.filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-tab {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  font-size: 12px; font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+.filter-tab:hover { border-color: var(--blue); color: var(--blue); }
+.filter-tab.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.filter-tab.active .filter-dot { border: 1px solid rgba(255,255,255,0.5); }
+.filter-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.filter-count { font-size: 11px; opacity: 0.7; }
+
+/* Show More */
+.show-more-btn {
+  padding: 10px 28px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  font-size: 13px; font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+.show-more-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+.stat-ai-bubble {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  padding: 16px;
+  box-shadow: var(--card-shadow);
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.stat-ai-avatar {
+  width: 36px; height: 36px; flex-shrink: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.stat-ai-text { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+.stat-ai-text strong { color: var(--text-primary); }
+
+/* ========== S7: VIEW - MOBILE DIGEST ========== */
+.digest-title h1 {
+  font-family: var(--font-display);
+  font-size: 24px; font-weight: 700; color: var(--navy);
+}
+.digest-title p { font-size: 13px; color: var(--text-secondary); margin-top: 4px; margin-bottom: 24px; }
+.digest-hero {
+  background: linear-gradient(135deg, var(--navy), var(--navy-mid));
+  border-radius: 16px;
+  padding: 28px;
+  color: #fff;
+  margin-bottom: 16px;
+}
+.digest-hero-icon { font-size: 24px; margin-bottom: 12px; opacity: 0.8; }
+.digest-hero-val { font-size: 36px; font-weight: 700; margin-bottom: 4px; }
+.digest-hero-sub { font-size: 12px; opacity: 0.7; }
+.digest-mini-stats {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px; margin-bottom: 28px;
+}
+.digest-mini {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: var(--card-shadow);
+}
+.digest-mini-icon { font-size: 18px; margin-bottom: 8px; }
+.digest-mini-val { font-size: 22px; font-weight: 700; color: var(--navy); }
+.digest-mini-label { font-size: 11px; color: var(--text-muted); }
+.digest-section-title {
+  font-size: 16px; font-weight: 700;
+  color: var(--navy); margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.digest-section-title .badge {
+  font-size: 11px; padding: 3px 10px;
+  background: #fee2e2; color: #dc2626;
+  border-radius: 6px; font-weight: 600;
+}
+.digest-email-card {
+  background: var(--card-bg);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 14px;
+  box-shadow: var(--card-shadow);
+}
+.digest-email-top {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 12px;
+}
+.digest-email-avatar {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  background: var(--navy); color: #fff;
+}
+.digest-email-meta { flex: 1; }
+.digest-email-name { font-size: 14px; font-weight: 600; }
+.digest-email-time { font-size: 11px; color: var(--text-muted); }
+.digest-email-expand {
+  width: 28px; height: 28px;
+  border-radius: 6px; background: var(--bg-start);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 12px; cursor: pointer;
+}
+.digest-email-summary {
+  font-size: 13px; color: var(--text-secondary);
+  line-height: 1.7; margin-bottom: 14px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+}
+.digest-email-summary strong { color: var(--navy); }
+.digest-email-actions { display: flex; gap: 10px; }
+.digest-btn {
+  flex: 1; padding: 10px;
+  border-radius: 10px;
+  font-size: 13px; font-weight: 600;
+  text-align: center;
+  transition: all 0.2s;
+}
+.digest-btn.primary { background: var(--navy); color: #fff; }
+.digest-btn.primary:hover { background: var(--navy-mid); }
+.digest-btn.secondary {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  color: var(--text-primary);
+}
+.digest-btn.secondary:hover { border-color: var(--navy); }
+.digest-tasks { margin-bottom: 28px; }
+.digest-task-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  cursor: pointer;
+}
+.digest-task-check {
+  width: 22px; height: 22px; flex-shrink: 0;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.digest-task-item.done .digest-task-check {
+  background: var(--success); border-color: var(--success); color: #fff;
+}
+.digest-task-text { flex: 1; }
+.digest-task-name { font-size: 13px; font-weight: 500; }
+.digest-task-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.digest-task-date {
+  font-size: 11px; padding: 3px 8px;
+  border-radius: 6px; background: #dbeafe; color: #2563eb;
+  font-weight: 600;
+}
+.digest-archive-title {
+  font-size: 16px; font-weight: 700; color: var(--navy);
+  margin-bottom: 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.digest-archive-link { font-size: 12px; color: var(--blue); font-weight: 600; cursor: pointer; }
+.digest-archive-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.digest-archive-item:last-child { border-bottom: none; }
+.digest-archive-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--bg-start);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 14px;
+}
+.digest-archive-text { flex: 1; }
+.digest-archive-name { font-size: 13px; font-weight: 500; }
+.digest-archive-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* ========== S8: SHARED COMPONENTS ========== */
+#modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15,25,35,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+}
+.modal-box {
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 36px;
+  max-width: 420px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  animation: modalIn 0.3s ease;
+  margin: auto;
+}
+.modal-title {
+  font-size: 18px; font-weight: 700;
+  text-align: center; margin-bottom: 8px;
+}
+.modal-desc {
+  font-size: 13px; color: var(--text-secondary);
+  text-align: center; margin-bottom: 28px; line-height: 1.6;
+}
+.modal-providers {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-bottom: 20px;
+}
+.modal-provider-btn {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: var(--card-bg);
+  font-size: 14px; font-weight: 500;
+  transition: all 0.2s;
+}
+.modal-provider-btn:hover { border-color: var(--navy); background: #f8fafc; }
+.modal-provider-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.modal-cancel {
+  width: 100%; padding: 12px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px; font-weight: 500;
+  text-align: center;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+.modal-cancel:hover { background: var(--bg-start); color: var(--text-primary); }
+.modal-wide { max-width: 520px; }
+.modal-back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; color: var(--text-muted);
+  font-size: 13px; font-weight: 500;
+  margin-bottom: 16px; padding: 4px 0;
+  transition: color 0.2s;
+}
+.modal-back-btn:hover { color: var(--text-primary); }
+.provider-guide-box {
+  background: #f0f7ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 24px;
+}
+.provider-guide-title {
+  font-size: 14px; font-weight: 700;
+  color: var(--navy); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.provider-guide-steps {
+  list-style: none; counter-reset: step;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.provider-guide-steps li {
+  counter-increment: step;
+  font-size: 13px; color: var(--text-secondary);
+  line-height: 1.6;
+  padding-left: 28px;
+  position: relative;
+}
+.provider-guide-steps li::before {
+  content: counter(step);
+  position: absolute; left: 0; top: 1px;
+  width: 20px; height: 20px;
+  background: var(--navy);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.provider-guide-steps li strong { color: var(--navy); }
+.provider-guide-steps li code {
+  background: #e0e7ff; color: var(--navy);
+  padding: 1px 6px; border-radius: 4px;
+  font-size: 12px; font-family: var(--font-mono);
+}
+.modal-form { display: flex; flex-direction: column; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.form-input {
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  background: var(--card-bg);
+  transition: border-color 0.2s;
+}
+.form-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.form-hint { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+.form-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px; color: #dc2626;
+}
+.bind-spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto;
+}
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+.empty-state-icon {
+  width: 64px; height: 64px;
+  background: var(--bg-start);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+  color: var(--text-muted);
+}
+.empty-state-title {
+  font-size: 16px; font-weight: 600;
+  color: var(--text-secondary); margin-bottom: 8px;
+}
+.empty-state-desc {
+  font-size: 13px; line-height: 1.6;
+  max-width: 320px; margin: 0 auto;
+}
+
+#toast-container {
+  position: fixed; top: 20px; right: 20px;
+  z-index: 600; display: flex;
+  flex-direction: column; gap: 8px;
+}
+.toast {
+  padding: 14px 22px;
+  background: var(--navy);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
+  display: flex; align-items: center; gap: 10px;
+}
+.toast.success { background: #059669; }
+.toast.info { background: var(--navy); }
+.fab-btn {
+  position: fixed;
+  bottom: 90px; right: 24px;
+  width: 52px; height: 52px;
+  background: var(--navy);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 22px;
+  box-shadow: 0 4px 16px rgba(26,35,50,0.3);
+  z-index: 150;
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+.fab-btn:hover { transform: scale(1.08); }
+
+/* ========== S9: ANIMATIONS & TRANSITIONS ========== */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(40px); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-in { animation: fadeUp 0.5s ease both; }
+.animate-in:nth-child(1) { animation-delay: 0.05s; }
+.animate-in:nth-child(2) { animation-delay: 0.1s; }
+.animate-in:nth-child(3) { animation-delay: 0.15s; }
+.animate-in:nth-child(4) { animation-delay: 0.2s; }
+.view-inner { animation: fadeUp 0.4s ease both; }
+
+/* ========== BIND STATUS BAR ========== */
+.bind-status-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--card-bg);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+.bind-status-left { display: flex; align-items: center; gap: 8px; }
+.bind-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+.bind-email { font-weight: 600; color: var(--navy); }
+.bind-provider { color: var(--text-muted); font-size: 12px; }
+.bind-change-btn {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.bind-change-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+/* ========== S10: RESPONSIVE ========== */
+@media (max-width: 768px) {
+  #sidebar { display: none; }
+  #main-area { margin-left: 0; }
+  #topnav { padding: 0 16px; }
+  #view-container { padding: 20px 16px 100px; }
+  #bottom-tabs.visible { display: flex; }
+  .ob-features { grid-template-columns: 1fr; }
+  .ob-bind-section { padding: 28px 20px; }
+  .proc-content { flex-direction: column; }
+  .proc-side { width: 100%; }
+  .stat-cards { grid-template-columns: 1fr; }
+  .stat-content { flex-direction: column; }
+  .stat-side { width: 100%; }
+  .stat-header { flex-direction: column; gap: 12px; }
+  .proc-steps { font-size: 9px; }
+  .stat-card-value { font-size: 22px; }
+  .topnav-tabs { gap: 18px; }
+  .topnav-tab { font-size: 13px; }
+  .priority-badge { white-space: nowrap; padding: 3px 8px; font-size: 9px; }
+  .email-card-header { padding: 12px 14px; }
+  .email-card-left { min-width: 0; }
+  .email-title { font-size: 14px; word-break: break-word; }
+  .email-from { font-size: 11px; }
+  .email-summary-preview { max-width: 200px; font-size: 11px; }
+  .email-card-right { flex-shrink: 0; }
+  .filter-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .filter-tab { white-space: nowrap; padding: 5px 10px; font-size: 11px; flex-shrink: 0; }
+  .report-card-body { font-size: 12px; word-break: break-word; }
+  .stat-cards { gap: 8px; }
+  .stat-card { padding: 14px; }
+
+  /* Modal mobile fixes */
+  #modal-overlay { padding: 12px; }
+  .modal-box { padding: 24px 18px; max-height: 92vh; border-radius: 16px; }
+  .modal-box.modal-wide { max-width: 100%; }
+  .modal-title { font-size: 16px; }
+  .modal-desc { font-size: 12px; margin-bottom: 20px; }
+
+  /* Guide box mobile fixes */
+  .provider-guide-box {
+    padding: 14px 12px;
+    margin-bottom: 18px;
+    overflow: hidden;
+    word-break: break-all;
+    overflow-wrap: break-word;
+  }
+  .provider-guide-title { font-size: 13px; }
+  .provider-guide-steps li {
+    font-size: 12px;
+    padding-left: 26px;
+    word-break: break-all;
+    overflow-wrap: break-word;
+  }
+  .provider-guide-steps li strong {
+    word-break: break-all;
+    overflow-wrap: break-word;
+  }
+  .provider-guide-steps li code { font-size: 11px; }
+
+  /* Form inputs mobile */
+  .modal-form input, .modal-form select {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  /* Email card body mobile */
+  .email-card-body {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  .email-draft { padding: 12px; }
+  .email-draft-textarea { font-size: 14px; }
+  .email-reply-actions { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .email-send-btn { width: 100%; justify-content: center; }
+  .email-send-hint { font-size: 10px; }
+
+  /* Command input mobile */
+  .cmd-input-wrapper textarea { font-size: 14px; }
+  .cmd-quick-actions { flex-wrap: wrap; }
+  .cmd-pill { font-size: 11px; padding: 5px 10px; }
+
+  /* Digest mobile */
+  .digest-hero { padding: 24px 16px; }
+  .digest-hero-val { font-size: 28px; }
+  .digest-email-card { word-break: break-word; overflow-wrap: break-word; }
+
+  /* Global overflow prevention */
+  * { max-width: 100%; }
+  img, video, iframe, table, pre, code { max-width: 100%; overflow-x: auto; }
+}
+@media (min-width: 769px) {
+  #bottom-tabs { display: none !important; }
+  #view-digest { display: none !important; }
+  .fab-btn { display: none !important; }
+/* ========== IFRAME MODE ========== */
+#iframe-block {
+  display: none;
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--card-bg);
+  justify-content: center; align-items: center;
+  flex-direction: column; gap: 16px;
+  font-family: var(--font-body);
+}
+#iframe-block.active { display: flex; }
+#iframe-block .ib-icon { font-size: 48px; opacity: 0.3; }
+#iframe-block .ib-title { font-size: 18px; font-weight: 700; color: var(--navy); }
+#iframe-block .ib-msg { font-size: 13px; color: var(--text-muted); }
+
+body.iframe-mode #sidebar { display: none !important; }
+body.iframe-mode #main-area { margin-left: 0 !important; }
+body.iframe-mode #bottom-tabs { display: none !important; }
+body.iframe-mode .ob-badge,
+body.iframe-mode .ob-features,
+body.iframe-mode .ob-footer,
+body.iframe-mode .ob-providers,
+body.iframe-mode .ob-header,
+body.iframe-mode .ob-title,
+body.iframe-mode .ob-subtitle { display: none !important; }
+body.iframe-mode .sidebar-bottom { display: none !important; }
+body.iframe-mode .sidebar-link { display: none !important; }
+body.iframe-mode #topnav { display: none !important; }
+body.iframe-mode #view-container { padding-top: 12px; padding-bottom: 12px; }
+body.iframe-mode .ob-bind-section { margin-top: 20px; border-radius: 16px; }
+</style>
+</head>
+<body>
+
+<!-- ===== ONBOARDING VIEW ===== -->
+<div id="view-onboarding" class="view">
+  <div class="ob-header">
+    <div class="ob-header-icon">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#fff"/></svg>
+    </div>
+    <span class="ob-header-text">AI 邮件秒清</span>
+  </div>
+  <div class="ob-bind-section ob-bind-compact animate-in">
+    <div class="ob-bind-icon">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="none" stroke="#fff" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="ob-bind-title">绑定您的邮箱</div>
+    <div class="ob-bind-desc">企业级加密，邮件仅用于 AI 分析，绝不存储或共享。</div>
+    <button class="ob-bind-btn" onclick="showProviderModal()">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#fff" stroke-width="2"/><path d="M22 6l-10 7L2 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+      授权邮箱访问
+    </button>
+    <div class="ob-providers">
+      <span class="ob-provider">OUTLOOK</span>
+      <span class="ob-provider">GMAIL</span>
+      <span class="ob-provider">ICLOUD</span>
+      <span class="ob-provider">IMAP/SMTP</span>
+    </div>
+  </div>
+  <div class="ob-badge">新一代 AI 技术</div>
+  <h1 class="ob-title">开启您的智能邮件清空之旅</h1>
+  <p class="ob-subtitle">利用先进 AI 技术，将繁琐的收件箱管理转化为毫秒级的自动化体验。</p>
+  <div class="ob-features">
+    <div class="ob-feature-card animate-in">
+      <div class="ob-feature-icon lightning">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor"/></svg>
+      </div>
+      <div class="ob-feature-title">极速清理</div>
+      <div class="ob-feature-desc">AI 自动识别垃圾邮件、促销信息及低优先级内容，一键实现 Inbox Zero。</div>
+    </div>
+    <div class="ob-feature-card animate-in">
+      <div class="ob-feature-icon draft">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="ob-feature-title">AI 回复草稿</div>
+      <div class="ob-feature-desc">根据语境自动生成专业回复建议，无论是商务合作还是日常问候，都能信手拈来。</div>
+    </div>
+    <div class="ob-feature-card animate-in">
+      <div class="ob-feature-icon task">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="ob-feature-title">任务自动提取</div>
+      <div class="ob-feature-desc">从复杂的邮件流中自动提取待办事项与截止日期，并同步至您的工作流。</div>
+    </div>
+  </div>
+  <div class="ob-footer">
+    隐私保护 · 极速处理 · 智能助手
+    <span class="ob-footer-sep">|</span>
+    <a href="https://beian.miit.gov.cn" target="_blank" rel="noopener noreferrer">晋ICP备2026003386号-1</a>
+  </div>
+</div>
+
+<!-- ===== APP SHELL (shown after login) ===== -->
+<div id="app-shell" class="hidden">
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#fff"/></svg>
+      </div>
+      <span class="sidebar-logo-text">AI 邮件秒清</span>
+    </div>
+    <div class="sidebar-concierge">
+      <div class="concierge-avatar">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#fff"/></svg>
+      </div>
+      <div class="concierge-info">
+        <strong>智能管家</strong>
+        <span>AI 运行中</span>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="sidebar-nav-item" data-view="status" onclick="navigateTo('status')">
+        <svg fill="none" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/></svg>
+        总览
+      </div>
+      <div class="sidebar-nav-item active" data-view="processing" onclick="navigateTo('processing')">
+        <svg fill="none" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2"/></svg>
+        AI 处理
+      </div>
+      <div class="sidebar-nav-item" data-view="status" onclick="navigateTo('status')">
+        <svg fill="none" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="currentColor" stroke-width="2"/><rect x="9" y="3" width="6" height="4" rx="1" stroke="currentColor" stroke-width="2"/><path d="M9 14h6M9 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        任务队列
+      </div>
+    </div>
+    <div class="sidebar-bottom">
+      <button class="sidebar-clear-btn" onclick="showToast('开始清理收件箱...','info')">清空收件箱</button>
+      <div class="sidebar-link">
+        <svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        帮助
+      </div>
+      <div class="sidebar-link" onclick="logout()">
+        <svg fill="none" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        退出登录
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN AREA -->
+  <div id="main-area">
+    <!-- TOP NAV -->
+    <header id="topnav">
+      <div class="topnav-tabs">
+        <div class="topnav-tab" data-view="status" onclick="navigateTo('status')">AI 状态</div>
+        <div class="topnav-tab active" data-view="processing" onclick="navigateTo('processing')">任务列表</div>
+      </div>
+      <div class="topnav-right">
+        <div class="topnav-icon">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="topnav-avatar"></div>
+      </div>
+    </header>
+
+    <!-- VIEW CONTAINER -->
+    <main id="view-container">
+      <section id="view-processing" class="view-inner active">
+        <div class="bind-status-bar" id="bindStatusBar">
+          <div class="bind-status-left">
+            <span class="bind-dot"></span>
+            <span class="bind-email" id="bindBarEmail">未绑定</span>
+            <span class="bind-provider" id="bindBarProvider"></span>
+          </div>
+          <button class="bind-change-btn" onclick="showProviderModal()">更换邮箱</button>
+        </div>
+        <div class="proc-header">
+          <h1>智能指令中心</h1>
+          <p>通过自然语言指挥您的 AI 助理，精准处理海量邮件。即刻清空您的收件箱。</p>
+        </div>
+        <div class="proc-command-box">
+          <div class="proc-command-top">
+            <div class="proc-cmd-icon">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#fff" stroke-width="2"/><path d="M22 6l-10 7L2 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="proc-textarea-wrap">
+              <textarea class="proc-textarea" id="cmdInput" placeholder="输入指令，例如：'处理前50封邮件' 或 '找一下明天下午的会议安排'"></textarea>
+            </div>
+          </div>
+          <div class="proc-cmd-bottom">
+            <span class="proc-cmd-hint">按 Enter 发送</span>
+            <button class="proc-send-btn" onclick="startProcessing()">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" fill="#fff"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="proc-pills">
+          <button class="proc-pill" onclick="fillCmd('处理前50封邮件')">处理前50封邮件</button>
+          <button class="proc-pill" onclick="fillCmd('找出所有会议邀约')">找出所有会议邀约</button>
+          <button class="proc-pill" onclick="fillCmd('草拟周报回复')">草拟周报回复</button>
+          <button class="proc-pill" onclick="fillCmd('标记财务发票')">标记财务发票</button>
+        </div>
+        <div class="proc-content">
+          <div class="proc-main">
+            <div class="proc-status-card" id="procStatusCard">
+              <div class="empty-state" id="procEmpty">
+                <div class="empty-state-icon">
+                  <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/><path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </div>
+                <div class="empty-state-title">等待您的指令</div>
+                <div class="empty-state-desc">输入指令或点击上方快捷操作，AI 将开始处理您的邮件。</div>
+              </div>
+              <div class="hidden" id="procProgress">
+                <div class="proc-status-top">
+                  <div class="proc-status-title"><span class="dot"></span> AI 正在处理中...</div>
+                  <span class="proc-pct" id="procPct">0%</span>
+                </div>
+                <div class="proc-task-label" id="procTaskLabel">准备中...</div>
+                <div class="proc-progress-track">
+                  <div class="proc-progress-fill" id="procBar" style="width:0%"></div>
+                </div>
+                <div class="proc-steps">
+                  <span class="proc-step">初始化</span>
+                  <span class="proc-step">扫描中</span>
+                  <span class="proc-step">筛选中</span>
+                  <span class="proc-step">草稿中</span>
+                  <span class="proc-step">完成</span>
+                </div>
+                <div class="proc-checklist" id="procChecklist"></div>
+              </div>
+            </div>
+          </div>
+          <div class="proc-side">
+            <div class="proc-insight-card">
+              <div class="proc-insight-icon">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+              </div>
+              <div class="proc-insight-title">使用提示</div>
+              <div class="proc-insight-text">输入自然语言指令，如"处理最新20封邮件"或"找出所有未读邮件"，AI 会自动分析和分类。</div>
+              <div class="proc-insight-link" onclick="fillCmd('读取最新20封邮件')">试一试 →</div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="view-status" class="view-inner">
+        <div class="stat-header">
+          <div>
+            <h1>处理结果概览</h1>
+            <p>您的智能管家已完成最新一轮的邮件清理</p>
+          </div>
+          <div class="stat-engine-badge" id="engineBadge">AI 处理引擎在线</div>
+        </div>
+        <div class="stat-cards" id="statCards">
+          <div class="stat-card white animate-in">
+            <div class="stat-card-label" style="color:var(--text-muted)">已处理邮件</div>
+            <div class="stat-card-value"><span id="statEmails">0</span><span class="stat-card-unit">封</span></div>
+          </div>
+          <div class="stat-card navy animate-in">
+            <div class="stat-card-label">节省时间</div>
+            <div class="stat-card-value"><span id="statTime">0</span><span class="stat-card-unit">分钟</span></div>
+          </div>
+          <div class="stat-card dark animate-in">
+            <div class="stat-card-label">提取任务</div>
+            <div class="stat-card-value"><span id="statTasks">0</span><span class="stat-card-unit">项</span></div>
+          </div>
+        </div>
+        <!-- AI Report Section -->
+        <div id="reportSection" class="hidden" style="margin-bottom:24px">
+          <div class="report-card">
+            <div class="report-card-header" onclick="this.parentElement.classList.toggle('collapsed')">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px">🤖</div>
+                <div>
+                  <div style="font-size:15px;font-weight:700;color:var(--navy)">AI 分析报告</div>
+                  <div style="font-size:12px;color:var(--text-muted)" id="reportSubtitle">点击展开/收起</div>
+                </div>
+              </div>
+              <svg class="report-chevron" width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="report-card-body" id="reportBody"></div>
+          </div>
+        </div>
+        <div class="stat-content">
+          <div class="stat-main" id="emailListContainer">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+              <div class="stat-section-title" style="margin-bottom:0">
+                <svg fill="none" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                邮件列表
+              </div>
+              <div class="filter-tabs" id="filterTabs">
+                <button class="filter-tab active" data-filter="all" onclick="filterEmails('all')">全部</button>
+                <button class="filter-tab" data-filter="high" onclick="filterEmails('high')">
+                  <span class="filter-dot" style="background:var(--danger)"></span>紧急 <span class="filter-count" id="filterHighCount">0</span>
+                </button>
+                <button class="filter-tab" data-filter="medium" onclick="filterEmails('medium')">
+                  <span class="filter-dot" style="background:var(--warning)"></span>普通 <span class="filter-count" id="filterMedCount">0</span>
+                </button>
+                <button class="filter-tab" data-filter="low" onclick="filterEmails('low')">
+                  <span class="filter-dot" style="background:var(--text-muted)"></span>低 <span class="filter-count" id="filterLowCount">0</span>
+                </button>
+              </div>
+            </div>
+            <div id="emailList">
+              <div class="empty-state">
+                <div class="empty-state-icon">
+                  <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="empty-state-title">暂无处理结果</div>
+                <div class="empty-state-desc">前往「AI 处理」页面输入指令开始处理邮件，处理结果将在此展示。</div>
+              </div>
+            </div>
+            <div id="emailShowMore" class="hidden" style="text-align:center;padding:16px">
+              <button class="show-more-btn" onclick="showAllEmails()">展开全部邮件 <span id="emailHiddenCount"></span></button>
+            </div>
+          </div>
+          <div class="stat-side">
+            <div class="todo-card">
+              <div class="todo-card-top">
+                <div class="todo-card-title">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2"/></svg>
+                  提取待办事项
+                </div>
+                <span class="todo-badge" id="todoBadge">0 项任务</span>
+              </div>
+              <div class="todo-list" id="todoList">
+                <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">处理邮件后将自动提取待办事项</div>
+              </div>
+              <button class="todo-sync-btn" onclick="showToast('已同步至日历','success')">同步至日历</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="view-digest" class="view-inner">
+        <div class="digest-title">
+          <h1>今日处理汇总</h1>
+          <p>智能管家已为您优化收件箱体验</p>
+        </div>
+        <div id="digestContent">
+          <div class="empty-state" style="padding-top:40px">
+            <div class="empty-state-icon">
+              <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/><path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="empty-state-title">暂无汇总数据</div>
+            <div class="empty-state-desc">前往「助手」页面输入指令处理邮件后，汇总数据将在此展示。</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- MOBILE BOTTOM TABS -->
+<nav id="bottom-tabs" class="hidden">
+  <div class="btab" data-view="status" onclick="navigateTo('status')">
+    <svg fill="none" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/><path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    收件箱
+  </div>
+  <div class="btab center-tab active" data-view="processing" onclick="navigateTo('processing')">
+    <svg fill="none" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="16" r="1.5" fill="currentColor"/><path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="2"/><path d="M7 3h2M15 3h2M12 1v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    助手
+  </div>
+  <div class="btab" data-view="digest" onclick="navigateTo('digest')">
+    <svg fill="none" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2"/></svg>
+    日报
+  </div>
+</nav>
+
+<!-- MODAL OVERLAY -->
+<div id="modal-overlay" class="hidden">
+  <!-- Step 1: 选择服务商 -->
+  <div class="modal-box" id="modal-step1">
+    <div class="modal-title">选择邮箱服务商</div>
+    <div class="modal-desc">选择您的邮箱类型，我们将引导您完成安全绑定。</div>
+    <div class="modal-providers">
+      <button class="modal-provider-btn" onclick="selectProvider('qq')">
+        <div class="modal-provider-icon" style="background:#dcfce7;color:#16a34a">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/><path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2"/></svg>
+        </div>
+        QQ 邮箱（授权码）
+      </button>
+      <button class="modal-provider-btn" onclick="selectProvider('163')">
+        <div class="modal-provider-icon" style="background:#fee2e2;color:#dc2626">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/><path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2"/></svg>
+        </div>
+        网易 163 邮箱（授权码）
+      </button>
+      <button class="modal-provider-btn" onclick="selectProvider('gmail')">
+        <div class="modal-provider-icon" style="background:#fef3c7;color:#d97706">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/><path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2"/></svg>
+        </div>
+        Gmail（应用专用密码）
+      </button>
+      <button class="modal-provider-btn" onclick="selectProvider('outlook')">
+        <div class="modal-provider-icon" style="background:#dbeafe;color:#2563eb">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/><path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2"/></svg>
+        </div>
+        Outlook / Hotmail
+      </button>
+      <button class="modal-provider-btn" onclick="selectProvider('imap')">
+        <div class="modal-provider-icon" style="background:#e5e7eb;color:#6b7280">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        自定义 IMAP 服务器
+      </button>
+    </div>
+    <button class="modal-cancel" onclick="hideModal()">取消</button>
+  </div>
+
+  <!-- Step 2: 教程 + 输入凭证 -->
+  <div class="modal-box modal-wide hidden" id="modal-step2">
+    <button class="modal-back-btn" onclick="goModalStep(1)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      返回
+    </button>
+    <div id="provider-guide"></div>
+    <div class="modal-form">
+      <div class="form-group">
+        <label class="form-label">邮箱地址</label>
+        <input type="email" class="form-input" id="bindEmail" placeholder="your@example.com">
+      </div>
+      <div class="form-group" id="authcodeGroup">
+        <label class="form-label" id="authcodeLabel">授权码</label>
+        <input type="password" class="form-input" id="bindAuthcode" placeholder="请粘贴授权码">
+        <div class="form-hint" id="authcodeHint"></div>
+      </div>
+      <div class="form-group hidden" id="imapHostGroup">
+        <label class="form-label">IMAP 服务器</label>
+        <input type="text" class="form-input" id="bindImapHost" placeholder="imap.example.com">
+      </div>
+      <div class="form-group hidden" id="imapPortGroup">
+        <label class="form-label">IMAP 端口</label>
+        <input type="number" class="form-input" id="bindImapPort" placeholder="993">
+      </div>
+      <div class="form-error hidden" id="bindError"></div>
+      <button class="ob-bind-btn" id="bindSubmitBtn" onclick="submitBind()" style="margin-top:8px">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#fff" stroke-width="2"/></svg>
+        连接并验证邮箱
+      </button>
+    </div>
+    <button class="modal-cancel" onclick="hideModal()" style="margin-top:12px">取消</button>
+  </div>
+
+  <!-- Step 3: 连接中 -->
+  <div class="modal-box hidden" id="modal-step3">
+    <div style="text-align:center;padding:30px 0">
+      <div class="bind-spinner"></div>
+      <div style="font-size:16px;font-weight:600;margin-top:20px" id="bindStatusText">正在连接邮箱服务器...</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-top:8px" id="bindStatusSub">请稍候，正在通过 IMAP 安全协议验证</div>
+    </div>
+  </div>
+</div>
+
+<!-- FAB (mobile) -->
+<div class="fab-btn" onclick="navigateTo('processing')" title="AI 助手">
+  <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#fff"/></svg>
+</div>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<script>
+/* ========== J0: IFRAME MODE DETECTION ========== */
+const _iframeParams = new URLSearchParams(window.location.search);
+const _isIframeMode = (window.self !== window.top) && _iframeParams.has('signature') && _iframeParams.has('sessionId');
+let _iframeVerified = false;
+
+if (_isIframeMode) {
+  document.body.classList.add('iframe-mode');
+
+  function _showIframeBlock(msg) {
+    const el = document.createElement('div');
+    el.id = 'iframe-block';
+    el.classList.add('active');
+    el.innerHTML = '<div class="ib-icon">🔒</div><div class="ib-title">Invalid Session</div><div class="ib-msg">' + (msg || '会话验证失败') + '</div>';
+    document.body.prepend(el);
+  }
+
+  // Verify signature with backend
+  (async function verifyIframe() {
+    try {
+      const resp = await fetch('/api/iframe-verify?' + _iframeParams.toString());
+      const data = await resp.json();
+      if (data.success) {
+        _iframeVerified = true;
+        console.log('[Iframe] Verified:', data.userId, data.sessionId);
+      } else {
+        _showIframeBlock(data.error || '会话验证失败');
+      }
+    } catch (e) {
+      _showIframeBlock('验证服务不可用');
+    }
+  })();
+}
+
+/* ========== J1: STATE & ROUTER ========== */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+let currentView = 'processing';
+let isLoggedIn = localStorage.getItem('ai_email_logged') === 'true';
+let boundEmail = localStorage.getItem('ai_email_addr') || '';
+let boundProvider = localStorage.getItem('ai_email_provider') || '';
+const API_BASE = location.origin; // backend serves both static files and API
+
+function navigateTo(view) {
+  currentView = view;
+  $$('.view-inner').forEach(v => v.classList.remove('active'));
+  const target = $(`#view-${view}`);
+  if (target) {
+    target.classList.remove('active');
+    void target.offsetWidth;
+    target.classList.add('active');
+  }
+  $$('.sidebar-nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.view === view);
+  });
+  $$('.topnav-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.view === view);
+  });
+  $$('.btab').forEach(b => {
+    b.classList.toggle('active',
+      b.dataset.view === view && !b.classList.contains('center-tab'));
+    if (b.classList.contains('center-tab'))
+      b.classList.toggle('active', b.dataset.view === view);
+  });
+}
+
+/* ========== J2: PROVIDER GUIDES ========== */
+const PROVIDERS = {
+  qq: {
+    name: 'QQ 邮箱',
+    imap: 'imap.qq.com',
+    port: 993,
+    authLabel: '授权码（非QQ密码）',
+    placeholder: '请粘贴16位授权码',
+    hint: '授权码不是QQ密码，请按教程获取。授权码类似 "abcdefghijklmnop"',
+    guide: `
+      <div class="provider-guide-box">
+        <div class="provider-guide-title">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+          QQ 邮箱授权码获取教程
+        </div>
+        <ol class="provider-guide-steps">
+          <li>登录 <strong>QQ 邮箱网页版</strong> → mail.qq.com</li>
+          <li>点击顶部 <strong>「设置」</strong> → <strong>「账户」</strong> 标签页</li>
+          <li>向下滚动找到 <strong>「POP3/IMAP/SMTP/Exchange/ CardDAV/CalDAV 服务」</strong></li>
+          <li>点击 <strong>「IMAP/SMTP 服务」</strong> 右侧的 <strong>「开启」</strong> 按钮</li>
+          <li>按提示 <strong>发送短信验证</strong>（用绑定手机发送指定内容到指定号码）</li>
+          <li>验证成功后，页面会显示一串 <strong>16 位授权码</strong>，例如 <code>abcdefghijklmnop</code></li>
+          <li><strong>立即复制并保存</strong>这个授权码（关闭页面后无法再次查看，但可以重新生成）</li>
+        </ol>
+      </div>
+    `
+  },
+  '163': {
+    name: '网易 163 邮箱',
+    imap: 'imap.163.com',
+    port: 993,
+    authLabel: '授权码（非登录密码）',
+    placeholder: '请粘贴授权码',
+    hint: '网易授权码在"设置 → POP3/SMTP/IMAP"中开启后获取',
+    guide: `
+      <div class="provider-guide-box">
+        <div class="provider-guide-title">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+          网易 163 邮箱授权码获取教程
+        </div>
+        <ol class="provider-guide-steps">
+          <li>登录 <strong>网易邮箱网页版</strong> → mail.163.com</li>
+          <li>点击顶部 <strong>「设置」</strong> → <strong>「POP3/SMTP/IMAP」</strong></li>
+          <li>点击 <strong>开启 IMAP/SMTP 服务</strong></li>
+          <li>按提示完成 <strong>手机验证</strong></li>
+          <li>验证成功后会显示 <strong>授权码</strong>，立即复制保存</li>
+        </ol>
+      </div>
+    `
+  },
+  gmail: {
+    name: 'Gmail',
+    imap: 'imap.gmail.com',
+    port: 993,
+    authLabel: '应用专用密码（非 Gmail 登录密码）',
+    placeholder: '请粘贴16位应用专用密码',
+    hint: '这不是您的 Gmail 密码！需先开启两步验证，然后在 Google 账户 → 安全性 → 应用专用密码 中生成一个独立的16位密码',
+    guide: `
+      <div class="provider-guide-box">
+        <div class="provider-guide-title">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+          Gmail 应用专用密码获取教程
+        </div>
+        <ol class="provider-guide-steps">
+          <li>前往 <strong>Google 账户</strong> → myaccount.google.com</li>
+          <li>左侧选择 <strong>「安全性」</strong></li>
+          <li>确保已开启 <strong>「两步验证」</strong>（未开启需先开启）</li>
+          <li>在两步验证下方找到 <strong>「应用专用密码」</strong></li>
+          <li>选择应用类型 <strong>「邮件」</strong>，设备选 <strong>「其他」</strong>，输入名称如 "AI邮件助手"</li>
+          <li>点击 <strong>「生成」</strong>，复制显示的 <strong>16 位密码</strong>（含空格）</li>
+        </ol>
+      </div>
+    `
+  },
+  outlook: {
+    name: 'Outlook',
+    imap: 'outlook.office365.com',
+    port: 993,
+    authLabel: '邮箱密码',
+    placeholder: '请输入 Outlook 登录密码',
+    hint: '如果开启了两步验证，需使用应用密码',
+    guide: `
+      <div class="provider-guide-box">
+        <div class="provider-guide-title">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+          Outlook / Hotmail 绑定说明
+        </div>
+        <ol class="provider-guide-steps">
+          <li>直接使用您的 <strong>Outlook 邮箱地址</strong>和<strong>登录密码</strong></li>
+          <li>如果开启了 <strong>两步验证</strong>，需前往 Microsoft 账户安全页面生成 <strong>应用密码</strong></li>
+          <li>IMAP 服务器地址: <code>outlook.office365.com</code>，端口: <code>993</code></li>
+        </ol>
+      </div>
+    `
+  },
+  imap: {
+    name: '自定义 IMAP',
+    imap: '',
+    port: 993,
+    authLabel: '密码 / 授权码',
+    placeholder: '请输入密码或授权码',
+    hint: '请确认您的邮箱服务商已开启 IMAP 服务',
+    guide: `
+      <div class="provider-guide-box">
+        <div class="provider-guide-title">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+          自定义 IMAP 配置
+        </div>
+        <ol class="provider-guide-steps">
+          <li>请确认您的邮箱已<strong>开启 IMAP 服务</strong></li>
+          <li>填写 IMAP <strong>服务器地址</strong>和<strong>端口号</strong>（通常为 993）</li>
+          <li>使用邮箱<strong>授权码或密码</strong>（视服务商要求而定）</li>
+        </ol>
+      </div>
+    `
+  }
+};
+
+let selectedProvider = null;
+
+function showProviderModal() {
+  $('#modal-overlay').classList.remove('hidden');
+  goModalStep(1);
+}
+function hideModal() {
+  $('#modal-overlay').classList.add('hidden');
+}
+function goModalStep(step) {
+  $('#modal-step1').classList.toggle('hidden', step !== 1);
+  $('#modal-step2').classList.toggle('hidden', step !== 2);
+  $('#modal-step3').classList.toggle('hidden', step !== 3);
+}
+
+function selectProvider(key) {
+  selectedProvider = key;
+  const p = PROVIDERS[key];
+  $('#provider-guide').innerHTML = p.guide;
+  $('#authcodeLabel').textContent = p.authLabel;
+  $('#bindAuthcode').placeholder = p.placeholder;
+  $('#authcodeHint').textContent = p.hint;
+  // Show/hide IMAP host fields for custom
+  $('#imapHostGroup').classList.toggle('hidden', key !== 'imap');
+  $('#imapPortGroup').classList.toggle('hidden', key !== 'imap');
+  if (key !== 'imap') {
+    $('#bindImapHost').value = p.imap;
+    $('#bindImapPort').value = p.port;
+  } else {
+    $('#bindImapHost').value = '';
+    $('#bindImapPort').value = '993';
+  }
+  // Pre-fill email domain hint
+  const emailInput = $('#bindEmail');
+  if (key === 'qq') emailInput.placeholder = '123456789@qq.com';
+  else if (key === '163') emailInput.placeholder = 'yourname@163.com';
+  else if (key === 'gmail') emailInput.placeholder = 'yourname@gmail.com';
+  else if (key === 'outlook') emailInput.placeholder = 'yourname@outlook.com';
+  else emailInput.placeholder = 'your@example.com';
+
+  $('#bindError').classList.add('hidden');
+  goModalStep(2);
+}
+
+function submitBind() {
+  const email = $('#bindEmail').value.trim();
+  const authcode = $('#bindAuthcode').value.trim();
+  const imapHost = $('#bindImapHost').value.trim() || PROVIDERS[selectedProvider]?.imap;
+  const imapPort = parseInt($('#bindImapPort').value) || 993;
+
+  if (!email) {
+    showBindError('请输入邮箱地址');
+    return;
+  }
+  if (!authcode) {
+    showBindError('请输入授权码 / 密码');
+    return;
+  }
+  if (!email.includes('@')) {
+    showBindError('邮箱地址格式不正确');
+    return;
+  }
+  if (selectedProvider === 'imap' && !imapHost) {
+    showBindError('请输入 IMAP 服务器地址');
+    return;
+  }
+
+  // Show connecting step
+  goModalStep(3);
+  $('#bindStatusText').textContent = '正在连接邮箱服务器...';
+  $('#bindStatusSub').textContent = `通过 IMAP 连接 ${imapHost}:${imapPort}`;
+
+  // Try to connect via backend API
+  fetch(API_BASE + '/api/bind', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password: authcode, host: imapHost, port: imapPort, provider: selectedProvider })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      $('#bindStatusText').textContent = '绑定成功！';
+      $('#bindStatusSub').textContent = `已连接 ${email}，正在进入系统...`;
+      localStorage.setItem('ai_email_logged', 'true');
+      localStorage.setItem('ai_email_addr', email);
+      localStorage.setItem('ai_email_provider', selectedProvider);
+      localStorage.setItem('ai_email_cred', JSON.stringify({ email, authcode, host: imapHost, port: imapPort }));
+      boundEmail = email;
+      boundProvider = selectedProvider;
+      isLoggedIn = true;
+      setTimeout(() => {
+        hideModal();
+        enterApp();
+        showToast(`${email} 绑定成功！`, 'success');
+      }, 1000);
+    } else {
+      goModalStep(2);
+      showBindError(data.error || '连接失败，请检查邮箱地址和授权码是否正确');
+    }
+  })
+  .catch(err => {
+    // If no backend, store locally and proceed in demo mode
+    console.warn('Backend unavailable, using local mode:', err);
+    $('#bindStatusText').textContent = '本地模式';
+    $('#bindStatusSub').textContent = '后端服务未启动，以本地演示模式运行';
+    localStorage.setItem('ai_email_logged', 'true');
+    localStorage.setItem('ai_email_addr', email);
+    localStorage.setItem('ai_email_provider', selectedProvider);
+    boundEmail = email;
+    boundProvider = selectedProvider;
+    isLoggedIn = true;
+    setTimeout(() => {
+      hideModal();
+      enterApp();
+      showToast('已保存邮箱配置（需启动后端服务才能读取邮件）', 'info');
+    }, 1500);
+  });
+}
+
+function showBindError(msg) {
+  const el = $('#bindError');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function enterApp() {
+  $('#view-onboarding').classList.add('hidden');
+  $('#app-shell').classList.remove('hidden');
+  if (window.innerWidth <= 768) {
+    $('#bottom-tabs').classList.remove('hidden');
+    $('#bottom-tabs').classList.add('visible');
+  }
+  // Update account card
+  if (boundEmail) {
+    if ($('#bindBarEmail')) $('#bindBarEmail').textContent = boundEmail;
+    if ($('#bindBarProvider')) $('#bindBarProvider').textContent = PROVIDERS[boundProvider]?.name + ' · IMAP 已连接';
+    $('#bindBarEmail').textContent = boundEmail;
+    $('#bindBarProvider').textContent = PROVIDERS[boundProvider]?.name || '';
+  }
+  navigateTo('processing');
+}
+
+function logout() {
+  localStorage.removeItem('ai_email_logged');
+  localStorage.removeItem('ai_email_addr');
+  localStorage.removeItem('ai_email_provider');
+  localStorage.removeItem('ai_email_cred');
+  isLoggedIn = false;
+  boundEmail = '';
+  boundProvider = '';
+  $('#app-shell').classList.add('hidden');
+  $('#bottom-tabs').classList.add('hidden');
+  $('#bottom-tabs').classList.remove('visible');
+  $('#view-onboarding').classList.remove('hidden');
+}
+
+/* ========== J3: PROCESSING LOGIC ========== */
+function fillCmd(text) {
+  const ta = $('#cmdInput');
+  ta.value = text;
+  ta.focus();
+}
+
+let procInterval = null;
+async function startProcessing() {
+  const cmd = $('#cmdInput').value.trim();
+  if (!cmd) {
+    fillCmd('处理前50封邮件');
+    return;
+  }
+  if (!boundEmail) {
+    showToast('请先绑定邮箱', 'info');
+    return;
+  }
+
+  // Best-effort: ensure backend session is alive by re-binding
+  const savedCred = JSON.parse(localStorage.getItem('ai_email_cred') || '{}');
+  try {
+    const bindResp = await fetch(API_BASE + '/api/status', { cache: 'no-store' }).then(r => r.json());
+    if (!bindResp.bound) {
+      // Session not active, try auto-rebind with saved credentials
+      if (savedCred.email && savedCred.authcode) {
+        showToast('正在重新连接邮箱...', 'info');
+        const rebind = await fetch(API_BASE + '/api/bind', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: savedCred.email, password: savedCred.authcode, host: savedCred.host, port: savedCred.port || 993, provider: boundProvider })
+        }).then(r => r.json());
+        if (!rebind.success) {
+          // Auth expired — clear old creds and show rebind modal
+          localStorage.removeItem('ai_email_cred');
+          showToast('授权已过期，请重新绑定邮箱', 'info');
+          setTimeout(() => showProviderModal(), 300);
+          return;
+        }
+        showToast('邮箱已重新连接', 'success');
+      } else {
+        // No saved credentials, prompt rebind
+        showToast('请重新绑定邮箱', 'info');
+        setTimeout(() => showProviderModal(), 300);
+        return;
+      }
+    }
+  } catch (e) {
+    // Don't hard-fail on status check; proceed to processing and let backend respond
+    console.warn('[status] check failed, continue to process', e);
+  }
+
+  // Animate textarea: flash + clear + disable
+  const cmdInput = $('#cmdInput');
+  const cmdBox = $('.proc-command-box');
+  cmdInput.disabled = true;
+  cmdBox.style.transition = 'all 0.3s';
+  cmdBox.style.borderColor = 'var(--success)';
+  cmdBox.style.boxShadow = '0 0 0 3px rgba(34,197,94,0.15)';
+  setTimeout(() => {
+    cmdBox.style.borderColor = '';
+    cmdBox.style.boxShadow = '';
+  }, 800);
+
+  // Show progress UI
+  $('#procEmpty').classList.add('hidden');
+  $('#procProgress').classList.remove('hidden');
+  $('#procTaskLabel').textContent = '当前任务：' + cmd;
+
+  // Clear input and scroll to progress
+  cmdInput.value = '';
+  cmdInput.disabled = false;
+  const procCard = $('#procStatusCard');
+  if (procCard) procCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  // Build checklist
+  const checklist = $('#procChecklist');
+  checklist.innerHTML = '';
+  const steps = [
+    { text: `连接到 ${PROVIDERS[boundProvider]?.name || 'IMAP'} 服务器...`, status: 'loading' },
+    { text: '读取邮件列表...', status: 'pending' },
+    { text: '分析邮件优先级与分类...', status: 'pending' },
+    { text: '生成处理建议与回复草稿...', status: 'pending' },
+    { text: '生成最终报告', status: 'pending' }
+  ];
+  steps.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'proc-check-item';
+    div.innerHTML = `<div class="ci-icon ${s.status}">${s.status === 'done' ? '<svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>' : s.status === 'loading' ? '<svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' : '○'}</div>${s.status === 'pending' ? '<span style="color:var(--text-muted)">' + s.text + '</span>' : s.text}`;
+    checklist.appendChild(div);
+  });
+
+  // Start progress animation while backend processes
+  startProgressAnim(85); // animate up to 85% while waiting
+
+  // Try calling backend with timeout
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 600000); // 10 min timeout
+
+  fetch(API_BASE + '/api/process', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ command: cmd, email: boundEmail }),
+    signal: controller.signal
+  })
+  .then(r => r.json())
+  .then(data => {
+    clearTimeout(timeout);
+    if (data.success) {
+      finishProcessing(data);
+    } else {
+      if (procInterval) { clearInterval(procInterval); procInterval = null; }
+      $('#procBar').style.width = '0%';
+      $('#procPct').textContent = '0%';
+      $('#procProgress').classList.add('hidden');
+      $('#procEmpty').classList.remove('hidden');
+      const errMsg = data.error || '处理失败';
+      if (errMsg.includes('绑定') || errMsg.includes('授权')) {
+        showToast('请重新绑定邮箱', 'info');
+        setTimeout(() => showProviderModal(), 300);
+      } else {
+        showToast(errMsg, 'info');
+      }
+    }
+  })
+  .catch((err) => {
+    clearTimeout(timeout);
+    if (procInterval) { clearInterval(procInterval); procInterval = null; }
+    $('#procBar').style.width = '0%';
+    $('#procPct').textContent = '0%';
+    $('#procProgress').classList.add('hidden');
+    $('#procEmpty').classList.remove('hidden');
+    if (err.name === 'AbortError') {
+      showToast('处理超时，请稍后重试或减少邮件数量', 'info');
+    } else {
+      showToast('连接失败，请检查网络或稍后重试', 'info');
+    }
+  });
+}
+
+function startProgressAnim(maxPct = 100) {
+  let pct = 0;
+  const bar = $('#procBar');
+  const label = $('#procPct');
+  const stepEls = $$('.proc-step');
+  const checkItems = $$('.proc-check-item');
+  if (procInterval) clearInterval(procInterval);
+  bar.style.width = '0%';
+  procInterval = setInterval(() => {
+    pct += Math.random() * 3 + 0.5;
+    if (pct > maxPct) pct = maxPct;
+    bar.style.width = pct + '%';
+    label.textContent = Math.round(pct) + '%';
+    stepEls.forEach((s, i) => {
+      s.className = 'proc-step';
+      if (pct > (i + 1) * 20) s.classList.add('done');
+      else if (pct > i * 20) s.classList.add('current');
+    });
+    // Update checklist items
+    const stageIdx = Math.floor(pct / 20);
+    checkItems.forEach((ci, i) => {
+      const icon = ci.querySelector('.ci-icon');
+      if (i < stageIdx) {
+        icon.className = 'ci-icon done';
+        icon.innerHTML = '<svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        ci.querySelector('span')?.replaceWith(document.createTextNode(ci.textContent.trim()));
+      } else if (i === stageIdx) {
+        icon.className = 'ci-icon loading';
+        icon.innerHTML = '<svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+      }
+    });
+    if (pct >= maxPct && maxPct >= 100) {
+      clearInterval(procInterval);
+      procInterval = null;
+      showToast('处理完成！（演示模式，启动后端可处理真实邮件）', 'success');
+    } else if (pct >= maxPct) {
+      clearInterval(procInterval);
+      procInterval = null;
+    }
+  }, 200);
+}
+
+function finishProcessing(data) {
+  if (procInterval) { clearInterval(procInterval); procInterval = null; }
+  $('#procBar').style.width = '100%';
+  $('#procPct').textContent = '100%';
+  $$('.proc-step').forEach(s => { s.className = 'proc-step done'; });
+  $$('.proc-check-item').forEach(ci => {
+    const icon = ci.querySelector('.ci-icon');
+    icon.className = 'ci-icon done';
+    icon.innerHTML = '<svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  });
+
+  const results = data.results || [];
+  const stats = data.stats || {};
+  const taskList = data.taskList || [];
+  const report = data.report || '';
+
+  // Store results globally for filtering
+  window._emailResults = results;
+
+  // Update stat counters
+  $('#statEmails').textContent = stats.total || data.count || 0;
+  $('#statTime').textContent = Math.round((stats.total || 0) * 2.5);
+  $('#statTasks').textContent = stats.tasks || 0;
+
+  // Show delete count if applicable
+  if (stats.deleted > 0) {
+    showToast(`已成功删除 ${stats.deleted} 封垃圾/广告邮件`, 'success');
+  }
+
+  // Render AI Report at top
+  const reportSection = $('#reportSection');
+  const reportBody = $('#reportBody');
+  if (report) {
+    reportSection.classList.remove('hidden');
+    // Convert markdown-like report to HTML
+    let reportHtml = escHtml(report)
+      .replace(/## (.+)/g, '<h2>$1</h2>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+    reportBody.innerHTML = reportHtml;
+    const highCount = results.filter(r => r.priority === 'high').length;
+    $('#reportSubtitle').textContent = highCount > 0
+      ? `发现 ${highCount} 封紧急邮件，请查看详情`
+      : `共分析 ${results.length} 封邮件`;
+  }
+
+  // Update filter counts
+  const highCount = results.filter(r => r.priority === 'high').length;
+  const medCount = results.filter(r => r.priority === 'medium').length;
+  const lowCount = results.filter(r => r.priority === 'low').length;
+  $('#filterHighCount').textContent = highCount;
+  $('#filterMedCount').textContent = medCount;
+  $('#filterLowCount').textContent = lowCount;
+
+  // Render email cards (default: show first 5 only)
+  renderEmailCards(results, 'all', 5);
+
+  // Render todo list
+  const todoListEl = $('#todoList');
+  const todoBadge = $('#todoBadge');
+  if (taskList.length > 0) {
+    todoBadge.textContent = taskList.length + ' 项任务';
+    todoListEl.innerHTML = '';
+    taskList.forEach(t => {
+      const item = document.createElement('div');
+      item.className = 'todo-item';
+      item.setAttribute('onclick', 'toggleTodo(this)');
+      item.innerHTML = `<div class="todo-check"></div><div><div class="todo-text">${escHtml(t)}</div></div>`;
+      todoListEl.appendChild(item);
+    });
+  } else {
+    todoBadge.textContent = '0 项任务';
+    todoListEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">未提取到待办事项</div>';
+  }
+
+  renderDigest(data);
+  showToast(`处理完成！共处理 ${data.count || 0} 封邮件`, 'success');
+  setTimeout(() => navigateTo('status'), 1200);
+}
+
+function renderEmailCards(results, filter, limit) {
+  const emailListEl = $('#emailList');
+  const showMoreEl = $('#emailShowMore');
+  emailListEl.innerHTML = '';
+
+  const priorityOrder = { high: 0, medium: 1, low: 2 };
+  let filtered = filter === 'all' ? [...results] : results.filter(r => r.priority === filter);
+  filtered.sort((a, b) => {
+    if (a.matched && !b.matched) return -1;
+    if (!a.matched && b.matched) return 1;
+    return (priorityOrder[a.priority] || 2) - (priorityOrder[b.priority] || 2);
+  });
+
+  if (filtered.length === 0) {
+    emailListEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted);font-size:13px">该分类下没有邮件</div>';
+    showMoreEl.classList.add('hidden');
+    return;
+  }
+
+  const showCount = limit || filtered.length;
+  const toShow = filtered.slice(0, showCount);
+  const remaining = filtered.length - showCount;
+
+  toShow.forEach(r => {
+    emailListEl.appendChild(createEmailCard(r));
+  });
+
+  if (remaining > 0) {
+    showMoreEl.classList.remove('hidden');
+    $('#emailHiddenCount').textContent = `(还有 ${remaining} 封)`;
+  } else {
+    showMoreEl.classList.add('hidden');
+  }
+}
+
+function createEmailCard(r) {
+  const e = r.email || {};
+  const p = r.priority || 'low';
+  const isDeleted = r._deleted;
+  const avatarColor = isDeleted ? 'gray' : (p === 'high' ? 'red' : p === 'medium' ? 'yellow' : 'gray');
+  const fromLabel = e.fromName || e.from || '未知发件人';
+  const initial = fromLabel.charAt(0);
+  const priorityLabel = isDeleted ? '已删除' : (p === 'high' ? '紧急' : p === 'medium' ? '普通' : '低');
+  const priorityClass = isDeleted ? 'deleted' : p;
+  const categoryLabel = r.category || '';
+  const matchTag = r.matched ? '<span style="color:var(--success);font-size:11px;font-weight:600;margin-left:8px">&#10003; 匹配</span>' : '';
+
+  let bodyHtml = `<div class="email-summary">${escHtml(r.summary || '')}</div>`;
+  if (r.priorityReason) bodyHtml += `<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px"><strong>优先级原因：</strong>${escHtml(r.priorityReason)}</div>`;
+  if (r.keyInfo) bodyHtml += `<div style="font-size:12px;color:var(--blue);margin-bottom:10px"><strong>关键信息：</strong>${escHtml(r.keyInfo)}</div>`;
+  if (r.suggestedReply && p === 'high') {
+    const cardId = 'reply-' + (e.uid || Math.random().toString(36).substr(2,9));
+    bodyHtml += `<div class="email-draft" onclick="event.stopPropagation()">
+      <div class="email-draft-label">AI 回复草稿 <span style="font-weight:400;color:var(--text-muted);font-size:11px">（可编辑后发送）</span></div>
+      <textarea id="${cardId}" class="email-draft-textarea" rows="4" onclick="event.stopPropagation()" onfocus="event.stopPropagation()">${escHtml(r.suggestedReply)}</textarea>
+    </div>
+    <div class="email-reply-actions" onclick="event.stopPropagation()">
+      <button class="email-send-btn" data-to="${escHtml(e.from || '')}" data-subject="${escHtml('Re: ' + (e.subject || ''))}" data-textarea="${cardId}" onclick="event.stopPropagation();sendReply(this)">
+        <svg fill="none" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        确认发送
+      </button>
+      <span class="email-send-hint">编辑完成后点击发送，邮件将直接回复给发件人</span>
+    </div>`;
+  }
+  if (r.tasks && r.tasks.length > 0) {
+    bodyHtml += `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"><div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:8px">提取的待办：</div>`;
+    r.tasks.forEach(t => { bodyHtml += `<div style="font-size:12px;color:var(--text-secondary);padding:3px 0">· ${escHtml(t)}</div>`; });
+    bodyHtml += '</div>';
+  }
+
+  const summaryPreview = (r.summary || '').substring(0, 60);
+  const card = document.createElement('div');
+  card.className = `email-card ${priorityClass}`;
+  if (isDeleted) card.style.opacity = '0.55';
+  card.innerHTML = `
+    <div class="email-card-header" onclick="this.parentElement.classList.toggle('expanded')">
+      <div class="email-card-left">
+        <div class="email-avatar ${avatarColor}">${escHtml(initial)}</div>
+        <div>
+          <div class="email-title"${isDeleted ? ' style="text-decoration:line-through"' : ''}>${escHtml(e.subject || '(无主题)')}${matchTag}</div>
+          <div class="email-from">${escHtml(fromLabel)}${categoryLabel ? ' · ' + escHtml(categoryLabel) : ''}${e.date ? ' · ' + new Date(e.date).toLocaleString('zh-CN') : ''}</div>
+          <div class="email-summary-preview">${escHtml(summaryPreview)}</div>
+        </div>
+      </div>
+      <div class="email-card-right">
+        <div class="priority-badge ${priorityClass}">${priorityLabel}</div>
+        <svg class="email-chevron" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+    <div class="email-card-body">${bodyHtml}</div>`;
+  return card;
+}
+
+let _currentFilter = 'all';
+function filterEmails(filter) {
+  _currentFilter = filter;
+  $$('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === filter));
+  renderEmailCards(window._emailResults || [], filter, filter === 'all' ? 5 : null);
+}
+
+function showAllEmails() {
+  renderEmailCards(window._emailResults || [], _currentFilter, null);
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function sendReply(btn) {
+  const to = btn.dataset.to;
+  const subject = btn.dataset.subject;
+  const textareaId = btn.dataset.textarea;
+  const textarea = document.getElementById(textareaId);
+  if (!textarea) return;
+  const body = textarea.value.trim();
+  if (!body) { showToast('回复内容不能为空', 'error'); return; }
+  if (!to) { showToast('无法获取收件人地址', 'error'); return; }
+
+  // Disable button while sending
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<svg class="spin" fill="none" viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31 31"/></svg> 发送中...';
+  btn.style.opacity = '0.7';
+
+  try {
+    const resp = await fetch('/api/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to, subject, body })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      showToast('邮件已成功发送', 'success');
+      // Hide the entire reply section
+      const actionsDiv = btn.parentElement;
+      const draftDiv = actionsDiv.previousElementSibling;
+      if (draftDiv) draftDiv.style.display = 'none';
+      actionsDiv.innerHTML = '<span style="color:var(--success);font-size:13px;font-weight:600">&#10003; 邮件已发送成功</span>';
+    } else {
+      showToast(data.error || '发送失败', 'error');
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  } catch (err) {
+    showToast('网络错误，发送失败', 'error');
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
+}
+
+function renderDigest(data) {
+  const results = data.results || [];
+  const stats = data.stats || {};
+  const taskList = data.taskList || [];
+  const report = data.report || '';
+  const estimatedTime = Math.round((stats.total || 0) * 2.5);
+  const container = $('#digestContent');
+  if (!container || results.length === 0) return;
+
+  const matched = results.filter(r => r.matched);
+  const highPriority = results.filter(r => r.priority === 'high');
+  const medPriority = results.filter(r => r.priority === 'medium');
+
+  let html = `
+    <div class="digest-hero">
+      <div class="digest-hero-icon">📧</div>
+      <div class="digest-hero-val">已清理 ${stats.total || 0} 封</div>
+      <div class="digest-hero-sub">AI 智能处理完成</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
+      <div style="background:var(--card-bg);border-radius:var(--card-radius);padding:20px;box-shadow:var(--card-shadow);text-align:center">
+        <div style="font-size:28px;font-weight:700;color:var(--navy)">${estimatedTime}</div>
+        <div style="font-size:12px;color:var(--text-muted)">分钟 节省时间</div>
+      </div>
+      <div style="background:var(--card-bg);border-radius:var(--card-radius);padding:20px;box-shadow:var(--card-shadow);text-align:center">
+        <div style="font-size:28px;font-weight:700;color:var(--navy)">${stats.tasks || 0}</div>
+        <div style="font-size:12px;color:var(--text-muted)">项 提取任务</div>
+      </div>
+    </div>`;
+
+  if (report) {
+    html += `<div style="background:var(--card-bg);border-radius:var(--card-radius);padding:20px;margin-bottom:24px;box-shadow:var(--card-shadow)">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--navy)">📋 AI 分析摘要</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">${escHtml(report)}</div>
+    </div>`;
+  }
+
+  if (highPriority.length > 0 || matched.length > 0) {
+    const focusItems = highPriority.length > 0 ? highPriority : matched;
+    html += `<div style="margin-bottom:24px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:16px;color:var(--navy)">🔥 待处理焦点</div>`;
+    focusItems.slice(0, 5).forEach(r => {
+      const e = r.email || {};
+      const p = r.priority || 'low';
+      const badgeClass = p === 'high' ? 'high' : p === 'medium' ? 'medium' : 'low';
+      const badgeLabel = p === 'high' ? '高' : p === 'medium' ? '中' : '低';
+      html += `<div class="digest-email-card" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:14px;font-weight:600">${escHtml(e.subject || '(无主题)')}</span>
+          <span class="priority-badge ${badgeClass}">${badgeLabel}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${escHtml(e.fromName || e.from || '')}${e.date ? ' · ' + new Date(e.date).toLocaleString('zh-CN') : ''}</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.6">${escHtml(r.summary || '')}</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  if (taskList.length > 0) {
+    html += `<div style="background:var(--card-bg);border-radius:var(--card-radius);padding:20px;box-shadow:var(--card-shadow)">
+      <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--navy)">✅ 自动提取的任务</div>`;
+    taskList.forEach(t => {
+      html += `<div class="digest-task-item" onclick="toggleDigestTask(this)" style="display:flex;align-items:center;gap:12px;padding:10px 0;cursor:pointer;border-bottom:1px solid var(--border)">
+        <div class="digest-task-check" style="width:18px;height:18px;border:2px solid var(--border);border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center"></div>
+        <span class="digest-task-name" style="font-size:13px">${escHtml(t)}</span>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+/* ========== J4: STATUS LOGIC ========== */
+function toggleTodo(el) {
+  el.classList.toggle('done');
+  const check = el.querySelector('.todo-check');
+  if (el.classList.contains('done')) {
+    check.innerHTML = '<svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    showToast('任务已完成', 'success');
+  } else {
+    check.innerHTML = '';
+  }
+}
+
+/* ========== J5: DIGEST LOGIC ========== */
+function toggleDigestTask(el) {
+  el.classList.toggle('done');
+  const check = el.querySelector('.digest-task-check');
+  const name = el.querySelector('.digest-task-name');
+  if (el.classList.contains('done')) {
+    check.innerHTML = '<svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    name.style.textDecoration = 'line-through';
+    name.style.color = 'var(--text-muted)';
+  } else {
+    check.innerHTML = '';
+    name.style.textDecoration = 'none';
+    name.style.color = '';
+  }
+}
+
+/* ========== J6: UTILITIES ========== */
+function showToast(msg, type = 'info') {
+  const container = $('#toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = (type === 'success' ? '&#10003; ' : '&#9432; ') + msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+/* ========== J7: INIT ========== */
+document.addEventListener('DOMContentLoaded', () => {
+  if (isLoggedIn && boundEmail) {
+    enterApp();
+    // Auto-restore session with saved credentials
+    const savedCred = JSON.parse(localStorage.getItem('ai_email_cred') || '{}');
+    if (savedCred.email && savedCred.authcode) {
+      fetch(API_BASE + '/api/bind', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: savedCred.email, password: savedCred.authcode, host: savedCred.host, port: savedCred.port || 993, provider: boundProvider })
+      }).then(r => r.json()).then(data => {
+        if (data.success) {
+          console.log('[AutoBind] Session restored for', savedCred.email);
+        } else {
+          console.warn('[AutoBind] Failed:', data.error);
+          localStorage.removeItem('ai_email_cred');
+          showToast('授权已过期，请重新绑定邮箱', 'info');
+          setTimeout(() => showProviderModal(), 500);
+        }
+      }).catch(() => {
+        console.warn('[AutoBind] Backend unavailable');
+      });
+    }
+  } else {
+    localStorage.removeItem('ai_email_logged');
+    isLoggedIn = false;
+    $('#view-onboarding').classList.remove('hidden');
+  }
+  document.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      startProcessing();
+    }
+    // Plain Enter also sends (unless Shift held for newline)
+    if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey && e.target.id === 'cmdInput') {
+      e.preventDefault();
+      startProcessing();
+    }
+  });
+  window.addEventListener('resize', () => {
+    if (isLoggedIn) {
+      if (window.innerWidth <= 768) {
+        $('#bottom-tabs').classList.remove('hidden');
+        $('#bottom-tabs').classList.add('visible');
+      } else {
+        $('#bottom-tabs').classList.add('hidden');
+        $('#bottom-tabs').classList.remove('visible');
+      }
+    }
+  });
+  $('#modal-overlay').addEventListener('click', e => {
+    if (e.target === $('#modal-overlay')) hideModal();
+  });
+});
+</script>
+<!-- Cloudflare RUM removed to avoid /cdn-cgi/rum 405 errors on self-hosted domain -->
+</body>
+</html>

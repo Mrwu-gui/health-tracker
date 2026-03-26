@@ -20,10 +20,10 @@
         </div>
         <div class="relative z-10 mt-auto">
           <h1 class="font-headline text-4xl font-extrabold text-on-surface leading-tight tracking-tight mb-4">
-            开启您的<br /><span class="text-primary">智能健康伴侣</span>
+            智康AI：您的<br /><span class="text-primary">智能健康守护者</span>
           </h1>
           <p class="text-on-surface-variant text-lg max-w-sm leading-relaxed">
-            用 AI 开启您的智慧健康生活，为您提供温馨的全方位守护。
+            自律不再孤单，AI 让每一步都充满温度。为您提供最贴心的陪伴与建议。
           </p>
         </div>
       </div>
